@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>化学反应原理机理推演 · 空间伪3D | Chemiation</title>
-  <meta name="description" content="基于纯2D Canvas与空间伪3D纵深映射的化学反应机理推演工坊，支持化学键双向渐变、纯字母排印、多自由度拖动与缩放、右侧机理推演工作区与 ACPL 自定义推演脚本编写。">
+  <meta name="description" content="基于纯2D Canvas与空间伪3D纵深映射的化学反应机理推演工坊，支持化学键双向渐变、纯字母排印、氢原子全程严格守恒、右侧机理推演工作区与极简 ACPL 推演脚本编写。">
   <!-- 字体引入 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,47 +13,34 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- 顶部独立品牌导航栏 (完全独立，不包含前序项目跳转) -->
+    <!-- 顶部独立品牌导航栏 (完全独立，不含前序项目跳转) -->
     <header class="header-bar">
       <div class="brand-section">
         <div class="brand-logo">
           <span>CHEMIATION</span>
         </div>
-        <span class="brand-badge">化学反应机理推演 · 空间伪3D</span>
+        <span class="brand-badge">化学反应机理推演 · 纯渲染器</span>
       </div>
 
       <div id="header-equation-display" class="header-status-equation">
-        <span id="reaction-equation">CO₂ → CH₃OH → DHA → DHAP → F-1,6-BP → G-6-P</span>
+        <span id="reaction-equation">CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O</span>
       </div>
     </header>
 
     <!-- 主工作区：左侧 Canvas 伪3D视口 + 右侧反应推演工作区 -->
     <div class="main-workspace">
-      <!-- 左侧 / 中央：纯 2D Canvas 拟态空间伪 3D 视口 -->
+      <!-- 左侧 / 中央：纯 2D Canvas 拟态空间伪 3D 视口 (纯推演渲染器) -->
       <main class="viewport-wrapper">
         <canvas id="reaction-canvas"></canvas>
 
-        <!-- 画布悬浮控制小工具 (拖动模式/平移/缩放/复位) -->
+        <!-- 画布悬浮控制小工具 -->
         <div class="viewport-floating-toolbar">
-          <div class="tool-mode-group">
-            <button id="btn-tool-rotate" class="tool-btn active" title="3D 空间自由旋转模式 (快捷键: 左键拖动)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              <span>旋转</span>
-            </button>
-            <button id="btn-tool-pan" class="tool-btn" title="画布空间平移模式 (快捷键: 右键/Shift+拖动)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="5 9 2 12 5 15"></polyline>
-                <polyline points="9 5 12 2 15 5"></polyline>
-                <polyline points="15 19 12 22 9 19"></polyline>
-                <polyline points="19 9 22 12 19 15"></polyline>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <line x1="12" y1="2" x2="12" y2="22"></line>
-              </svg>
-              <span>平移</span>
-            </button>
+          <div class="status-mode-tag" title="纯渲染器：全自动计算三维空间拓扑与氢原子位移，无需手动移动">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span>纯推演渲染视口</span>
           </div>
 
           <div class="toolbar-divider"></div>
@@ -73,7 +60,7 @@
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
           </button>
-          <button id="btn-reset-cam" class="tool-btn icon-only" title="视角与平移复位 (快捷键: R)">
+          <button id="btn-reset-cam" class="tool-btn icon-only" title="视角复位居中 (快捷键: R)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
               <path d="M3 3v5h5"></path>
@@ -89,21 +76,21 @@
 
         <!-- 当前步骤状态悬浮胶囊 -->
         <div id="canvas-step-toast" class="canvas-step-toast">
-          <span class="toast-num">第 1/6 步</span>
-          <span class="toast-title">反应基态</span>
-          <span class="toast-action">原料注入</span>
+          <span class="toast-num">第 1/5 步</span>
+          <span class="toast-title">底物分子靠近</span>
+          <span class="toast-action">分子对准</span>
         </div>
 
         <!-- 底部操作指示器 -->
         <div class="canvas-bottom-hints">
           <div class="hint-item">
-            <span>🖱️ 左键拖动：3D 空间旋转</span>
+            <span>🖱️ 鼠标拖拽：3D 空间自由旋转</span>
           </div>
           <div class="hint-item">
-            <span>✋ 右键/Shift+拖动：画布平移</span>
+            <span>🔍 滚轮/捏合：多级无级缩放</span>
           </div>
-          <div class="hint-item">
-            <span>🔍 滚轮/捏合：多级缩放</span>
+          <div class="hint-item" style="color: var(--color-accent); font-weight: 600;">
+            <span>⚛️ 氢原子严格守恒</span>
           </div>
         </div>
 
@@ -123,7 +110,7 @@
           <div class="workspace-title-group">
             <div class="workspace-icon">⚗️</div>
             <span class="workspace-title">反应推演工作区</span>
-            <span id="step-counter-text" class="step-counter-text">第 1 / 6 步</span>
+            <span id="step-counter-text" class="step-counter-text">第 1 / 5 步</span>
           </div>
           <button id="btn-toggle-workspace" class="btn-toggle-workspace" title="收起推演工作区">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,13 +137,13 @@
               <polyline points="16 18 22 12 16 6"></polyline>
               <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
-            <span>ACPL 脚本编写</span>
+            <span>ACPL 简易脚本</span>
           </button>
         </div>
 
         <!-- 工作区滚动内容区 -->
         <div class="workspace-content">
-          <!-- 选项卡 1: 机理与步骤列表 -->
+          <!-- 选项卡 1: 机理与步骤列表 (纯推演模式) -->
           <div id="tab-pane-steps" class="tab-pane-steps">
             <!-- 反应预设选择器 -->
             <div class="preset-select-wrap">
@@ -169,46 +156,55 @@
                 <h3 id="reaction-title" class="overview-title">载入中...</h3>
                 <span id="reaction-delta-h" class="overview-deltah">ΔH</span>
               </div>
-              <div id="reaction-category" style="display:none;">人工合成路线</div>
+              <div id="reaction-category" style="display:none;">经典有机机理</div>
               <p id="reaction-desc" class="overview-desc">反应机理推演载入中...</p>
             </div>
 
             <!-- 步骤流列表卡片容器 -->
             <div class="steps-list-header">
-              <span>推演步骤序列</span>
-              <span style="font-size: 11px; opacity: 0.7;">点击步骤直接跳转</span>
+              <span>推演步骤序列 (氢原子全守恒)</span>
+              <span style="font-size: 11px; opacity: 0.7;">点击直达任意步</span>
             </div>
             <div id="steps-list-container" class="steps-list-container">
               <!-- 动态渲染各步骤卡片 -->
             </div>
           </div>
 
-          <!-- 选项卡 2: 推演脚本编写 (ACPL 编辑器) -->
+          <!-- 选项卡 2: 推演脚本编写 (简易 ACPL 编辑器) -->
           <div id="tab-pane-script" class="tab-pane-script">
             <div class="script-toolbar">
-              <span class="script-title">ACPL 反应推演脚本</span>
+              <span class="script-title">ACPL 简易推演脚本</span>
               <div class="script-btn-group">
-                <button id="btn-reset-script" class="script-btn" title="还原为当前预设脚本">↺ 还原</button>
-                <button id="btn-run-script" class="script-btn primary" title="解析并重新运行推演脚本">▶ 解析并运行</button>
+                <button id="btn-reset-script" class="script-btn" title="还原为当前反应预设">↺ 还原</button>
+                <button id="btn-run-script" class="script-btn primary" title="解析并立即运行推演脚本">▶ 解析并运行</button>
               </div>
+            </div>
+
+            <!-- 快捷模板一键插入工具栏 -->
+            <div class="script-templates-bar">
+              <span class="template-label">插入模板:</span>
+              <button class="template-pill" data-template="new_step" title="插入新的空白步骤">+ 步骤</button>
+              <button class="template-pill" data-template="esterification" title="载入完整酯化模板">酯化</button>
+              <button class="template-pill" data-template="chlorination" title="载入甲烷氯代模板">氯代</button>
+              <button class="template-pill" data-template="haber_bosch" title="载入合成氨模板">合成氨</button>
+              <button class="template-pill" data-template="co2_reduction" title="载入CO2加氢模板">CO₂还原</button>
             </div>
 
             <div id="script-error-toast" class="script-error-toast"></div>
 
             <div class="script-editor-wrap">
-              <textarea id="script-editor" class="script-editor" spellcheck="false" placeholder="在此编写 ACPL 反应推演脚本..."></textarea>
+              <textarea id="script-editor" class="script-editor" spellcheck="false" placeholder="在此编写或修改 ACPL 反应推演脚本..."></textarea>
             </div>
 
             <!-- 语法速查指南 -->
             <div class="script-syntax-guide">
-              <strong>语法速查参考：</strong>
-              <div class="syntax-item"><code>reaction "反应名"</code> - 定义反应标题</div>
-              <div class="syntax-item"><code>step "步骤名称" {</code> - 开始新步骤</div>
-              <div class="syntax-item"><code>  note "机理解释"</code> - 步骤文字说明</div>
-              <div class="syntax-item"><code>  action "动作描述"</code> - 步骤反应动作</div>
-              <div class="syntax-item"><code>  atom &lt;ID&gt; &lt;元素&gt; &lt;X&gt; &lt;Y&gt; &lt;Z&gt;</code> - 设定原子坐标</div>
-              <div class="syntax-item"><code>  bond &lt;ID1&gt; &lt;ID2&gt; [1/2/3]</code> - 设定化学键拓扑</div>
-              <div class="syntax-item"><code>}</code> - 结束当前步骤</div>
+              <strong>极简上手提示（三维坐标全自动解算）：</strong>
+              <div class="syntax-item"><code>step "步骤名称" {</code> - 声明步骤</div>
+              <div class="syntax-item"><code>  note "机理详解说明"</code> - 步骤说明文本</div>
+              <div class="syntax-item"><code>  action "动作描述"</code> - 动态状态徽标</div>
+              <div class="syntax-item"><code>  atom &lt;ID&gt; &lt;元素&gt;</code> - 定义原子 (无需写坐标，自动排布)</div>
+              <div class="syntax-item"><code>  bond &lt;ID1&gt; &lt;ID2&gt; [1/2/3]</code> - 连接化学键</div>
+              <div class="syntax-item"><code>}</code> - 步骤闭合</div>
             </div>
           </div>
         </div>

@@ -167,6 +167,23 @@ class ReactionApp {
       this.btnResetScript.addEventListener('click', () => this.resetScriptToCurrent());
     }
 
+    // 快捷模板一键插入
+    const templatePills = document.querySelectorAll('.template-pill');
+    templatePills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const t = pill.dataset.template;
+        const text = ReactionScriptEngine.getQuickTemplate(t);
+        if (this.scriptEditor) {
+          if (t === 'new_step') {
+            this.scriptEditor.value += text;
+          } else {
+            this.scriptEditor.value = text;
+          }
+          this.hideScriptError();
+        }
+      });
+    });
+
     // 播放与步进
     if (this.prevBtn) {
       this.prevBtn.addEventListener('click', () => {
