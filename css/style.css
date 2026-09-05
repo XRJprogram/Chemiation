@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    Chemiation - 3D Quantum Atom & Electron Orbit Visualizer Stylesheet
    ========================================================================== */
 
@@ -254,6 +254,30 @@ body {
   min-width: 28px;
   font-weight: 700;
   color: #fff;
+}
+
+.nav-switch-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(249, 115, 22, 0.2));
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: var(--transition);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.15);
+  margin-left: 4px;
+}
+.nav-switch-link:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.35), rgba(249, 115, 22, 0.35));
+  color: #fff;
+  border-color: #fde047;
+  box-shadow: 0 0 18px rgba(234, 179, 8, 0.35);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>化学反应原理机理推演 · 空间伪3D | Chemiation</title>
+  <meta name="description" content="基于纯2D Canvas与空间伪3D纵深映射的化学反应机理动态推演平台，无球体纯字母排印，极简淡黄宣纸视觉风格。">
+  <!-- 引入典雅学者风与科技排印字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/reaction.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 顶部极简导航栏 -->
+    <header class="header-bar">
+      <div class="brand-section">
+        <a href="index.html" class="brand-logo">
+          <span>CHEMIATION</span>
+        </a>
+        <span class="brand-badge">化学反应机理推演 · 空间伪3D</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="index.html" class="nav-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="4"></circle>
+            <line x1="21.17" y1="8" x2="12" y2="8"></line>
+            <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+            <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
+          </svg>
+          <span>3D 电子视界</span>
+        </a>
+        <a href="https://xrjprogram.github.io/" class="nav-btn primary">
+          <span>全局项目导航 ↗</span>
+        </a>
+      </nav>
+    </header>
+
+    <!-- 视口与画布区域 -->
+    <main class="viewport-wrapper">
+      <canvas id="reaction-canvas"></canvas>
+
+      <!-- 左上角反应概况卡片 -->
+      <aside class="reaction-info-overlay">
+        <div class="preset-dropdown-wrap">
+          <select id="preset-select" class="preset-select" aria-label="选择化学反应"></select>
+        </div>
+
+        <div class="reaction-card">
+          <div class="reaction-title-row">
+            <h1 id="reaction-title" class="reaction-title">载入中...</h1>
+            <span id="reaction-delta-h" class="reaction-delta-h">ΔH</span>
+          </div>
+          <div id="reaction-equation" class="reaction-equation">CO₂ → CH₃OH</div>
+          <p id="reaction-desc" class="reaction-desc">反应机理推演加载中...</p>
+        </div>
+      </aside>
+
+      <!-- 右上角悬浮相机工具箱 -->
+      <aside class="viewport-tools">
+        <button id="btn-reset-cam" class="tool-btn" title="重置视角 (R)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+        </button>
+        <button id="btn-toggle-rotate" class="tool-btn" title="自动缓速自转">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+        <button id="btn-zoom-in" class="tool-btn" title="放大">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+        <button id="btn-zoom-out" class="tool-btn" title="缩小">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+      </aside>
+
+      <!-- 底部机理推演详解面板 -->
+      <section class="mechanism-panel">
+        <!-- 步骤描述与机理注解 -->
+        <div class="step-details-header">
+          <div class="step-badge-wrap">
+            <span id="step-counter-badge" class="step-counter-badge">STEP 1/6</span>
+            <span id="step-action-badge" class="step-action-badge">反应基态</span>
+          </div>
+          <h2 id="step-name" class="step-name">步骤名称</h2>
+        </div>
+
+        <p id="step-note-text" class="step-note-text">
+          反应机理详解...
+        </p>
+
+        <!-- 步骤时间轴轨道 -->
+        <div id="timeline-track" class="timeline-track-wrap"></div>
+
+        <!-- 播放与步进控制栏 -->
+        <div class="playback-controls">
+          <div class="control-btn-group">
+            <button id="prev-btn" class="ctrl-btn" title="上一步 (← 或 A)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line>
+              </svg>
+              <span>上一步</span>
+            </button>
+
+            <button id="play-btn" class="ctrl-btn primary" title="播放/暂停 (Space 空格)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>自动推演</span>
+            </button>
+
+            <button id="next-btn" class="ctrl-btn" title="下一步 (→ 或 D)">
+              <span>下一步</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
+              </svg>
+            </button>
+
+            <button id="reset-step-btn" class="ctrl-btn" title="从起点开始">
+              <span>↺ 重置起点</span>
+            </button>
+          </div>
+
+          <div class="speed-select-wrap">
+            <span>速率:</span>
+            <button class="speed-pill" data-speed="0.5">0.5x</button>
+            <button class="speed-pill active" data-speed="1">1.0x</button>
+            <button class="speed-pill" data-speed="2">2.0x</button>
+          </div>
+
+          <div class="keyboard-hints">
+            <span><span class="key-tag">←</span> <span class="key-tag">→</span> 步进</span>
+            <span><span class="key-tag">Space</span> 播放</span>
+            <span><span class="key-tag">鼠标拖拽</span> 空间旋转</span>
+            <span><span class="key-tag">滚轮</span> 缩放</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 脚本加载 -->
+  <script src="js/reaction/reactionData.js"></script>
+  <script src="js/reaction/pseudo3DRenderer.js"></script>
+  <script src="js/reaction/reactionApp.js"></script>
+</body>
+</html>
