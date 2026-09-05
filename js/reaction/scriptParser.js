@@ -272,7 +272,7 @@ const ReactionScriptEngine = {
     }
 
     if (type === 'co2_reduction') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'co2-to-sugar') || REACTION_PRESETS[0]);
+      return this.serialize(REACTION_PRESETS.find(p => p.id === 'co2-reduction') || REACTION_PRESETS[2]);
     }
 
     return '';

@@ -31,8 +31,8 @@
   --shadow-md: 0 6px 20px rgba(36, 20, 11, 0.08);
   --shadow-lg: 0 12px 36px rgba(36, 20, 11, 0.14);
 
-  --font-serif: 'Cinzel', 'Playfair Display', 'Merriweather', 'Times New Roman', Georgia, serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+  --font-sans: 'Century Gothic', CenturyGothic, AppleGothic, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
 }
 

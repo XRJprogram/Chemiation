@@ -841,7 +841,7 @@ class Pseudo3DRenderer {
   renderAtom(ctx, atom) {
     ctx.save();
 
-    ctx.font = `600 ${atom.fontSize}px 'Cinzel', 'Playfair Display', 'Merriweather', 'Times New Roman', Georgia, serif`;
+    ctx.font = `700 ${atom.fontSize}px 'Century Gothic', CenturyGothic, AppleGothic, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -896,7 +896,7 @@ class Pseudo3DRenderer {
   renderHoverTooltip(ctx, atom) {
     ctx.save();
     const text = `${atom.element} (${atom.id}) · 空间深度 Z: ${atom.sz.toFixed(2)}`;
-    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = '12px "Century Gothic", CenturyGothic, AppleGothic, sans-serif';
     const textMetrics = ctx.measureText(text);
     const boxW = textMetrics.width + 20;
     const boxH = 26;
