@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemiation · 量子原子与电子动力学视界 | 元素周期表 3D 动画</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'/><circle cx='19' cy='5' r='2'/><circle cx='5' cy='19' r='2'/><path d='M10.4 10.4 6.4 17.6'/><path d='m13.6 13.6 4-7.2'/></svg>">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Serif+SC:wght@600;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- 样式表 -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 3D 动态视口画布容器 -->
+  <div id="atom-viewport"></div>
+
+  <!-- 顶部悬浮控制栏 -->
+  <header class="top-nav">
+    <!-- 品牌 Logo -->
+    <div class="brand-title">
+      <div class="brand-icon">
+        <i class="fas fa-atom"></i>
+      </div>
+      <div>
+        <span class="brand-name">Chemiation · AtomScope</span>
+      </div>
+      <span class="brand-tag">3D 电子视界</span>
+    </div>
+
+    <!-- 元素快捷步进器 -->
+    <div class="element-stepper">
+      <button id="btnPrev" class="step-btn" title="上一个元素 (快捷键: ←)"><i class="fas fa-chevron-left"></i></button>
+      <button id="btnRandom" class="random-btn" title="随机探索元素"><i class="fas fa-shuffle"></i> 随机漫游</button>
+      <button id="btnNext" class="step-btn" title="下一个元素 (快捷键: →)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- 工具与模式切换 -->
+    <div class="top-controls">
+      <!-- 三维呈现模式切换 -->
+      <div class="mode-btn-group">
+        <button class="mode-btn active" data-mode="gyroscopic" title="3D 天体陀螺模式：多轴交错立体环绕">
+          <i class="fas fa-compass-drafting"></i> 天体陀螺
+        </button>
+        <button class="mode-btn" data-mode="bohr" title="经典玻尔平面模式：同心圆平面观察">
+          <i class="fas fa-circle-notch"></i> 玻尔平面
+        </button>
+        <button class="mode-btn" data-mode="quantum" title="量子几率云模式：波函数电子云弥散分布">
+          <i class="fas fa-cloud"></i> 量子几率云
+        </button>
+      </div>
+
+      <!-- 动画速度调节 -->
+      <div class="speed-control">
+        <i class="fas fa-gauge-high"></i>
+        <input type="range" id="speedSlider" min="0.2" max="2.5" step="0.1" value="1.0" title="运转速度调节">
+        <span id="speedValText" class="speed-text">1.0x</span>
+      </div>
+
+      <!-- 控制开关 -->
+      <button id="btnPause" class="tool-icon-btn" title="暂停/继续 (快捷键: 空格)"><i class="fas fa-pause"></i></button>
+      <button id="btnTrails" class="tool-icon-btn active" title="光迹流光尾焰开关"><i class="fas fa-wand-magic-sparkles"></i></button>
+      <button id="btnResetCam" class="tool-icon-btn" title="重置观赏视角"><i class="fas fa-crosshairs"></i></button>
+      <button id="btnSound" class="tool-icon-btn" title="高科技交互音效开关"><i class="fas fa-volume-xmark"></i></button>
+    </div>
+  </header>
+
+  <!-- 左侧浮动科学 HUD 档案面板 -->
+  <aside class="atom-hud">
+    <div class="hud-hero">
+      <div class="hud-symbol-box">
+        <span id="hudAtomicNumber" class="hud-atomic-number">11</span>
+        <span id="hudSymbol" class="hud-symbol">Na</span>
+      </div>
+      <div class="hud-names">
+        <div id="hudZhName" class="hud-zh-name">钠</div>
+        <div id="hudPinyin" class="hud-pinyin">nà</div>
+        <div id="hudEnName" class="hud-en-name">Sodium</div>
+      </div>
+    </div>
+
+    <!-- 分类与族群信息 -->
+    <div class="hud-badges-row">
+      <span id="hudCategoryBadge" class="hud-badge">碱金属</span>
+      <span id="hudPeriodGroup" class="hud-period-group">第 3 周期 · 第 1 族</span>
+    </div>
+
+    <!-- 核心理化参数网格 -->
+    <div class="hud-stats-grid">
+      <div class="stat-box">
+        <div class="stat-title">相对原子质量</div>
+        <div id="hudMass" class="stat-val">22.990</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-title">最外层价电子</div>
+        <div id="hudValence" class="stat-val">1 个</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-title">常温单质物态</div>
+        <div id="hudState" class="stat-val">固态</div>
+      </div>
+      <div class="stat-box full-width">
+        <div class="stat-title">基态电子排布式</div>
+        <div id="hudConfig" class="stat-val" style="color: #38bdf8;">[Ne] 3s¹</div>
+      </div>
+    </div>
+
+    <!-- 各层电子结构图 (K-Q 能级分布) -->
+    <div class="hud-shells-section">
+      <div class="section-title">
+        <span>主量子层电子分布 (K - Q)</span>
+      </div>
+      <div id="hudShellsList" class="shells-list">
+        <!-- 动态渲染各能级层柱状指示 -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- 底部元素周期表折叠抽屉 -->
+  <section id="tablePanel" class="table-drawer">
+    <div class="drawer-header-bar">
+      <button id="tableToggleBtn" class="drawer-toggle-btn">
+        <i class="fas fa-chevron-down"></i> 收起元素周期表
+      </button>
+    </div>
+    <div class="drawer-body">
+      <!-- 搜索与分类过滤栏 -->
+      <div class="table-toolbar">
+        <div class="search-wrapper">
+          <i class="fas fa-magnifying-glass search-icon"></i>
+          <input type="text" id="elementSearchInput" class="search-input" placeholder="快速定位 (如: Na / 铁 / 26)...">
+        </div>
+        <div id="categoryFilterBar" class="category-filter-bar">
+          <!-- 动态渲染分类筛选药丸 -->
+        </div>
+      </div>
+
+      <!-- 18 列标准周期表网格 -->
+      <div id="periodicGrid" class="periodic-grid">
+        <!-- 动态生成 118 个元素磁贴 -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 依赖库与脚本引入 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  
+  <script src="js/periodicData.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/atomVisualizer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
