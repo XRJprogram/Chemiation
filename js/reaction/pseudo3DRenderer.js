@@ -427,7 +427,7 @@ class Pseudo3DRenderer {
       const b = Math.round(this.palette.atomBack.b + (this.palette.atomFront.b - this.palette.atomBack.b) * depthFactor);
       atom.color = `rgba(${r}, ${g}, ${b}, ${atom.opacity || 1})`;
       atom.rgb = { r, g, b };
-      atom.clipRadius = atom.fontSize * 0.68;
+      atom.clipRadius = Math.max(7, atom.fontSize * 0.44);
 
       atomMap.set(atom.id, atom);
     });
@@ -845,17 +845,23 @@ class Pseudo3DRenderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const pad = atom.fontSize * 0.62;
-    ctx.beginPath();
-    ctx.arc(atom.sx, atom.sy, pad, 0, Math.PI * 2);
-    ctx.fillStyle = this.palette.maskBg;
-    ctx.fill();
+    // 关键优化：沿着字母外轮廓勾勒一圈底色，完全消除圆球衬底感，同时防止化学键穿透字形
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.miterLimit = 2;
+    ctx.lineWidth = Math.max(3.5, atom.fontSize * 0.28);
+    ctx.strokeStyle = this.palette.maskBg;
+    ctx.strokeText(atom.element, atom.sx, atom.sy);
 
     const isHovered = this.hoveredAtom && this.hoveredAtom.id === atom.id;
     if (isHovered) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(184, 74, 40, 0.65)';
+      ctx.shadowBlur = 8;
       ctx.strokeStyle = this.palette.highlight;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      ctx.lineWidth = Math.max(1.8, atom.fontSize * 0.12);
+      ctx.strokeText(atom.element, atom.sx, atom.sy);
+      ctx.restore();
     }
 
     ctx.fillStyle = atom.color;

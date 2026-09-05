@@ -212,22 +212,15 @@ html, body {
   left: 18px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 6px 14px;
-  border-radius: 6px;
-  background: rgba(250, 246, 233, 0.88);
+  padding: 5px 12px;
+  border-radius: 14px;
+  background: rgba(250, 246, 233, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--color-mid-brown);
   pointer-events: none;
   z-index: 10;
-}
-
-.hint-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .canvas-step-toast {
@@ -492,10 +485,10 @@ html, body {
   background: rgba(243, 236, 224, 0.45);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .overview-top-row {
@@ -507,7 +500,7 @@ html, body {
 
 .overview-title {
   font-family: var(--font-serif);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-dark-brown);
 }
@@ -533,8 +526,8 @@ html, body {
 }
 
 .overview-desc {
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 11.5px;
+  line-height: 1.45;
   color: var(--color-mid-brown);
 }
 
@@ -777,15 +770,14 @@ html, body {
   background: rgba(243, 236, 224, 0.5);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 6px 10px;
   font-size: 11px;
   color: var(--color-mid-brown);
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
 }
 
-.syntax-item code {
+.script-syntax-guide code {
   font-family: var(--font-mono);
   color: var(--color-accent);
   background: rgba(184, 74, 40, 0.08);

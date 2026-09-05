@@ -263,16 +263,20 @@ const ReactionScriptEngine = {
       return this.serialize(REACTION_PRESETS.find(p => p.id === 'esterification') || REACTION_PRESETS[0]);
     }
 
+    if (type === 'co2_starch' || type === 'starch') {
+      return this.serialize(REACTION_PRESETS.find(p => p.id === 'co2-to-starch') || REACTION_PRESETS[1]);
+    }
+
     if (type === 'chlorination') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'methane-chlorination') || REACTION_PRESETS[1]);
+      return this.serialize(REACTION_PRESETS.find(p => p.id === 'methane-chlorination') || REACTION_PRESETS[2]);
     }
 
     if (type === 'haber_bosch') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'haber-bosch') || REACTION_PRESETS[2]);
+      return this.serialize(REACTION_PRESETS.find(p => p.id === 'haber-bosch') || REACTION_PRESETS[4]);
     }
 
     if (type === 'co2_reduction') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'co2-reduction') || REACTION_PRESETS[2]);
+      return this.serialize(REACTION_PRESETS.find(p => p.id === 'co2-reduction') || REACTION_PRESETS[3]);
     }
 
     return '';

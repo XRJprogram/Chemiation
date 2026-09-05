@@ -336,11 +336,12 @@ class ReactionApp {
       card.className = `step-item-card ${idx === 0 ? 'active' : ''}`;
       card.dataset.stepIndex = idx;
 
+      const cleanTitle = step.name.replace(/^\d+\.\s*/, '');
       card.innerHTML = `
         <div class="step-card-top">
           <div class="step-card-num">${idx + 1}</div>
-          <div class="step-card-title">${step.name}</div>
-          <span class="step-card-badge">${(step.action && step.action.desc) || '反应基态'}</span>
+          <div class="step-card-title">${cleanTitle}</div>
+          <span class="step-card-badge">${(step.action && step.action.desc) || '反应'}</span>
         </div>
         <div class="step-card-note">${step.note || ''}</div>
       `;
@@ -383,15 +384,15 @@ class ReactionApp {
 
     // 更新右侧计数
     if (this.stepCounterText) {
-      this.stepCounterText.textContent = `第 ${stepIndex + 1} / ${totalSteps} 步`;
+      this.stepCounterText.textContent = `${stepIndex + 1} / ${totalSteps}`;
     }
 
     // 画布浮动状态吐司
     if (this.canvasStepToast) {
+      const cleanTitle = step.name.replace(/^\d+\.\s*/, '');
       this.canvasStepToast.innerHTML = `
-        <span class="toast-num">第 ${stepIndex + 1}/${totalSteps} 步</span>
-        <span class="toast-title">${step.name}</span>
-        <span class="toast-action">${(step.action && step.action.desc) || '基态'}</span>
+        <span class="toast-num">${stepIndex + 1}/${totalSteps}</span>
+        <span class="toast-title">${cleanTitle}</span>
       `;
     }
 
