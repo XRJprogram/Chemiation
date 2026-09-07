@@ -810,15 +810,18 @@ html, body {
   height: 100%;
 }
 
-/* 全屏编写模式：主容器铺满整个视口 */
+/* 全屏编写模式：主容器铺满视口下方（位于页眉下方，不遮挡页眉亦不被页眉覆盖） */
 .tab-pane-script.fullscreen {
   position: fixed;
-  inset: 0;
+  top: 54px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - 54px);
   z-index: 100000;
   background: var(--bg-primary);
-  padding: 16px 24px;
+  padding: 14px 20px;
   box-sizing: border-box;
   display: flex !important;
   flex-direction: column;
@@ -832,7 +835,7 @@ html, body {
 
 .tab-pane-script.fullscreen .ide-container {
   flex: 1;
-  height: calc(100vh - 76px);
+  height: calc(100vh - 54px - 66px);
   min-height: 0;
 }
 
