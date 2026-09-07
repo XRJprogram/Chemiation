@@ -6,13 +6,12 @@
 
 reaction "甲烷自由基氯代反应机理"
 equation "CH₄ + Cl₂ —(hν)→ CH₃Cl + HCl"
-category "自由基反应"
 summary "经典烷烃自由基取代：光解均裂引发、高活性氯原子夺氢、甲基自由基偶联生成一氯甲烷与HCl。"
 
 step "1. 反应物底物处于基态" {
   note "甲烷 (CH₄) 与氯气 (Cl-Cl) 空间共存，4 个 C-H 键构型稳定。"
 
-  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]
   atom C1 C -2.40 0.00 0.00
   atom H1 H -2.40 1.80 0.00
   atom H2 H -0.90 -0.60 0.90
@@ -32,14 +31,14 @@ step "1. 反应物底物处于基态" {
 step "2. 光解均裂与自由基夺氢" {
   note "紫外光诱导 Cl-Cl 均裂断开，氯自由基夺取 H1 迁移生成 HCl 前体。"
 
-  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
-  atom C1 C -1.80 0.00 0.00
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]
+  atom C1 C -1.80 0.00 0.00 radical
   atom H2 H -0.70 1.20 0.00
   atom H3 H -3.20 0.50 0.00
   atom H4 H -1.60 -1.70 0.00
   atom H1 H 1.10 0.30 0.20
   atom Cl1 Cl 2.50 0.30 0.20
-  atom Cl2 Cl 0.60 -1.50 0.60
+  atom Cl2 Cl 0.60 -1.50 0.60 radical
 
   # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
   bond C1 H2 1
@@ -51,7 +50,7 @@ step "2. 光解均裂与自由基夺氢" {
 step "3. 链传递产物生成" {
   note "甲基自由基与 Cl2 结合形成稳定的 C-Cl 单键，生成一氯甲烷与 HCl。"
 
-  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]
   atom C1 C -0.60 0.00 0.00
   atom Cl2 Cl 1.50 0.00 0.00
   atom H2 H -1.20 1.30 0.80

@@ -533,13 +533,22 @@ html, body {
 }
 
 .reaction-count-badge {
-  font-size: 10px;
+  font-size: 10.5px;
+  font-weight: 700;
   font-family: var(--font-mono);
   color: var(--color-mid-brown);
-  background: rgba(94, 65, 47, 0.08);
-  padding: 1px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
+  background: rgba(94, 65, 47, 0.09);
+  border: 1px solid rgba(94, 65, 47, 0.15);
+  min-width: 18px;
+  height: 18px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 9px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .project-actions {
@@ -1189,4 +1198,156 @@ html, body {
   .canvas-bottom-hints {
     display: none;
   }
+}
+
+/* ==========================================================================
+   自研极简工坊风模态对话框 (替换原生 prompt / confirm / alert)
+   ========================================================================== */
+.chem-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(24, 17, 11, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  animation: chemDialogFadeIn 0.18s ease-out;
+}
+
+@keyframes chemDialogFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.chem-dialog-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-primary);
+  border: 1px solid rgba(62, 38, 22, 0.28);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(24, 17, 11, 0.35);
+  padding: 18px 20px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  animation: chemDialogPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes chemDialogPopIn {
+  from { opacity: 0; transform: scale(0.95) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.chem-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chem-dialog-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-deep-brown);
+  font-family: var(--font-sans);
+  margin: 0;
+}
+
+.chem-dialog-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--color-light-brown);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.chem-dialog-close-btn:hover {
+  color: var(--color-accent);
+  background: rgba(184, 74, 40, 0.1);
+}
+
+.chem-dialog-message {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-deep-brown);
+  word-break: break-word;
+}
+
+.chem-dialog-input-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.chem-dialog-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--color-deep-brown);
+  background: #FFFDF9;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chem-dialog-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(184, 74, 40, 0.12);
+}
+
+.chem-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.chem-dialog-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.chem-dialog-btn.secondary {
+  background: #FAF6E9;
+  color: var(--color-mid-brown);
+}
+
+.chem-dialog-btn.secondary:hover {
+  background: #F3ECE0;
+  color: var(--color-deep-brown);
+}
+
+.chem-dialog-btn.primary {
+  background: var(--color-deep-brown);
+  color: var(--bg-primary);
+  border-color: var(--color-deep-brown);
+}
+
+.chem-dialog-btn.primary:hover {
+  background: var(--color-dark-brown);
+}
+
+.chem-dialog-btn.danger {
+  background: var(--color-accent);
+  color: #FFF;
+  border-color: var(--color-accent);
+}
+
+.chem-dialog-btn.danger:hover {
+  background: #A03D1E;
 }

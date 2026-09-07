@@ -318,9 +318,6 @@
 <span class="comment"># 化学反应总方程式（必填）</span>
 <span class="keyword">equation</span> <span class="string">"CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O"</span>
 
-<span class="comment"># 反应分类标签（可选）</span>
-<span class="keyword">category</span> <span class="string">"经典有机机理"</span>
-
 <span class="comment"># 机理概述与背景说明（可选）</span>
 <span class="keyword">summary</span> <span class="string">"经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。"</span></code></pre>
     </section>
@@ -379,6 +376,20 @@
       <div class="note-box">
         <strong>💡 提示：</strong> 渲染器会自动根据两个原子的元素类型，在键上绘制平滑的<strong>双向渐变色与纵深光影</strong>，不同元素原子之间一目了然。
       </div>
+
+      <h3>4.3 自由基单电子 (radical) 与形式电荷 (charge)</h3>
+      <p>在有机化学反应机理推演中，自由基、碳正/碳负离子与过渡态电荷中心的严谨表达至关重要：</p>
+      <ul>
+        <li><strong>自由基中心 (radical)</strong>：标注单电子自由基（如氯原子自由基 $\text{Cl}\cdot$、甲基自由基 $\cdot\text{CH}_3$），将在原子右上角渲染出<strong>高对比度实心圆点（$\cdot$）</strong>。
+          <br>语法一（行内声明）：<code>atom C1 C -1.8 0 0 radical</code>
+          <br>语法二（独立声明）：<code>radical C1 Cl2</code>
+        </li>
+        <li><strong>形式电荷 (charge)</strong>：针对离子与过度成键/少键原子（如氧鎓阳离子 $\text{O}^+$、烷氧负离子 $\text{O}^-$、碳正离子 $\text{C}^+$），将在原子右上角渲染出教科书级<strong>圈加/圈减徽章（$\oplus$ 或 $\ominus$）</strong>。
+          <br>语法一（行内声明）：<code>atom O1 O -1.4 1.1 0 charge=-1</code>、<code>atom O2 O -1.0 -1.3 0 charge=+1</code>
+          <br>语法二（独立声明）：<code>charge O1 -1</code>、<code>charge O2 +1</code>
+        </li>
+        <li><strong>机理智能推断兜底</strong>：若脚本中未显式指定，推演引擎亦会依据元素的共价成键数差异（如三键氧、单键氧负离子、均裂单原子自由基等）进行自动机理状态解算与标注呈现。</li>
+      </ul>
     </section>
 
     <!-- 5. 高分子聚合物规范 -->

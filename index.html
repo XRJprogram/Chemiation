@@ -131,9 +131,8 @@
             <!-- 反应库管理操作栏 -->
             <div id="project-bar" class="project-bar">
               <div class="project-info">
-                <span class="project-folder-icon">📂</span>
                 <span id="project-name-label" class="project-name-label">反应机理库</span>
-                <span id="reaction-count-badge" class="reaction-count-badge">4 个机理</span>
+                <span id="reaction-count-badge" class="reaction-count-badge">5</span>
               </div>
               <div class="project-actions">
                 <button id="btn-new-reaction" class="project-btn primary" title="新建反应机理脚本">
@@ -155,7 +154,6 @@
               <div class="overview-top-row">
                 <h3 id="reaction-title" class="overview-title">载入中...</h3>
               </div>
-              <div id="reaction-category" style="display:none;">机理推演</div>
               <p id="reaction-desc" class="overview-desc">反应机理推演载入中...</p>
             </div>
 
@@ -248,6 +246,24 @@
           </div>
         </footer>
       </aside>
+    </div>
+  </div>
+
+  <!-- 极简工坊风自研对话框 (完全替代原生 prompt / confirm / alert) -->
+  <div id="chem-dialog-overlay" class="chem-dialog-overlay" style="display: none;">
+    <div class="chem-dialog-card" role="dialog" aria-modal="true">
+      <div class="chem-dialog-header">
+        <h3 id="chem-dialog-title" class="chem-dialog-title">提示</h3>
+        <button id="chem-dialog-close-btn" class="chem-dialog-close-btn" title="关闭 (Esc)">×</button>
+      </div>
+      <div id="chem-dialog-message" class="chem-dialog-message"></div>
+      <div id="chem-dialog-input-wrap" class="chem-dialog-input-wrap" style="display: none;">
+        <input id="chem-dialog-input" type="text" class="chem-dialog-input" spellcheck="false" autocomplete="off" />
+      </div>
+      <div class="chem-dialog-footer">
+        <button id="chem-dialog-cancel-btn" class="chem-dialog-btn secondary">取消</button>
+        <button id="chem-dialog-confirm-btn" class="chem-dialog-btn primary">确定</button>
+      </div>
     </div>
   </div>
 

@@ -5,7 +5,7 @@
 
 class ReactionApp {
   constructor() {
-    this.storageKey = 'chemiation_reactions_v4';
+    this.storageKey = 'chemiation_reactions_v5';
     this.presets = this.loadInitialPresets();
     this.currentReactionIndex = 0;
     this.currentStepIndex = 0;
@@ -62,10 +62,9 @@ class ReactionApp {
     this.btnSaveScript = document.getElementById('btn-save-script');
     this.btnFullscreenScript = document.getElementById('btn-fullscreen-script');
 
-    // 反应总体信息 (已移除 deltaH)
+    // 反应总体信息 (已移除 deltaH, category)
     this.reactionTitle = document.getElementById('reaction-title');
     this.reactionEquation = document.getElementById('reaction-equation');
-    this.reactionCategory = document.getElementById('reaction-category');
     this.reactionDesc = document.getElementById('reaction-desc');
 
     // 右侧推演工作区整体与容器
@@ -127,7 +126,7 @@ class ReactionApp {
     });
     this.presetSelect.value = this.currentReactionIndex;
     if (this.reactionCountBadge) {
-      this.reactionCountBadge.textContent = `${this.presets.length} 个机理`;
+      this.reactionCountBadge.textContent = String(this.presets.length);
     }
   }
 
@@ -389,7 +388,6 @@ class ReactionApp {
 
         if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
         if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
-        if (this.reactionCategory) this.reactionCategory.textContent = parsedReaction.category || '机理推演';
         if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
 
         if (this.presetSelect && this.presetSelect.options[this.currentReactionIndex]) {
@@ -484,7 +482,6 @@ class ReactionApp {
 
     if (this.reactionTitle) this.reactionTitle.textContent = reaction.name;
     if (this.reactionEquation) this.reactionEquation.textContent = reaction.equation || '';
-    if (this.reactionCategory) this.reactionCategory.textContent = reaction.category || '机理推演';
     if (this.reactionDesc) this.reactionDesc.textContent = reaction.summary || '';
 
     if (this.presetSelect) {
@@ -727,7 +724,6 @@ class ReactionApp {
 
       if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
       if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
-      if (this.reactionCategory) this.reactionCategory.textContent = parsedReaction.category || '机理推演';
       if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
 
       if (this.presetSelect && this.presetSelect.options[this.currentReactionIndex]) {
@@ -762,7 +758,6 @@ class ReactionApp {
 
       if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
       if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
-      if (this.reactionCategory) this.reactionCategory.textContent = parsedReaction.category || '机理推演';
       if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
 
       if (this.presetSelect && this.presetSelect.options[this.currentReactionIndex]) {
@@ -794,10 +789,124 @@ class ReactionApp {
   }
 
   /**
-   * 新建反应机理
+   * 自研模态对话框底层触发器 (完全替代原生 prompt / confirm / alert)
    */
-  handleNewReaction() {
-    const name = prompt('请输入新反应名称 (例如: 乙醇催化氧化机理):', '新建化学反应');
+  showModalDialog({ title = '提示', message = '', type = 'alert', defaultValue = '', placeholder = '', confirmText = '确定', cancelText = '取消', danger = false }) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('chem-dialog-overlay');
+      const titleEl = document.getElementById('chem-dialog-title');
+      const msgEl = document.getElementById('chem-dialog-message');
+      const inputWrap = document.getElementById('chem-dialog-input-wrap');
+      const inputEl = document.getElementById('chem-dialog-input');
+      const cancelBtn = document.getElementById('chem-dialog-cancel-btn');
+      const confirmBtn = document.getElementById('chem-dialog-confirm-btn');
+      const closeBtn = document.getElementById('chem-dialog-close-btn');
+
+      if (!overlay) {
+        if (type === 'prompt') resolve(prompt(message, defaultValue));
+        else if (type === 'confirm') resolve(confirm(message));
+        else { alert(message); resolve(); }
+        return;
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (msgEl) msgEl.textContent = message;
+
+      if (type === 'prompt') {
+        if (inputWrap) inputWrap.style.display = 'block';
+        if (inputEl) {
+          inputEl.value = defaultValue || '';
+          inputEl.placeholder = placeholder || '';
+        }
+      } else {
+        if (inputWrap) inputWrap.style.display = 'none';
+      }
+
+      if (cancelBtn) {
+        cancelBtn.style.display = type === 'alert' ? 'none' : 'inline-block';
+        cancelBtn.textContent = cancelText;
+      }
+
+      if (confirmBtn) {
+        confirmBtn.textContent = confirmText;
+        confirmBtn.className = `chem-dialog-btn ${danger ? 'danger' : 'primary'}`;
+      }
+
+      overlay.style.display = 'flex';
+
+      const cleanup = () => {
+        overlay.style.display = 'none';
+        window.removeEventListener('keydown', onKeyDown);
+      };
+
+      const onConfirm = () => {
+        const val = type === 'prompt' ? (inputEl ? inputEl.value : '') : true;
+        cleanup();
+        resolve(val);
+      };
+
+      const onCancel = () => {
+        cleanup();
+        resolve(type === 'prompt' ? null : false);
+      };
+
+      const onKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          onCancel();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          onConfirm();
+        }
+      };
+
+      if (confirmBtn) confirmBtn.onclick = onConfirm;
+      if (cancelBtn) cancelBtn.onclick = onCancel;
+      if (closeBtn) closeBtn.onclick = onCancel;
+      overlay.onclick = (e) => {
+        if (e.target === overlay) onCancel();
+      };
+
+      window.addEventListener('keydown', onKeyDown);
+
+      if (type === 'prompt' && inputEl) {
+        setTimeout(() => {
+          inputEl.focus();
+          inputEl.select();
+        }, 30);
+      } else if (confirmBtn) {
+        setTimeout(() => {
+          confirmBtn.focus();
+        }, 30);
+      }
+    });
+  }
+
+  showPromptDialog(opts) {
+    return this.showModalDialog({ ...opts, type: 'prompt' });
+  }
+
+  showConfirmDialog(opts) {
+    return this.showModalDialog({ ...opts, type: 'confirm' });
+  }
+
+  showAlertDialog(opts) {
+    return this.showModalDialog({ ...opts, type: 'alert' });
+  }
+
+  /**
+   * 新建反应机理 (使用自研优雅工坊模态对话框)
+   */
+  async handleNewReaction() {
+    const name = await this.showPromptDialog({
+      title: '新建化学反应机理',
+      message: '请输入新反应机理的名称：',
+      defaultValue: '新建化学反应',
+      placeholder: '例如: 乙醇催化氧化机理',
+      confirmText: '创建机理'
+    });
     if (!name || !name.trim()) return;
 
     const templateText = ReactionScriptEngine.getQuickTemplate('reaction_blank').replace('reaction "新建化学反应"', `reaction "${name.trim()}"`);
@@ -809,7 +918,6 @@ class ReactionApp {
         id: 'reaction-' + Date.now(),
         name: name.trim(),
         equation: 'A + B ⇌ C + D',
-        category: '自定义机理',
         summary: '新建化学反应机理推演',
         steps: [
           {
@@ -834,16 +942,24 @@ class ReactionApp {
   }
 
   /**
-   * 删除当前选中的反应机理
+   * 删除当前选中的反应机理 (使用自研优雅工坊模态对话框)
    */
-  handleDeleteReaction() {
+  async handleDeleteReaction() {
     if (this.presets.length <= 1) {
-      alert('反应机理库中至少需要保留 1 个机理，无法删除唯一机理。');
+      await this.showAlertDialog({
+        title: '无法删除机理',
+        message: '反应机理库中至少需要保留 1 个机理，无法删除唯一机理。'
+      });
       return;
     }
 
     const currentReaction = this.presets[this.currentReactionIndex];
-    const ok = confirm(`确定要删除反应【${currentReaction.name}】吗？删除后将从本地机理库移除。`);
+    const ok = await this.showConfirmDialog({
+      title: '删除反应机理',
+      message: `确定要删除反应【${currentReaction.name}】吗？删除后将从本地机理库移除。`,
+      confirmText: '确认删除',
+      danger: true
+    });
     if (!ok) return;
 
     this.presets.splice(this.currentReactionIndex, 1);
@@ -913,7 +1029,7 @@ class ReactionApp {
   highlightCCPL(text) {
     if (!text) return '';
 
-    const tokenRegex = /(#.*$)|("(?:[^"\\]|\\.)*")|\b(reaction|step|atom|bond|polymer|order|tag|leftBond|rightBond|exclude|excludeIds|vector|note|equation|summary|category)\b|\b(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Fe|Cu|Zn|Br|I|Pt|Pd|Au)\b|(?<!\w)(-?\d+(?:\.\d+)?)(?!\w)|([{}[\]])/gm;
+    const tokenRegex = /(#.*$)|("(?:[^"\\]|\\.)*")|\b(reaction|step|atom|bond|polymer|order|tag|leftBond|rightBond|exclude|excludeIds|vector|note|equation|summary|radical|charge)\b|\b(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Fe|Cu|Zn|Br|I|Pt|Pd|Au)\b|(?<!\w)(-?\d+(?:\.\d+)?)(?!\w)|([{}[\]])/gm;
 
     let result = '';
     let lastIndex = 0;

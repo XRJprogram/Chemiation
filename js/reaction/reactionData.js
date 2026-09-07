@@ -13,7 +13,6 @@ const REACTION_PRESETS = [
     id: "esterification",
     name: "乙酸与乙醇费歇尔酯化反应",
     equation: "CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O",
-    category: "经典有机机理",
     summary: "经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。",
     steps: [
       {
@@ -71,8 +70,8 @@ const REACTION_PRESETS = [
           { id: "H12", element: "H", x: -2.0, y: -2.0, z: 1.0 },
           { id: "H13", element: "H", x: -2.7, y: -1.4, z: -0.4 },
           { id: "C2", element: "C", x: -1.1, y: -0.4, z: 0.1 },
-          { id: "O1", element: "O", x: -1.4, y: 1.1, z: -0.4 },
-          { id: "O2", element: "O", x: -1.0, y: -1.3, z: -1.1 },
+          { id: "O1", element: "O", x: -1.4, y: 1.1, z: -0.4, charge: -1 },
+          { id: "O2", element: "O", x: -1.0, y: -1.3, z: -1.1, charge: 1 },
           { id: "H1", element: "H", x: -1.5, y: -2.1, z: -1.0 },
           { id: "H2", element: "H", x: -0.3, y: -1.6, z: -1.4 },
           { id: "O3", element: "O", x: 0.3, y: 0.2, z: 0.3 },
@@ -154,7 +153,6 @@ const REACTION_PRESETS = [
     id: "co2-to-starch",
     name: "二氧化碳人工全合成淀粉 (ASAP机理)",
     equation: "CO₂ + H₂ → C₁ (甲醇) → C₃ (DHA) → 2×C₃ (DHA+GAP) → C₆ (葡萄糖) → (C₆H₁₀O₅)ₙ (直链淀粉)",
-    category: "前沿人工合成路线",
     summary: "中科院 ASAP 经典路线：CO₂经加氢还原(C₁)、C-C偶联(C₃)、三碳糖复制异构(2×C₃)、半缩醛成环(C₆)至α-1,4-糖苷键聚合(淀粉)。",
     steps: [
       {
@@ -261,7 +259,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C5", atom2Id: "C6", order: 1 },
           { atom1Id: "C4", atom2Id: "O4", order: 1 },
           { atom1Id: "O4", atom2Id: "H4O", order: 1 },
-          { atom1Id: "C5", atom2Id: "O5", order: 1 },
+          { atom1Id: "C5", atom2Id: "O5", order: 2 },
           { atom1Id: "C6", atom2Id: "O6", order: 1 },
           { atom1Id: "O6", atom2Id: "H6O", order: 1 },
           { atom1Id: "C4", atom2Id: "H4", order: 1 },
@@ -408,7 +406,6 @@ const REACTION_PRESETS = [
     id: "methane-chlorination",
     name: "甲烷自由基氯代反应机理",
     equation: "CH₄ + Cl₂ —(hν)→ CH₃Cl + HCl",
-    category: "自由基反应",
     summary: "经典烷烃自由基取代：光解均裂引发、高活性氯原子夺氢、甲基自由基偶联生成一氯甲烷与HCl。",
     steps: [
       {
@@ -438,7 +435,7 @@ const REACTION_PRESETS = [
         note: "紫外光诱导 Cl-Cl 均裂断开，氯自由基夺取 H1 迁移生成 HCl 前体。",
         atoms: [
           // 甲基自由基型碳架
-          { id: "C1", element: "C", x: -1.8, y: 0, z: 0 },
+          { id: "C1", element: "C", x: -1.8, y: 0, z: 0, radical: true },
           { id: "H2", element: "H", x: -0.7, y: 1.2, z: 0 },
           { id: "H3", element: "H", x: -3.2, y: 0.5, z: 0 },
           { id: "H4", element: "H", x: -1.6, y: -1.7, z: 0 },
@@ -448,7 +445,7 @@ const REACTION_PRESETS = [
           { id: "Cl1", element: "Cl", x: 2.5, y: 0.3, z: 0.2 },
 
           // 第二个氯自由基向甲基靠近准备加成
-          { id: "Cl2", element: "Cl", x: 0.6, y: -1.5, z: 0.6 }
+          { id: "Cl2", element: "Cl", x: 0.6, y: -1.5, z: 0.6, radical: true }
         ],
         bonds: [
           { atom1Id: "C1", atom2Id: "H2", order: 1 },
@@ -487,7 +484,6 @@ const REACTION_PRESETS = [
     id: "co2-reduction",
     name: "二氧化碳催化加氢制甲醇",
     equation: "CO₂ + 3H₂ ⇌ CH₃OH + H₂O",
-    category: "人工碳中和路线",
     summary: "人工碳中和多相催化：CO₂活化加氢、C=O键逐步还原、氢解脱氧生成甲醇与副产物水。",
     steps: [
       {
@@ -576,7 +572,6 @@ const REACTION_PRESETS = [
     id: "haber-bosch",
     name: "哈伯-博施法合成氨机理",
     equation: "N₂ + 3H₂ ⇌ 2NH₃",
-    category: "工业无机催化",
     summary: "工业合成氨经典机理：N≡N三键与H-H协同解离活化、金属表面加氢、最终生成2个三角锥氨分子。",
     steps: [
       {
@@ -606,12 +601,12 @@ const REACTION_PRESETS = [
         note: "催化剂反馈活化使 N≡N 与 H-H 键解离，迁移形成对称的 NH₂* 表面活性基团与就位氢分子。",
         atoms: [
           // 第一个加氢中心 (N1, H1, H2)
-          { id: "N1", element: "N", x: -2.0, y: 0.2, z: 0 },
+          { id: "N1", element: "N", x: -2.0, y: 0.2, z: 0, radical: true },
           { id: "H1", element: "H", x: -3.1, y: 0.8, z: 0.3 },
           { id: "H2", element: "H", x: -2.8, y: -0.8, z: -0.3 },
 
           // 第二个加氢中心 (N2, H4, H5)
-          { id: "N2", element: "N", x: 2.0, y: 0.2, z: 0 },
+          { id: "N2", element: "N", x: 2.0, y: 0.2, z: 0, radical: true },
           { id: "H4", element: "H", x: 3.1, y: 0.8, z: -0.3 },
           { id: "H5", element: "H", x: 2.8, y: -0.8, z: 0.3 },
 

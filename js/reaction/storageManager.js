@@ -303,7 +303,6 @@ class StorageManager {
     const initialContent = `# Chemiation 反应机理推演脚本 (CCPL)
 reaction "${cleanName.replace(/\.ccpl$/i, '')}"
 equation "A + B ⇌ C + D"
-category "自定义反应机理"
 summary "在此输入关于该反应原理、过渡态与机理特征的简述。"
 
 step "1. 反应物底物吸附/碰撞" {

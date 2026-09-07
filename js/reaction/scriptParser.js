@@ -63,7 +63,6 @@ const ReactionScriptEngine = {
 
     lines.push(`reaction "${reaction.name || '未命名反应'}"`);
     if (reaction.equation) lines.push(`equation "${reaction.equation}"`);
-    if (reaction.category) lines.push(`category "${reaction.category}"`);
     if (reaction.summary) lines.push(`summary "${reaction.summary.replace(/"/g, '\\"')}"`);
     lines.push('');
 
@@ -88,9 +87,12 @@ const ReactionScriptEngine = {
         lines.push(`  polymer "${labelStr}"${tagStr}${exclStr}${leftStr}${rightStr}`);
       }
       lines.push('');
-      lines.push('  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]');
+      lines.push('  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]');
       (step.atoms || []).forEach(a => {
-        lines.push(`  atom ${a.id} ${a.element} ${a.x.toFixed(2)} ${a.y.toFixed(2)} ${a.z.toFixed(2)}`);
+        let extra = '';
+        if (a.radical) extra += ' radical';
+        if (a.charge) extra += ` charge=${a.charge > 0 ? '+' + a.charge : a.charge}`;
+        lines.push(`  atom ${a.id} ${a.element} ${a.x.toFixed(2)} ${a.y.toFixed(2)} ${a.z.toFixed(2)}${extra}`);
       });
       lines.push('');
       lines.push('  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]');
@@ -196,13 +198,9 @@ const ReactionScriptEngine = {
           throw new Error(`第 ${lineNum} 行语法错误: equation 指令格式错误，必须使用双引号包裹化学方程式，例如: equation "A + B ⇌ C"`);
         }
 
-        const catMatch = line.match(/^category\s+"((?:[^"\\]|\\.)*)"\s*$/i);
-        if (catMatch) {
-          reaction.category = catMatch[1].replace(/\\"/g, '"');
-          continue;
-        }
+        // 兼容旧脚本中的 category 声明，静默跳过
         if (/^category\b/i.test(line)) {
-          throw new Error(`第 ${lineNum} 行语法错误: category 指令格式错误，必须使用双引号包裹分类名称，例如: category "经典有机机理"`);
+          continue;
         }
 
         const sumMatch = line.match(/^summary\s+"((?:[^"\\]|\\.)*)"\s*$/i);
@@ -241,7 +239,7 @@ const ReactionScriptEngine = {
           throw new Error(`第 ${lineNum} 行语法错误: 意外的多余闭合括号 '}'`);
         }
 
-        throw new Error(`第 ${lineNum} 行语法错误: 未知的全局指令 "${line}"，有效指令包括 reaction, equation, category, summary, step`);
+        throw new Error(`第 ${lineNum} 行语法错误: 未知的全局指令 "${line}"，有效指令包括 reaction, equation, summary, step`);
       }
 
       // 处理处于步骤内部的代码块
@@ -339,38 +337,18 @@ const ReactionScriptEngine = {
       }
 
       if (/^atom\b/i.test(line)) {
-        const atomWithCoord = line.match(/^atom\s+([A-Za-z0-9_]+)\s+([A-Za-z]{1,2})\s+([-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?)\s+([-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?)\s+([-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?)\s*$/i);
-        const atomSimple = !atomWithCoord ? line.match(/^atom\s+([A-Za-z0-9_]+)\s+([A-Za-z]{1,2})\s*$/i) : null;
-
-        if (!atomWithCoord && !atomSimple) {
-          const parts = line.split(/\s+/);
-          if (parts.length < 3) {
-            throw new Error(`第 ${lineNum} 行语法错误: atom 指令参数不足，至少需指定原子 ID 与元素符号，例如: atom C1 C`);
-          }
-          if (!/^[A-Za-z0-9_]+$/.test(parts[1])) {
-            throw new Error(`第 ${lineNum} 行语法错误: 无效的原子 ID "${parts[1]}"，ID 只能由英文字母、数字和下划线组成`);
-          }
-          const rawElem = parts[2];
-          const normElem = rawElem.charAt(0).toUpperCase() + rawElem.slice(1).toLowerCase();
-          if (!VALID_CCPL_ELEMENTS.has(normElem)) {
-            throw new Error(`第 ${lineNum} 行语法错误: 未知的化学元素符号 "${rawElem}"`);
-          }
-          if (parts.length !== 3 && parts.length !== 6) {
-            throw new Error(`第 ${lineNum} 行语法错误: atom 坐标格式错误，必须提供完整的 X Y Z 三维数值或不提供坐标，例如: atom C1 C 0.0 1.5 -0.5`);
-          }
-          for (let p = 3; p < parts.length; p++) {
-            if (isNaN(parseFloat(parts[p]))) {
-              throw new Error(`第 ${lineNum} 行语法错误: atom 坐标包含非数值 "${parts[p]}"，例如: atom C1 C 0.0 1.5 -0.5`);
-            }
-          }
-          throw new Error(`第 ${lineNum} 行语法错误: atom 指令格式错误，正确格式为: atom <ID> <元素> [X Y Z]`);
+        const parts = line.split(/\s+/);
+        if (parts.length < 3) {
+          throw new Error(`第 ${lineNum} 行语法错误: atom 指令参数不足，至少需指定原子 ID 与元素符号，例如: atom C1 C`);
         }
 
-        const match = atomWithCoord || atomSimple;
-        const atomId = match[1];
-        const rawElem = match[2];
-        const normElem = rawElem.charAt(0).toUpperCase() + rawElem.slice(1).toLowerCase();
+        const atomId = parts[1];
+        if (!/^[A-Za-z0-9_]+$/.test(atomId)) {
+          throw new Error(`第 ${lineNum} 行语法错误: 无效的原子 ID "${atomId}"，ID 只能由英文字母、数字和下划线组成`);
+        }
 
+        const rawElem = parts[2];
+        const normElem = rawElem.charAt(0).toUpperCase() + rawElem.slice(1).toLowerCase();
         if (!VALID_CCPL_ELEMENTS.has(normElem)) {
           throw new Error(`第 ${lineNum} 行语法错误: 未知的化学元素符号 "${rawElem}"`);
         }
@@ -379,14 +357,78 @@ const ReactionScriptEngine = {
           throw new Error(`第 ${lineNum} 行语法错误: 步骤 "${currentStep.name}" 中重复定义了原子 ID "${atomId}"`);
         }
 
+        let x = null, y = null, z = null;
+        let radical = false;
+        let charge = 0;
+
+        const extraTokens = parts.slice(3);
+        const numericTokens = [];
+        for (const token of extraTokens) {
+          if (/^radical$/i.test(token)) {
+            radical = true;
+          } else if (/^charge=([+-]?\d*)$/i.test(token)) {
+            const chgMatch = token.match(/^charge=([+-]?\d*)$/i);
+            const val = chgMatch[1];
+            if (val === '+' || val === '') charge = 1;
+            else if (val === '-') charge = -1;
+            else charge = parseInt(val, 10) || 0;
+          } else if (!isNaN(parseFloat(token))) {
+            numericTokens.push(parseFloat(token));
+          } else {
+            throw new Error(`第 ${lineNum} 行语法错误: atom 指令中未知的参数 "${token}"，支持 [X Y Z] 坐标、radical、charge=+1/-1`);
+          }
+        }
+
+        if (numericTokens.length === 3) {
+          [x, y, z] = numericTokens;
+        } else if (numericTokens.length !== 0) {
+          throw new Error(`第 ${lineNum} 行语法错误: atom 坐标格式错误，必须提供完整的 X Y Z 三维数值或不提供坐标，例如: atom C1 C 0.0 1.5 -0.5`);
+        }
+
         currentStepAtomIds.add(atomId);
-        currentStep.atoms.push({
-          id: atomId,
-          element: normElem,
-          x: atomWithCoord ? parseFloat(atomWithCoord[3]) : null,
-          y: atomWithCoord ? parseFloat(atomWithCoord[4]) : null,
-          z: atomWithCoord ? parseFloat(atomWithCoord[5]) : null
-        });
+        const atomObj = { id: atomId, element: normElem, x, y, z };
+        if (radical) atomObj.radical = true;
+        if (charge !== 0) atomObj.charge = charge;
+        currentStep.atoms.push(atomObj);
+        continue;
+      }
+
+      // 自由基声明: radical <atomId1> [atomId2 ...]
+      if (/^radical\b/i.test(line)) {
+        const parts = line.split(/\s+/).slice(1);
+        if (parts.length === 0) {
+          throw new Error(`第 ${lineNum} 行语法错误: radical 指令缺少原子 ID，例如: radical Cl2 C1`);
+        }
+        for (const aId of parts) {
+          const target = currentStep.atoms.find(a => a.id === aId);
+          if (!target) {
+            throw new Error(`第 ${lineNum} 行语法错误: radical 指令引用的原子 "${aId}" 尚未声明`);
+          }
+          target.radical = true;
+        }
+        continue;
+      }
+
+      // 形式电荷声明: charge <atomId> <+1|-1|+|-|值>
+      if (/^charge\b/i.test(line)) {
+        const parts = line.split(/\s+/);
+        if (parts.length < 3) {
+          throw new Error(`第 ${lineNum} 行语法错误: charge 指令参数不足，格式为: charge <原子ID> <电荷值>，例如: charge O1 -1`);
+        }
+        const aId = parts[1];
+        const valStr = parts[2];
+        const target = currentStep.atoms.find(a => a.id === aId);
+        if (!target) {
+          throw new Error(`第 ${lineNum} 行语法错误: charge 指令引用的原子 "${aId}" 尚未声明`);
+        }
+        let chg = 0;
+        if (valStr === '+' || valStr === '+1') chg = 1;
+        else if (valStr === '-' || valStr === '-1') chg = -1;
+        else chg = parseInt(valStr, 10);
+        if (isNaN(chg)) {
+          throw new Error(`第 ${lineNum} 行语法错误: charge 电荷值 "${valStr}" 无效，例如: charge O1 -1 或 charge O2 +1`);
+        }
+        target.charge = chg;
         continue;
       }
 
@@ -482,10 +524,10 @@ const ReactionScriptEngine = {
 
     if (type === 'addition_elimination') {
       return `\nstep "亲电加成/消除反应" {
-  note "亲电试剂进攻 C=C 不饱和双键，π 键解离，形成饱和烷基卤代/醇类中间体。"
+  note "亲电试剂进攻 C=C 不饱和双键，π 键解离，形成带正电碳正离子中间体。"
 
   atom C1 C -1.2 0 0
-  atom C2 C 1.2 0 0
+  atom C2 C 1.2 0 0 charge=+1
   atom X1 Br 0 1.8 0
   atom H1 H -1.8 -1.0 0
   atom H2 H 1.8 -1.0 0
@@ -518,9 +560,9 @@ const ReactionScriptEngine = {
       return `\nstep "自由基均裂与链传递" {
   note "光照或受热导致共价键均裂产生单电子自由基，夺取底物原子引发链传递。"
 
-  atom C1 C -1.5 0 0
+  atom C1 C -1.5 0 0 radical
   atom H1 H -0.3 0 0
-  atom Cl1 Cl 1.8 0 0
+  atom Cl1 Cl 1.8 0 0 radical
   atom H2 H -2.2 1.0 0
   atom H3 H -2.2 -1.0 0
 
@@ -555,7 +597,6 @@ const ReactionScriptEngine = {
       return `# Chemiation 反应机理推演脚本 (CCPL)
 reaction "新建化学反应"
 equation "A + B ⇌ C + D"
-category "反应机理推演"
 summary "在此输入关于该反应原理、过渡态与机理路径的详细说明。"
 
 step "1. 反应物底物吸附与碰撞" {
@@ -564,7 +605,7 @@ step "1. 反应物底物吸附与碰撞" {
   atom A1 C -1.5 0 0
   atom A2 O 1.5 0 0
   atom H1 H -1.5 1.2 0
-  atom H2 H 1.5 1.2 0
+  atom H2 H 1.2 1.2 0
 
   bond A1 H1 1
   bond A2 H2 1

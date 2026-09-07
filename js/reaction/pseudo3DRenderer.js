@@ -220,6 +220,44 @@ class Pseudo3DRenderer {
   }
 
   /**
+   * 自动机理化学推断：针对未显式声明自由基/电荷的原子，依据成键数与共价价态自动推算
+   */
+  enrichAtomsRadicalAndCharge(atoms, bonds) {
+    if (!atoms || !bonds) return;
+    const bondCounts = new Map();
+    bonds.forEach(b => {
+      const ord = b.order || 1;
+      const id1 = b.atom1Id || b.atom1;
+      const id2 = b.atom2Id || b.atom2;
+      if (id1) bondCounts.set(id1, (bondCounts.get(id1) || 0) + ord);
+      if (id2) bondCounts.set(id2, (bondCounts.get(id2) || 0) + ord);
+    });
+
+    const STANDARD_VALENCE = { H: 1, C: 4, N: 3, O: 2, Cl: 1, Br: 1, I: 1, F: 1 };
+
+    atoms.forEach(a => {
+      if (a.radical === undefined && a.charge === undefined) {
+        const actual = bondCounts.get(a.id) || 0;
+        const std = STANDARD_VALENCE[a.element];
+        if (std !== undefined && actual !== std) {
+          const diff = actual - std;
+          if (a.element === 'O') {
+            if (diff === -1) a.charge = -1;
+            else if (diff === 1) a.charge = 1;
+          } else if (a.element === 'N') {
+            if (diff === 1) a.charge = 1;
+            else if (diff === -1) a.radical = true;
+          } else if (a.element === 'C' && diff === -1) {
+            a.radical = true;
+          } else if (['Cl', 'Br', 'I', 'F'].includes(a.element) && actual === 0) {
+            a.radical = true;
+          }
+        }
+      }
+    });
+  }
+
+  /**
    * 核心机理计算：插值原子与化学键集合
    * 具备“断裂从中间断开”与“同元素加键时键迁移重组合成”判定
    */
@@ -228,8 +266,10 @@ class Pseudo3DRenderer {
 
     // 静止态（无过渡）
     if (this.transitionProgress >= 1 || !this.nextStepData) {
+      const atoms = this.currentStepData.atoms.map(a => ({ ...a, opacity: 1, scale: 1 }));
+      this.enrichAtomsRadicalAndCharge(atoms, this.currentStepData.bonds);
       return {
-        atoms: this.currentStepData.atoms.map(a => ({ ...a, opacity: 1, scale: 1 })),
+        atoms,
         bonds: this.currentStepData.bonds.map(b => ({ ...b, opacity: 1, isStandard: true }))
       };
     }
@@ -254,6 +294,8 @@ class Pseudo3DRenderer {
           x: cur.x + (nxt.x - cur.x) * t,
           y: cur.y + (nxt.y - cur.y) * t,
           z: cur.z + (nxt.z - cur.z) * t,
+          radical: t < 0.5 ? cur.radical : nxt.radical,
+          charge: t < 0.5 ? cur.charge : nxt.charge,
           opacity: 1,
           scale: 1
         });
@@ -267,6 +309,8 @@ class Pseudo3DRenderer {
           x: cur.x + (cur.x * 0.15) * t,
           y: cur.y + (cur.y * 0.15) * t,
           z: cur.z + (cur.z * 0.15) * t,
+          radical: cur.radical,
+          charge: cur.charge,
           opacity: smoothFade,
           scale: Math.max(0.08, 1 - t * 0.5)
         });
@@ -280,11 +324,15 @@ class Pseudo3DRenderer {
           x: nxt.x * (0.88 + 0.12 * t),
           y: nxt.y * (0.88 + 0.12 * t),
           z: nxt.z * (0.88 + 0.12 * t),
+          radical: nxt.radical,
+          charge: nxt.charge,
           opacity: smoothIn,
           scale: Math.min(1, 0.4 + 0.6 * t)
         });
       }
     });
+
+    this.enrichAtomsRadicalAndCharge(interpolatedAtoms, t < 0.5 ? this.currentStepData.bonds : this.nextStepData.bonds);
 
     // 化学键拓扑分析与匹配
     const curBonds = this.currentStepData.bonds;
@@ -889,6 +937,62 @@ class Pseudo3DRenderer {
     ctx.fillStyle = atom.color;
     ctx.fillText(atom.element, atom.sx, atom.sy);
 
+    // ==========================================
+    // 自由基实心圆点 (·) 与 形式电荷圈加圈减 (⊕ / ⊖) 规范排印
+    // ==========================================
+    const textMetrics = ctx.measureText(atom.element);
+    const halfWidth = textMetrics.width * 0.5;
+    let badgeOffsetX = halfWidth + Math.max(2, atom.fontSize * 0.08);
+
+    // 1. 自由基单电子实心圆点 (Radical Dot: ·)
+    if (atom.radical) {
+      const dotR = Math.max(2.4, atom.fontSize * 0.11);
+      const dotX = atom.sx + badgeOffsetX + dotR;
+      const dotY = atom.sy - atom.fontSize * 0.35;
+
+      // 底色遮罩环，防止键线穿透字形
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR + 1.2, 0, Math.PI * 2);
+      ctx.fillStyle = this.palette.maskBg;
+      ctx.fill();
+
+      // 实心自由基圆点 (反应活性中心赭红)
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = '#B84A28';
+      ctx.fill();
+
+      badgeOffsetX += dotR * 2 + 4;
+    }
+
+    // 2. 形式电荷圈加/圈减 (Formal Charge: ⊕ / ⊖)
+    if (typeof atom.charge === 'number' && atom.charge !== 0) {
+      const isPos = atom.charge > 0;
+      const chargeR = Math.max(5.5, atom.fontSize * 0.24);
+      const chargeX = atom.sx + badgeOffsetX + chargeR;
+      const chargeY = atom.sy - atom.fontSize * 0.36;
+      const chargeColor = isPos ? '#B84A28' : '#382215';
+
+      // 宣纸底色圆盘遮罩
+      ctx.beginPath();
+      ctx.arc(chargeX, chargeY, chargeR, 0, Math.PI * 2);
+      ctx.fillStyle = this.palette.maskBg;
+      ctx.fill();
+
+      // 外描边圆圈
+      ctx.lineWidth = Math.max(1.1, atom.fontSize * 0.05);
+      ctx.strokeStyle = chargeColor;
+      ctx.stroke();
+
+      // 正负号符号 (使用加粗，负号用数学减号 '\u2212')
+      const symbol = isPos ? '+' : '\u2212';
+      ctx.font = `700 ${Math.max(8, atom.fontSize * 0.34)}px sans-serif`;
+      ctx.fillStyle = chargeColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(symbol, chargeX, chargeY + (isPos ? 0.5 : -0.2));
+    }
+
     ctx.restore();
   }
 
@@ -926,7 +1030,12 @@ class Pseudo3DRenderer {
 
   renderHoverTooltip(ctx, atom) {
     ctx.save();
-    const text = `${atom.element} (${atom.id}) · 空间深度 Z: ${atom.sz.toFixed(2)}`;
+    let statusText = '';
+    if (atom.radical) statusText += ' · 自由基单电子 (·)';
+    if (typeof atom.charge === 'number' && atom.charge !== 0) {
+      statusText += ` · 形式电荷: ${atom.charge > 0 ? '+' + atom.charge : atom.charge}`;
+    }
+    const text = `${atom.element} (${atom.id})${statusText} · 空间深度 Z: ${atom.sz.toFixed(2)}`;
     ctx.font = '12px "Century Gothic", CenturyGothic, AppleGothic, sans-serif';
     const textMetrics = ctx.measureText(text);
     const boxW = textMetrics.width + 20;
