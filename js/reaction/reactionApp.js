@@ -160,6 +160,7 @@ class ReactionApp {
       isResizing = true;
       startX = e.clientX;
       startWidth = this.workspaceSidebar.getBoundingClientRect().width;
+      this.workspaceSidebar.style.transition = 'none';
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
 
@@ -171,13 +172,15 @@ class ReactionApp {
       if (!isResizing) return;
       const dx = startX - e.clientX;
       const newWidth = Math.max(320, Math.min(760, startWidth + dx));
-      this.workspaceSidebar.style.width = `${newWidth}px`;
+      this.workspaceSidebar.style.setProperty('--sidebar-width', `${newWidth}px`);
+      this.workspaceSidebar.style.width = 'var(--sidebar-width)';
       this.renderer.resize();
       this.renderer.render();
     };
 
     const onMouseUp = () => {
       isResizing = false;
+      this.workspaceSidebar.style.transition = '';
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMouseMove);
@@ -362,14 +365,11 @@ class ReactionApp {
     if (!this.workspaceSidebar) return;
     if (open) {
       this.workspaceSidebar.classList.remove('collapsed');
-      if (this.btnExpandWorkspace) this.btnExpandWorkspace.style.display = 'none';
+      if (this.btnExpandWorkspace) this.btnExpandWorkspace.classList.remove('visible');
     } else {
       this.workspaceSidebar.classList.add('collapsed');
-      if (this.btnExpandWorkspace) this.btnExpandWorkspace.style.display = 'flex';
+      if (this.btnExpandWorkspace) this.btnExpandWorkspace.classList.add('visible');
     }
-    // 立即重置视口尺寸并重绘，消除延时形变
-    this.renderer.resize();
-    this.renderer.render();
   }
 
   loadReaction(reactionIndex) {

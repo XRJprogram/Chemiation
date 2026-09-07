@@ -73,7 +73,7 @@ class Pseudo3DRenderer {
 
     this.canvas.width = Math.round(this.width * dpr);
     this.canvas.height = Math.round(this.height * dpr);
-    this.ctx.scale(dpr, dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   initEvents() {
@@ -157,6 +157,13 @@ class Pseudo3DRenderer {
   start() {
     if (this.animationFrameId) return;
     const loop = (now) => {
+      // 实时检测视口尺寸变动（平滑展开/折叠或拖动过程），动态更新绘图缓冲区消除形变拉伸
+      const rect = this.canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0 &&
+          (Math.abs(rect.width - this.width) > 0.5 || Math.abs(rect.height - this.height) > 0.5)) {
+        this.resize();
+      }
+
       this.update(now);
       this.render();
       this.animationFrameId = requestAnimationFrame(loop);

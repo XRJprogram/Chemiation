@@ -95,6 +95,34 @@ html, body {
   gap: 8px;
 }
 
+.header-docs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(94, 65, 47, 0.05);
+  color: var(--color-deep-brown);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.header-docs-btn:hover {
+  background: rgba(184, 74, 40, 0.1);
+  color: var(--color-accent);
+  border-color: rgba(184, 74, 40, 0.35);
+  transform: translateY(-1px);
+}
+
+.header-docs-btn svg {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
 .brand-badge {
   font-size: 11px;
   font-family: var(--font-sans);
@@ -266,7 +294,6 @@ html, body {
   position: absolute;
   top: 50%;
   right: 0;
-  transform: translateY(-50%);
   width: 26px;
   height: 38px;
   padding: 0;
@@ -277,11 +304,20 @@ html, body {
   color: var(--color-deep-brown);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 20;
-  transition: all 0.15s ease;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(100%);
+  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, color 0.15s ease;
+}
+
+.btn-expand-workspace.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
 }
 
 .btn-expand-workspace:hover {
@@ -290,10 +326,11 @@ html, body {
 }
 
 /* ==========================================================================
-   右侧：反应推演工作区 (参考 Anychem 架构)
+   右侧：反应推演工作区 (参考 Anychem 架构，支持丝滑平滑移动展开/折叠)
    ========================================================================== */
 .workspace-sidebar {
-  width: 440px;
+  --sidebar-width: 440px;
+  width: var(--sidebar-width);
   min-width: 320px;
   max-width: 760px;
   height: 100%;
@@ -304,10 +341,16 @@ html, body {
   border-left: 1px solid var(--border-color);
   box-shadow: -4px 0 20px rgba(36, 20, 11, 0.05);
   z-index: 30;
+  flex-shrink: 0;
+  visibility: visible;
+  transition: margin-right 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s ease;
 }
 
 .workspace-sidebar.collapsed {
-  display: none;
+  margin-right: calc(-1 * var(--sidebar-width));
+  pointer-events: none;
+  visibility: hidden;
+  transition: margin-right 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0.28s;
 }
 
 /* 左侧边缘可拖动调节宽度控制柄 */
@@ -899,24 +942,7 @@ html, body {
   border-color: var(--color-accent-gold);
 }
 
-.script-syntax-guide {
-  background: rgba(243, 236, 224, 0.5);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 11px;
-  color: var(--color-mid-brown);
-  display: flex;
-  align-items: center;
-}
 
-.script-syntax-guide code {
-  font-family: var(--font-mono);
-  color: var(--color-accent);
-  background: rgba(184, 74, 40, 0.08);
-  padding: 1px 4px;
-  border-radius: 3px;
-}
 
 /* 工作区底部：推演进度与步进控制器 (Controller) */
 .workspace-footer {
