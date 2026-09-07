@@ -831,7 +831,7 @@ html, body {
 .playback-controls-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
 }
 
@@ -845,16 +845,21 @@ html, body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 6px 12px;
+  width: 36px;
+  height: 32px;
+  padding: 0;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   background: #FAF6E9;
   color: var(--color-deep-brown);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s;
+}
+
+.ctrl-btn svg {
+  display: block;
 }
 
 .ctrl-btn:hover {
@@ -870,29 +875,6 @@ html, body {
 
 .ctrl-btn.primary:hover {
   background: var(--color-dark-brown);
-}
-
-.speed-control-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.speed-pill {
-  padding: 3px 6px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  background: transparent;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--color-mid-brown);
-  cursor: pointer;
-}
-
-.speed-pill.active {
-  background: var(--color-deep-brown);
-  color: var(--bg-primary);
-  border-color: var(--color-deep-brown);
 }
 
 /* 响应式调整 */

@@ -491,22 +491,20 @@ class ReactionApp {
       if (hasNext) {
         this.scheduleNextTick();
       } else {
-        setTimeout(() => {
-          if (this.isPlaying) {
-            this.goToStep(0, true);
-            this.scheduleNextTick();
-          }
-        }, 1600);
+        // 推演到最后一步时自动暂停，不进行循环播放
+        this.pause();
       }
     }, interval);
   }
 
   setPlaybackSpeed(speed) {
     this.playbackSpeed = speed;
-    this.speedPills.forEach(pill => {
-      const pSpeed = parseFloat(pill.dataset.speed || '1');
-      pill.classList.toggle('active', pSpeed === speed);
-    });
+    if (this.speedPills) {
+      this.speedPills.forEach(pill => {
+        const pSpeed = parseFloat(pill.dataset.speed || '1');
+        pill.classList.toggle('active', pSpeed === speed);
+      });
+    }
 
     if (this.isPlaying) {
       if (this.playTimer) clearTimeout(this.playTimer);
@@ -522,16 +520,16 @@ class ReactionApp {
           <rect x="6" y="4" width="4" height="16"></rect>
           <rect x="14" y="4" width="4" height="16"></rect>
         </svg>
-        <span>暂停推演</span>
       `;
+      this.playBtn.title = '暂停 (快捷键: Space)';
       this.playBtn.classList.add('primary');
     } else {
       this.playBtn.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
           <polygon points="5 3 19 12 5 21 5 3"></polygon>
         </svg>
-        <span>自动推演</span>
       `;
+      this.playBtn.title = '自动推演 (快捷键: Space)';
       this.playBtn.classList.remove('primary');
     }
   }

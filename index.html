@@ -19,7 +19,6 @@
         <div class="brand-logo">
           <span>CHEMIATION</span>
         </div>
-        <span class="brand-badge">化学反应机理推演 · 纯渲染器</span>
       </div>
 
       <div id="header-equation-display" class="header-status-equation">
@@ -35,16 +34,6 @@
 
         <!-- 画布悬浮控制小工具 -->
         <div class="viewport-floating-toolbar">
-          <div class="status-mode-tag" title="纯渲染器：全自动计算三维空间拓扑与氢原子位移，无需手动移动">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
-            <span>纯推演渲染视口</span>
-          </div>
-
-          <div class="toolbar-divider"></div>
-
           <button id="btn-zoom-in" class="tool-btn icon-only" title="放大 (滚轮向上)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
@@ -80,11 +69,6 @@
           <span class="toast-title">底物靠近</span>
         </div>
 
-        <!-- 底部操作指示器 -->
-        <div class="canvas-bottom-hints">
-          <span>🖱️ 拖拽旋转 · 滚轮缩放 · 氢原子严格守恒 · 聚合物智能就近延伸</span>
-        </div>
-
         <!-- 当工作区收起时显示的右侧唤醒按钮 -->
         <button id="btn-expand-workspace" class="btn-expand-workspace" title="展开推演工作区">
           <span>推演工作区 ⇤</span>
@@ -99,7 +83,6 @@
         <!-- 工作区头部 -->
         <div class="workspace-header">
           <div class="workspace-title-group">
-            <div class="workspace-icon">⚗️</div>
             <span class="workspace-title">推演工作区</span>
             <span id="step-counter-text" class="step-counter-text">1 / 4</span>
           </div>
@@ -204,35 +187,26 @@
           <div class="playback-controls-row">
             <div class="ctrl-btn-group">
               <button id="prev-btn" class="ctrl-btn" title="上一步 (快捷键: ← 或 A)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="19 20 9 12 19 4 19 20"></polygon>
                   <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line>
                 </svg>
-                <span>上一步</span>
               </button>
 
-              <button id="play-btn" class="ctrl-btn primary" title="自动连续推演 (快捷键: Space)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <button id="play-btn" class="ctrl-btn primary" title="自动推演 (快捷键: Space)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
-                <span>自动推演</span>
               </button>
 
               <button id="next-btn" class="ctrl-btn" title="下一步 (快捷键: → 或 D)">
-                <span>下一步</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 4 15 12 5 20 5 4"></polygon>
                   <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
                 </svg>
               </button>
 
-              <button id="reset-step-btn" class="ctrl-btn" title="回到第 1 步">↺</button>
-            </div>
-
-            <div class="speed-control-group">
-              <button class="speed-pill" data-speed="0.5">0.5x</button>
-              <button class="speed-pill active" data-speed="1">1.0x</button>
-              <button class="speed-pill" data-speed="2">2.0x</button>
+              <button id="reset-step-btn" class="ctrl-btn" title="回到起点">↺</button>
             </div>
           </div>
         </footer>

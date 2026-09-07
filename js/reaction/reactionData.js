@@ -279,133 +279,74 @@ const REACTION_PRESETS = [
         note: "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，延伸构建直链淀粉骨架，完成人工全合成！",
         polymer: {
           label: "n",
-          tag: "直链淀粉聚合重复单元 · [C₆H₁₀O₅]ₙ",
-          excludeIds: ["Ow1", "Hw1", "Hw2", "Ow2", "Hw3", "Hw4"],
+          tag: "直链淀粉单体最简重复单元 · [C₆H₁₀O₅]ₙ",
+          excludeIds: ["Ow", "Hw1", "Hw2"],
           leftBond: {
-            atomId: "O4A",
-            vector: [-1.3, 0.1, 0]
+            atomId: "O4",
+            vector: [-1.4, -0.2, 0]
           },
           rightBond: {
-            atomId: "C1B",
-            vector: [1.3, -0.6, 0.1]
+            atomId: "C1",
+            vector: [1.4, 0.4, 0]
           }
         },
         atoms: [
-          // 左环 A
-          { id: "O5A", element: "O", x: -2.2, y: 1.1, z: -0.2 },
-          { id: "C1A", element: "C", x: -1.1, y: 0.5, z: 0.1 },
-          { id: "C2A", element: "C", x: -1.2, y: -0.8, z: -0.2 },
-          { id: "C3A", element: "C", x: -2.4, y: -1.3, z: 0.1 },
-          { id: "C4A", element: "C", x: -3.5, y: -0.6, z: -0.1 },
-          { id: "C5A", element: "C", x: -3.4, y: 0.7, z: 0.2 },
-          { id: "C6A", element: "C", x: -4.4, y: 1.5, z: -0.2 },
-          { id: "O6A", element: "O", x: -5.4, y: 1.0, z: 0.3 },
-          { id: "H6AO", element: "H", x: -5.9, y: 1.5, z: 0.4 },
-          { id: "O2A", element: "O", x: -0.3, y: -1.5, z: 0.2 },
-          { id: "H2AO", element: "H", x: -0.1, y: -2.1, z: 0.4 },
-          { id: "O3A", element: "O", x: -2.5, y: -2.4, z: -0.2 },
-          { id: "H3AO", element: "H", x: -2.3, y: -3.0, z: 0.2 },
+          // 吡喃葡萄糖单体链节核心环 (C6H10O5)
+          { id: "O5", element: "O", x: 0.2, y: 1.3, z: -0.2 },
+          { id: "C1", element: "C", x: 1.4, y: 0.6, z: 0.1 },
+          { id: "C2", element: "C", x: 1.2, y: -0.8, z: -0.2 },
+          { id: "C3", element: "C", x: -0.2, y: -1.4, z: 0.1 },
+          { id: "C4", element: "C", x: -1.3, y: -0.6, z: -0.1 },
+          { id: "C5", element: "C", x: -1.1, y: 0.8, z: 0.2 },
+          { id: "C6", element: "C", x: -2.2, y: 1.6, z: -0.2 },
+          { id: "O6", element: "O", x: -3.3, y: 1.0, z: 0.3 },
+          { id: "H6O", element: "H", x: -3.8, y: 1.6, z: 0.4 },
+          { id: "O2", element: "O", x: 2.2, y: -1.6, z: 0.3 },
+          { id: "H2O", element: "H", x: 2.8, y: -1.4, z: 0.6 },
+          { id: "O3", element: "O", x: -0.4, y: -2.6, z: -0.2 },
+          { id: "H3O", element: "H", x: -0.2, y: -3.2, z: 0.3 },
           // 4-位糖苷桥氧 (向左延伸穿出括号，与上一单元 C1 相连)
-          { id: "O4A", element: "O", x: -4.6, y: -0.1, z: 0.2 },
-          { id: "H1A", element: "H", x: -1.0, y: 0.5, z: 1.1 },
-          { id: "H2A", element: "H", x: -1.3, y: -0.8, z: -1.2 },
-          { id: "H3A", element: "H", x: -2.4, y: -1.3, z: 1.1 },
-          { id: "H4A", element: "H", x: -3.6, y: -0.5, z: -1.1 },
-          { id: "H5A", element: "H", x: -3.4, y: 0.7, z: 1.2 },
-          { id: "H6A1", element: "H", x: -4.6, y: 2.2, z: 0.3 },
-          { id: "H6A2", element: "H", x: -4.2, y: 1.8, z: -1.1 },
+          { id: "O4", element: "O", x: -2.4, y: -1.3, z: 0.4 },
+          { id: "H1", element: "H", x: 1.6, y: 0.6, z: 1.1 },
+          { id: "H2", element: "H", x: 1.1, y: -0.8, z: -1.2 },
+          { id: "H3", element: "H", x: -0.2, y: -1.4, z: 1.1 },
+          { id: "H4", element: "H", x: -1.4, y: -0.5, z: -1.1 },
+          { id: "H5", element: "H", x: -1.1, y: 0.8, z: 1.2 },
+          { id: "H61", element: "H", x: -2.5, y: 2.4, z: 0.3 },
+          { id: "H62", element: "H", x: -1.9, y: 1.9, z: -1.1 },
 
-          // 糖苷键桥氧
-          { id: "Ob", element: "O", x: 0.0, y: -0.1, z: 0.2 },
-
-          // 右环 B
-          { id: "C4B", element: "C", x: 1.1, y: -0.6, z: -0.1 },
-          { id: "C3B", element: "C", x: 2.2, y: -1.3, z: 0.1 },
-          { id: "C2B", element: "C", x: 3.4, y: -0.8, z: -0.2 },
-          // 1-位端基碳 (向右下延伸穿出括号，与下一单元 O4 相连)
-          { id: "C1B", element: "C", x: 3.5, y: 0.5, z: 0.1 },
-          { id: "O5B", element: "O", x: 2.4, y: 1.1, z: -0.2 },
-          { id: "C5B", element: "C", x: 1.2, y: 0.7, z: 0.2 },
-          { id: "C6B", element: "C", x: 0.2, y: 1.5, z: -0.2 },
-          { id: "O6B", element: "O", x: -0.7, y: 1.1, z: 0.3 },
-          { id: "H6BO", element: "H", x: -1.2, y: 1.6, z: 0.4 },
-          { id: "O2B", element: "O", x: 4.4, y: -1.5, z: 0.2 },
-          { id: "H2BO", element: "H", x: 4.9, y: -1.3, z: 0.5 },
-          { id: "O3B", element: "O", x: 2.1, y: -2.4, z: -0.2 },
-          { id: "H3BO", element: "H", x: 2.3, y: -3.0, z: 0.2 },
-          { id: "H1B", element: "H", x: 3.6, y: 0.5, z: 1.1 },
-          { id: "H2B", element: "H", x: 3.3, y: -0.8, z: -1.2 },
-          { id: "H3B", element: "H", x: 2.2, y: -1.3, z: 1.1 },
-          { id: "H4B", element: "H", x: 1.0, y: -0.5, z: -1.1 },
-          { id: "H5B", element: "H", x: 1.2, y: 0.7, z: 1.2 },
-          { id: "H6B1", element: "H", x: 0.0, y: 2.2, z: 0.3 },
-          { id: "H6B2", element: "H", x: 0.4, y: 1.8, z: -1.1 },
-
-          // 脱除的水分子 1 (环间 α-1,4 缩合生成)
-          { id: "Ow1", element: "O", x: -1.2, y: -2.6, z: -0.6 },
-          { id: "Hw1", element: "H", x: -1.8, y: -3.1, z: -0.8 },
-          { id: "Hw2", element: "H", x: -0.5, y: -3.0, z: -0.4 },
-
-          // 脱除的水分子 2 (链间缩聚生成)
-          { id: "Ow2", element: "O", x: 1.2, y: -2.6, z: -0.6 },
-          { id: "Hw3", element: "H", x: 0.5, y: -3.0, z: -0.4 },
-          { id: "Hw4", element: "H", x: 1.8, y: -3.1, z: -0.8 }
+          // 缩聚脱除的 1 分子水 (1O, 2H，位于大括号外侧)
+          { id: "Ow", element: "O", x: 3.4, y: -2.5, z: -0.5 },
+          { id: "Hw1", element: "H", x: 2.8, y: -3.1, z: -0.8 },
+          { id: "Hw2", element: "H", x: 4.1, y: -2.9, z: -0.2 }
         ],
         bonds: [
-          // 左环 A 键
-          { atom1Id: "C1A", atom2Id: "C2A", order: 1 },
-          { atom1Id: "C2A", atom2Id: "C3A", order: 1 },
-          { atom1Id: "C3A", atom2Id: "C4A", order: 1 },
-          { atom1Id: "C4A", atom2Id: "C5A", order: 1 },
-          { atom1Id: "C5A", atom2Id: "O5A", order: 1 },
-          { atom1Id: "O5A", atom2Id: "C1A", order: 1 },
-          { atom1Id: "C1A", atom2Id: "Ob", order: 1 },
-          { atom1Id: "C1A", atom2Id: "H1A", order: 1 },
-          { atom1Id: "C2A", atom2Id: "O2A", order: 1 },
-          { atom1Id: "O2A", atom2Id: "H2AO", order: 1 },
-          { atom1Id: "C2A", atom2Id: "H2A", order: 1 },
-          { atom1Id: "C3A", atom2Id: "O3A", order: 1 },
-          { atom1Id: "O3A", atom2Id: "H3AO", order: 1 },
-          { atom1Id: "C3A", atom2Id: "H3A", order: 1 },
-          { atom1Id: "C4A", atom2Id: "O4A", order: 1 },
-          { atom1Id: "C4A", atom2Id: "H4A", order: 1 },
-          { atom1Id: "C5A", atom2Id: "C6A", order: 1 },
-          { atom1Id: "C5A", atom2Id: "H5A", order: 1 },
-          { atom1Id: "C6A", atom2Id: "O6A", order: 1 },
-          { atom1Id: "O6A", atom2Id: "H6AO", order: 1 },
-          { atom1Id: "C6A", atom2Id: "H6A1", order: 1 },
-          { atom1Id: "C6A", atom2Id: "H6A2", order: 1 },
+          // 吡喃六元环骨架与侧基键
+          { atom1Id: "C1", atom2Id: "C2", order: 1 },
+          { atom1Id: "C2", atom2Id: "C3", order: 1 },
+          { atom1Id: "C3", atom2Id: "C4", order: 1 },
+          { atom1Id: "C4", atom2Id: "C5", order: 1 },
+          { atom1Id: "C5", atom2Id: "O5", order: 1 },
+          { atom1Id: "O5", atom2Id: "C1", order: 1 },
+          { atom1Id: "C5", atom2Id: "C6", order: 1 },
+          { atom1Id: "C6", atom2Id: "O6", order: 1 },
+          { atom1Id: "O6", atom2Id: "H6O", order: 1 },
+          { atom1Id: "C1", atom2Id: "H1", order: 1 },
+          { atom1Id: "C2", atom2Id: "O2", order: 1 },
+          { atom1Id: "O2", atom2Id: "H2O", order: 1 },
+          { atom1Id: "C2", atom2Id: "H2", order: 1 },
+          { atom1Id: "C3", atom2Id: "O3", order: 1 },
+          { atom1Id: "O3", atom2Id: "H3O", order: 1 },
+          { atom1Id: "C3", atom2Id: "H3", order: 1 },
+          { atom1Id: "C4", atom2Id: "O4", order: 1 },
+          { atom1Id: "C4", atom2Id: "H4", order: 1 },
+          { atom1Id: "C5", atom2Id: "H5", order: 1 },
+          { atom1Id: "C6", atom2Id: "H61", order: 1 },
+          { atom1Id: "C6", atom2Id: "H62", order: 1 },
 
-          // 糖苷键桥连
-          { atom1Id: "Ob", atom2Id: "C4B", order: 1 },
-
-          // 右环 B 键
-          { atom1Id: "C4B", atom2Id: "C3B", order: 1 },
-          { atom1Id: "C3B", atom2Id: "C2B", order: 1 },
-          { atom1Id: "C2B", atom2Id: "C1B", order: 1 },
-          { atom1Id: "C1B", atom2Id: "O5B", order: 1 },
-          { atom1Id: "O5B", atom2Id: "C5B", order: 1 },
-          { atom1Id: "C5B", atom2Id: "C4B", order: 1 },
-          { atom1Id: "C4B", atom2Id: "H4B", order: 1 },
-          { atom1Id: "C3B", atom2Id: "O3B", order: 1 },
-          { atom1Id: "O3B", atom2Id: "H3BO", order: 1 },
-          { atom1Id: "C3B", atom2Id: "H3B", order: 1 },
-          { atom1Id: "C2B", atom2Id: "O2B", order: 1 },
-          { atom1Id: "O2B", atom2Id: "H2BO", order: 1 },
-          { atom1Id: "C2B", atom2Id: "H2B", order: 1 },
-          { atom1Id: "C1B", atom2Id: "H1B", order: 1 },
-          { atom1Id: "C5B", atom2Id: "C6B", order: 1 },
-          { atom1Id: "C5B", atom2Id: "H5B", order: 1 },
-          { atom1Id: "C6B", atom2Id: "O6B", order: 1 },
-          { atom1Id: "O6B", atom2Id: "H6BO", order: 1 },
-          { atom1Id: "C6B", atom2Id: "H6B1", order: 1 },
-          { atom1Id: "C6B", atom2Id: "H6B2", order: 1 },
-
-          // 2 分子脱除的水分子
-          { atom1Id: "Ow1", atom2Id: "Hw1", order: 1 },
-          { atom1Id: "Ow1", atom2Id: "Hw2", order: 1 },
-          { atom1Id: "Ow2", atom2Id: "Hw3", order: 1 },
-          { atom1Id: "Ow2", atom2Id: "Hw4", order: 1 }
+          // 脱除的水分子内键
+          { atom1Id: "Ow", atom2Id: "Hw1", order: 1 },
+          { atom1Id: "Ow", atom2Id: "Hw2", order: 1 }
         ],
         action: { type: "product", desc: "淀粉聚合" }
       }

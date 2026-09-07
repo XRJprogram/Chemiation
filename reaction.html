@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>化学反应原理机理推演 · 空间伪3D | Chemiation</title>
-  <meta name="description" content="基于纯2D Canvas与空间伪3D纵深映射的化学反应机理推演工坊，支持化学键双向渐变、纯字母排印、氢原子全程严格守恒、右侧机理推演工作区与极简 ACPL 推演脚本编写。">
+  <title>Chemiation · 化学反应原理机理推演工坊 (ReactionPrinciple)</title>
+  <meta name="description" content="基于纯2D Canvas与空间伪3D纵深映射的化学反应机理推演工坊，支持化学键双向渐变、纯字母排印、氢原子全程严格守恒、聚合物大括号规范、右侧机理推演工作区与极简 ACPL 推演脚本编写。">
   <!-- 字体引入 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,13 +13,12 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- 顶部独立品牌导航栏 (完全独立，不含前序项目跳转) -->
+    <!-- 顶部独立品牌导航栏 -->
     <header class="header-bar">
       <div class="brand-section">
         <div class="brand-logo">
           <span>CHEMIATION</span>
         </div>
-        <span class="brand-badge">化学反应机理推演 · 纯渲染器</span>
       </div>
 
       <div id="header-equation-display" class="header-status-equation">
@@ -35,16 +34,6 @@
 
         <!-- 画布悬浮控制小工具 -->
         <div class="viewport-floating-toolbar">
-          <div class="status-mode-tag" title="纯渲染器：全自动计算三维空间拓扑与氢原子位移，无需手动移动">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
-            <span>纯推演渲染视口</span>
-          </div>
-
-          <div class="toolbar-divider"></div>
-
           <button id="btn-zoom-in" class="tool-btn icon-only" title="放大 (滚轮向上)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
@@ -80,26 +69,20 @@
           <span class="toast-title">底物靠近</span>
         </div>
 
-        <!-- 底部操作指示器 (精简为紧凑微型胶囊) -->
-        <div class="canvas-bottom-hints">
-          <span>🖱️ 拖拽旋转 · 滚轮缩放 · 氢原子严格守恒</span>
-        </div>
-
         <!-- 当工作区收起时显示的右侧唤醒按钮 -->
         <button id="btn-expand-workspace" class="btn-expand-workspace" title="展开推演工作区">
           <span>推演工作区 ⇤</span>
         </button>
       </main>
 
-      <!-- 右侧：反应推演工作区 (参考 Anychem 架构) -->
+      <!-- 右侧：反应推演工作区 -->
       <aside id="workspace-sidebar" class="workspace-sidebar">
-        <!-- 边缘调节宽度把手 (拖拽调节宽度) -->
+        <!-- 边缘调节宽度把手 -->
         <div id="resize-handle" class="resize-handle" title="左右拖拽调整工作区宽度"></div>
 
         <!-- 工作区头部 -->
         <div class="workspace-header">
           <div class="workspace-title-group">
-            <div class="workspace-icon">⚗️</div>
             <span class="workspace-title">推演工作区</span>
             <span id="step-counter-text" class="step-counter-text">1 / 4</span>
           </div>
@@ -141,7 +124,7 @@
               <select id="preset-select" class="preset-select" aria-label="选择化学反应"></select>
             </div>
 
-            <!-- 反应总览信息卡片 (精简为紧凑卡片) -->
+            <!-- 反应总览信息卡片 -->
             <div class="reaction-overview-card">
               <div class="overview-top-row">
                 <h3 id="reaction-title" class="overview-title">载入中...</h3>
@@ -188,9 +171,9 @@
               <textarea id="script-editor" class="script-editor" spellcheck="false" placeholder="在此编写或修改 ACPL 反应推演脚本..."></textarea>
             </div>
 
-            <!-- 语法速查指南 (精简为单行速查条) -->
+            <!-- 语法速查指南 -->
             <div class="script-syntax-guide">
-              <span>💡 语法: <code>step "名称" { atom ID 元素 [X Y Z] ... bond A B [键级] }</code></span>
+              <span>💡 语法: <code>step "名称" { atom ID 元素 [X Y Z] ... bond A B [键级] polymer "n" }</code></span>
             </div>
           </div>
         </div>
@@ -204,35 +187,26 @@
           <div class="playback-controls-row">
             <div class="ctrl-btn-group">
               <button id="prev-btn" class="ctrl-btn" title="上一步 (快捷键: ← 或 A)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="19 20 9 12 19 4 19 20"></polygon>
                   <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line>
                 </svg>
-                <span>上一步</span>
               </button>
 
-              <button id="play-btn" class="ctrl-btn primary" title="自动连续推演 (快捷键: Space)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <button id="play-btn" class="ctrl-btn primary" title="自动推演 (快捷键: Space)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3"></polygon>
                 </svg>
-                <span>自动推演</span>
               </button>
 
               <button id="next-btn" class="ctrl-btn" title="下一步 (快捷键: → 或 D)">
-                <span>下一步</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 4 15 12 5 20 5 4"></polygon>
                   <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
                 </svg>
               </button>
 
-              <button id="reset-step-btn" class="ctrl-btn" title="回到第 1 步">↺</button>
-            </div>
-
-            <div class="speed-control-group">
-              <button class="speed-pill" data-speed="0.5">0.5x</button>
-              <button class="speed-pill active" data-speed="1">1.0x</button>
-              <button class="speed-pill" data-speed="2">2.0x</button>
+              <button id="reset-step-btn" class="ctrl-btn" title="回到起点">↺</button>
             </div>
           </div>
         </footer>
