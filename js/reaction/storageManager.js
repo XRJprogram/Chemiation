@@ -304,8 +304,7 @@ class StorageManager {
 reaction "${cleanName.replace(/\.acpl$/i, '')}"
 equation "A + B ⇌ C + D"
 category "自定义反应机理"
-deltaH "-ΔH (放热)"
-summary "在此输入关于该反应原理、过渡态与热力学动力学特征的简述。"
+summary "在此输入关于该反应原理、过渡态与机理特征的简述。"
 
 step "1. 反应物底物吸附/碰撞" {
   note "反应底物靠近，化学键准备断裂或重构。"

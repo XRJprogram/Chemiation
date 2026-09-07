@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemiation · ACPL 反应机理推演脚本语法手册 (ACPL Specification)</title>
+  <meta name="description" content="Chemiation ACPL (Antigravity Chemical Principle Language) 官方语法手册与机理编写规范指南。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #F4EFE6;
+      --bg-card: #FAF6E9;
+      --bg-code: #EFE8DA;
+      --border-color: #DCD3C1;
+      --border-dark: #C4B79F;
+      --color-dark: #24140B;
+      --color-brown: #4A3324;
+      --color-mid: #6E533F;
+      --color-accent: #B84A28;
+      --color-accent-soft: rgba(184, 74, 40, 0.08);
+      --font-serif: "Cinzel", "Noto Serif SC", Georgia, serif;
+      --font-sans: "Century Gothic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", Consolas, Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--color-brown);
+      font-family: var(--font-sans);
+      line-height: 1.68;
+      font-size: 15px;
+      padding-bottom: 60px;
+    }
+
+    /* 顶部导航 */
+    .docs-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(36, 20, 11, 0.04);
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--color-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: var(--color-accent-soft);
+      color: var(--color-accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(184, 74, 40, 0.25);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: #FAF6E9;
+      border: 1px solid var(--border-color);
+      color: var(--color-dark);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: #FFFDF9;
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    /* 页面主体容器 */
+    .docs-container {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+
+    .docs-hero {
+      margin-bottom: 36px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .docs-hero h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      color: var(--color-dark);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .docs-hero p {
+      font-size: 15px;
+      color: var(--color-mid);
+    }
+
+    /* 章节卡片 */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 8px rgba(36, 20, 11, 0.03);
+    }
+
+    .section-card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-card h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--color-accent);
+      border-radius: 2px;
+    }
+
+    .section-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-brown);
+      margin: 18px 0 8px 0;
+    }
+
+    .section-card p {
+      margin-bottom: 12px;
+      color: var(--color-brown);
+    }
+
+    /* 代码块与高亮 */
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 12px 0 16px 0;
+      color: #2F2117;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(94, 65, 47, 0.08);
+      padding: 2px 5px;
+      border-radius: 3px;
+      color: var(--color-accent);
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* 提示胶囊 */
+    .note-box {
+      background: rgba(184, 74, 40, 0.05);
+      border-left: 3px solid var(--color-accent);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 13.5px;
+    }
+
+    .note-box strong {
+      color: var(--color-accent);
+    }
+
+    /* 表格 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 13.5px;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 9px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(94, 65, 47, 0.06);
+      color: var(--color-dark);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .keyword {
+      color: #9C27B0;
+      font-weight: 700;
+    }
+
+    .string {
+      color: #2E7D32;
+    }
+
+    .comment {
+      color: #8D6E63;
+      font-style: italic;
+    }
+
+    .num {
+      color: #D84315;
+    }
+
+    /* 快捷键列表 */
+    .kbd-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .kbd-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    kbd {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 2px 6px;
+      color: var(--color-dark);
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航栏 -->
+  <header class="docs-header">
+    <div class="brand-title">
+      <span>CHEMIATION</span>
+      <span class="brand-tag">ACPL v1.2 SPEC</span>
+    </div>
+    <a href="index.html" class="back-btn">
+      <span>← 返回推演工坊</span>
+    </a>
+  </header>
+
+  <main class="docs-container">
+    <div class="docs-hero">
+      <h1>ACPL 反应机理推演脚本语法手册</h1>
+      <p>Antigravity & Chemiation Chemical Principle Language · 面向化学机理推演的极简声明式脚本规范</p>
+    </div>
+
+    <!-- 1. 设计概述 -->
+    <section class="section-card">
+      <h2>1. 设计理念与概述</h2>
+      <p>ACPL (Antigravity Chemical Principle Language) 是 Chemiation 专为化学反应机理、过渡态演化与聚合物推演设计的极简 DSL 语法。其核心原则包括：</p>
+      <ul>
+        <li><strong>极简可读</strong>：去除冗余标点，采用自然声明式语法，无需编写繁重的 JSON 或代码。</li>
+        <li><strong>智能空间排布</strong>：用户无需手算三维空间坐标，声明原子和键后，引擎内置力导向算法自动解算空间立体构型。</li>
+        <li><strong>严格质量守恒</strong>：支持多基元步骤连续推演，消除“游离原子”悬空等非物理现象。</li>
+        <li><strong>纯粹机理导向</strong>：已全面精简热力学冗余项（如移除旧版 deltaH 等），专注电子转移、键的断裂与重组过程。</li>
+      </ul>
+    </section>
+
+    <!-- 2. 全局反应声明 -->
+    <section class="section-card">
+      <h2>2. 全局反应元数据声明</h2>
+      <p>脚本头部必须包含或选择性声明反应的整体属性：</p>
+      <pre><code><span class="comment"># 反应全称（必填）</span>
+<span class="keyword">reaction</span> <span class="string">"乙酸与乙醇费歇尔酯化反应"</span>
+
+<span class="comment"># 化学反应总方程式（必填）</span>
+<span class="keyword">equation</span> <span class="string">"CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O"</span>
+
+<span class="comment"># 反应分类标签（可选）</span>
+<span class="keyword">category</span> <span class="string">"经典有机机理"</span>
+
+<span class="comment"># 机理概述与背景说明（可选）</span>
+<span class="keyword">summary</span> <span class="string">"经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。"</span></code></pre>
+    </section>
+
+    <!-- 3. 基元反应步骤 -->
+    <section class="section-card">
+      <h2>3. 基元反应步骤 (Step Block)</h2>
+      <p>每一个基元步骤使用 <code>step "步骤名称" { ... }</code> 代码块进行包裹：</p>
+      <pre><code><span class="keyword">step</span> <span class="string">"1. 反应物底物吸附与碰撞"</span> {
+  <span class="comment"># 步骤原理阐释说明</span>
+  <span class="keyword">note</span> <span class="string">"乙酸与乙醇分子受热靠近，羟基氧原子准备进攻羰基碳原子。"</span>
+  
+  <span class="comment"># 步骤动作标记标签</span>
+  <span class="keyword">action</span> <span class="string">"底物靠近"</span>
+
+  <span class="comment"># 原子声明</span>
+  <span class="keyword">atom</span> C1 C -2.0 0.0 0.0
+  <span class="keyword">atom</span> O1 O -1.5 1.2 0.0
+  
+  <span class="comment"># 化学键声明</span>
+  <span class="keyword">bond</span> C1 O1 2
+}</code></pre>
+    </section>
+
+    <!-- 4. 原子与化学键语法 -->
+    <section class="section-card">
+      <h2>4. 原子与化学键拓扑定义</h2>
+      <h3>4.1 原子定义 (atom)</h3>
+      <p>支持以下两种语法：</p>
+      <table>
+        <thead>
+          <tr>
+            <th>语法格式</th>
+            <th>说明</th>
+            <th>适用场景</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>atom &lt;ID&gt; &lt;Element&gt; &lt;X&gt; &lt;Y&gt; &lt;Z&gt;</code></td>
+            <td>显式指定原子的三维空间相对坐标</td>
+            <td>需要精准空间取向或精密对称性排布时</td>
+          </tr>
+          <tr>
+            <td><code>atom &lt;ID&gt; &lt;Element&gt;</code></td>
+            <td>不提供坐标，由引擎自动力导向立体排布</td>
+            <td>快速草拟反应、自动计算分子空间结构时</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>4.2 化学键定义 (bond)</h3>
+      <p>语法：<code>bond &lt;原子ID1&gt; &lt;原子ID2&gt; [键级]</code></p>
+      <ul>
+        <li><code>bond C1 C2 1</code>：在 C1 与 C2 之间建立<strong>单键</strong>（默认）。</li>
+        <li><code>bond C1 O1 2</code>：在 C1 与 O1 之间建立<strong>双键</strong>（如羰基 C=O）。</li>
+        <li><code>bond N1 N2 3</code>：在 N1 与 N2 之间建立<strong>三键</strong>（如氮气分子 N≡N）。</li>
+      </ul>
+      <div class="note-box">
+        <strong>💡 提示：</strong> 渲染器会自动根据两个原子的元素类型，在键上绘制平滑的<strong>双向渐变色与纵深光影</strong>，不同元素原子之间一目了然。
+      </div>
+    </section>
+
+    <!-- 5. 高分子聚合物规范 -->
+    <section class="section-card">
+      <h2>5. 高分子聚合物与大括号规范 (Polymer)</h2>
+      <p>在聚合反应机理步骤中，可通过 <code>polymer</code> 语句开启聚合物大括号视图：</p>
+      <pre><code><span class="comment"># 语法：polymer "&lt;下标&gt;" ["说明文字"] [exclude "&lt;排除原子ID...&gt;"]</span>
+<span class="keyword">polymer</span> <span class="string">"n"</span> <span class="string">"直链淀粉单体最简重复单元 · [C₆H₁₀O₅]ₙ"</span> <span class="keyword">exclude</span> <span class="string">"Ow Hw1 Hw2"</span></code></pre>
+
+      <h3>核心机制与设计考量：</h3>
+      <ul>
+        <li><strong>单体最简重复单元原则</strong>：例如淀粉生成过程，严谨表示为吡喃葡萄糖单环脱水脱氧后的最简 $[C_6H_{10}O_5]_n$ 单元，结构纯粹简明。</li>
+        <li><strong>动态就近延申截断机制</strong>：当视角拖拽旋转时，系统在每一帧动态计算大括号左侧与右侧的就近截断点，使化学键始终向左右就近延申至括号外，彻底解决跨视角“远距离交叉飞线”的视觉 Bug。</li>
+        <li><strong>排除独立副产物 (exclude)</strong>：缩聚反应常伴随脱除水分子等小分子副产物，使用 <code>exclude "Ow Hw1 Hw2"</code> 可将副产物原子移至大括号外侧独立展示。</li>
+      </ul>
+    </section>
+
+    <!-- 6. 快捷模板与实战 -->
+    <section class="section-card">
+      <h2>6. 常用机理基元模板</h2>
+      <p>您可以在推演工坊编辑器的快捷模板栏中一键插入以下标准机理骨架：</p>
+      <table>
+        <thead>
+          <tr>
+            <th>模板按钮</th>
+            <th>机理类型</th>
+            <th>包含特性</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>+ 步骤</code></td>
+            <td>通用基元步骤</td>
+            <td>带注释的标准 atom 与 bond 骨架</td>
+          </tr>
+          <tr>
+            <td><code>加成消除</code></td>
+            <td>亲电加成/消除反应</td>
+            <td>碳碳双键解离、卤素/亲电进攻形成饱和中间体</td>
+          </tr>
+          <tr>
+            <td><code>配位催化</code></td>
+            <td>金属络合催化循环</td>
+            <td>中心金属原子多重配位活化底物靶键</td>
+          </tr>
+          <tr>
+            <td><code>自由基</code></td>
+            <td>均裂引发与链传递</td>
+            <td>单电子夺氢、甲基自由基偶联机理</td>
+          </tr>
+          <tr>
+            <td><code>聚合物</code></td>
+            <td>高分子缩聚/加聚</td>
+            <td>自动包含 polymer 大括号、就近截断与排除水分子</td>
+          </tr>
+          <tr>
+            <td><code>新反应</code></td>
+            <td>全新反应全局模板</td>
+            <td>含 reaction、equation、多步骤完整起步模版</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 7. 快捷键指南 -->
+    <section class="section-card">
+      <h2>7. 全局快捷键指南</h2>
+      <div class="kbd-list">
+        <div class="kbd-item">
+          <span>保存推演脚本</span>
+          <kbd>Ctrl + S</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>自动推演 / 暂停</span>
+          <kbd>Space 空格</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>上一步</span>
+          <kbd>←</kbd> 或 <kbd>A</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>下一步</span>
+          <kbd>→</kbd> 或 <kbd>D</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>重置视口居中</span>
+          <kbd>R</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>拖拽旋转视角</span>
+          <span>鼠标左键拖拽</span>
+        </div>
+        <div class="kbd-item">
+          <span>平移视角</span>
+          <span>鼠标右键拖拽</span>
+        </div>
+        <div class="kbd-item">
+          <span>视口缩放</span>
+          <span>鼠标滚轮</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

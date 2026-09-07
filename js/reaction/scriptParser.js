@@ -22,7 +22,6 @@ const ReactionScriptEngine = {
 
     lines.push(`reaction "${reaction.name || '未命名反应'}"`);
     if (reaction.equation) lines.push(`equation "${reaction.equation}"`);
-    if (reaction.deltaH) lines.push(`deltaH "${reaction.deltaH}"`);
     if (reaction.category) lines.push(`category "${reaction.category}"`);
     if (reaction.summary) lines.push(`summary "${reaction.summary.replace(/"/g, '\\"')}"`);
     lines.push('');
@@ -83,7 +82,6 @@ const ReactionScriptEngine = {
       name: '自定义推演反应',
       equation: '',
       category: '自定义机理',
-      deltaH: 'ΔH',
       summary: '',
       steps: []
     };
@@ -110,9 +108,8 @@ const ReactionScriptEngine = {
         continue;
       }
 
-      const dhMatch = line.match(/^deltaH\s+"([^"]+)"/i);
-      if (dhMatch) {
-        reaction.deltaH = dhMatch[1];
+      // 兼容旧脚本中的 deltaH 声明，静默跳过
+      if (/^deltaH\s+/i.test(line)) {
         continue;
       }
 
@@ -259,45 +256,136 @@ const ReactionScriptEngine = {
   },
 
   /**
-   * 预设模板生成工具（供用户一键插入）
+   * 预设机理模板生成工具（供用户一键插入到编辑器）
    */
   getQuickTemplate(type) {
     if (type === 'new_step') {
       return `\nstep "新反应步骤" {
-  note "在此输入该反应步骤的详细机理解释"
-  action "成键/断键动作说明"
-  
-  # 简写原子：无需计算坐标，系统自动解算空间排布
-  atom C1 C
-  atom O1 O
-  atom H1 H
-  atom H2 H
-  
-  # 连接化学键：bond <原子1> <原子2> [键级]
+  note "在此输入该基元反应步骤的机理描述与电子转移说明。"
+  action "成键/断键"
+
+  # 原子定义: atom <ID> <元素> [X Y Z(可选)]
+  atom C1 C -1.0 0 0
+  atom O1 O 1.0 0 0
+  atom H1 H -1.0 1.2 0
+  atom H2 H 1.0 1.2 0
+
+  # 化学键定义: bond <原子1> <原子2> [键级]
   bond C1 O1 2
   bond C1 H1 1
-  bond C1 H2 1
+  bond O1 H2 1
 }\n`;
     }
 
-    if (type === 'esterification') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'esterification') || REACTION_PRESETS[0]);
+    if (type === 'addition_elimination') {
+      return `\nstep "亲电加成/消除反应" {
+  note "亲电试剂进攻 C=C 不饱和双键，π 键解离，形成饱和烷基卤代/醇类中间体。"
+  action "亲电加成"
+
+  atom C1 C -1.2 0 0
+  atom C2 C 1.2 0 0
+  atom X1 Br 0 1.8 0
+  atom H1 H -1.8 -1.0 0
+  atom H2 H 1.8 -1.0 0
+
+  bond C1 C2 1
+  bond C1 X1 1
+  bond C1 H1 1
+  bond C2 H2 1
+}\n`;
     }
 
-    if (type === 'co2_starch' || type === 'starch') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'co2-to-starch') || REACTION_PRESETS[1]);
+    if (type === 'catalysis_step') {
+      return `\nstep "催化剂表面配位与活化" {
+  note "中心催化原子与底物配位，削弱靶反应键能，显著降低反应活化能。"
+  action "配位催化"
+
+  atom M1 Fe 0 -1.0 0
+  atom N1 N -1.2 0.8 0
+  atom N2 N 1.2 0.8 0
+  atom H1 H -1.2 2.0 0
+  atom H2 H 1.2 2.0 0
+
+  bond M1 N1 1
+  bond M1 N2 1
+  bond N1 H1 1
+  bond N2 H2 1
+}\n`;
     }
 
-    if (type === 'chlorination') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'methane-chlorination') || REACTION_PRESETS[2]);
+    if (type === 'radical_step') {
+      return `\nstep "自由基均裂与链传递" {
+  note "光照或受热导致共价键均裂产生单电子自由基，夺取底物原子引发链传递。"
+  action "自由基传递"
+
+  atom C1 C -1.5 0 0
+  atom H1 H -0.3 0 0
+  atom Cl1 Cl 1.8 0 0
+  atom H2 H -2.2 1.0 0
+  atom H3 H -2.2 -1.0 0
+
+  bond C1 H2 1
+  bond C1 H3 1
+  bond H1 Cl1 1
+}\n`;
     }
 
-    if (type === 'haber_bosch') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'haber-bosch') || REACTION_PRESETS[4]);
+    if (type === 'polymer_step') {
+      return `\nstep "单体聚合生成高分子" {
+  note "单体首尾脱水/脱除小分子后缩合，主链化学键就近穿出大括号截断形成重复单元。"
+  action "缩聚/加聚"
+
+  # 聚合物括号语法: polymer "<聚合度下标如 n>" ["说明标签"] [exclude "<副产物原子ID列表>"]
+  polymer "n" "[单体最简重复单元]ₙ" exclude "Ow Hw1 Hw2"
+
+  atom C1 C -1.2 0 0
+  atom C2 C 1.2 0 0
+  atom O1 O 0 1.0 0
+  atom Ow O 3.6 0 0
+  atom Hw1 H 4.2 0.8 0
+  atom Hw2 H 4.2 -0.8 0
+
+  bond C1 C2 1
+  bond C1 O1 1
+  bond Ow Hw1 1
+  bond Ow Hw2 1
+}\n`;
     }
 
-    if (type === 'co2_reduction') {
-      return this.serialize(REACTION_PRESETS.find(p => p.id === 'co2-reduction') || REACTION_PRESETS[3]);
+    if (type === 'reaction_blank') {
+      return `# Chemiation 反应机理推演脚本 (ACPL)
+reaction "新建化学反应"
+equation "A + B ⇌ C + D"
+category "反应机理推演"
+summary "在此输入关于该反应原理、过渡态与机理路径的详细说明。"
+
+step "1. 反应物底物吸附与碰撞" {
+  note "底物分子靠近，化学键受到极化并准备重构。"
+  action "碰撞活化"
+
+  atom A1 C -1.5 0 0
+  atom A2 O 1.5 0 0
+  atom H1 H -1.5 1.2 0
+  atom H2 H 1.5 1.2 0
+
+  bond A1 H1 1
+  bond A2 H2 1
+}
+
+step "2. 产物分子生成与脱附" {
+  note "新化学键形成，完成基元反应并脱附离开。"
+  action "产物生成"
+
+  atom A1 C -0.8 0 0
+  atom A2 O 0.8 0 0
+  atom H1 H -1.8 0.8 0
+  atom H2 H 1.8 0.8 0
+
+  bond A1 A2 2
+  bond A1 H1 1
+  bond A2 H2 1
+}
+`;
     }
 
     return '';

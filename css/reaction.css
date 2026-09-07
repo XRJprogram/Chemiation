@@ -261,33 +261,32 @@ html, body {
   color: var(--color-mid-brown);
 }
 
-/* 视口右侧：当工作区被折叠时的唤醒按钮 */
+/* 视口右侧：当工作区被折叠时的唤醒按钮 (纯图标极简) */
 .btn-expand-workspace {
   position: absolute;
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  padding: 12px 6px;
-  border-radius: 8px 0 0 8px;
+  width: 26px;
+  height: 38px;
+  padding: 0;
+  border-radius: 6px 0 0 6px;
   border: 1px solid var(--border-color);
   border-right: none;
   background: var(--bg-card);
   color: var(--color-deep-brown);
-  font-size: 12px;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   display: none;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  writing-mode: vertical-rl;
-  letter-spacing: 2px;
+  justify-content: center;
   z-index: 20;
+  transition: all 0.15s ease;
 }
 
 .btn-expand-workspace:hover {
   background: #FFFDF9;
-  color: var(--color-dark-brown);
+  color: var(--color-accent);
 }
 
 /* ==========================================================================
@@ -305,13 +304,10 @@ html, body {
   border-left: 1px solid var(--border-color);
   box-shadow: -4px 0 20px rgba(36, 20, 11, 0.05);
   z-index: 30;
-  transition: transform 0.22s ease;
 }
 
 .workspace-sidebar.collapsed {
-  transform: translateX(100%);
-  position: absolute;
-  right: 0;
+  display: none;
 }
 
 /* 左侧边缘可拖动调节宽度控制柄 */
@@ -485,37 +481,68 @@ html, body {
 }
 
 .project-name-label {
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--color-deep-brown);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.reaction-count-badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-mid-brown);
+  background: rgba(94, 65, 47, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .project-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .project-btn {
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 4px;
   border: 1px solid var(--border-color);
   background: #FAF6E9;
   color: var(--color-deep-brown);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .project-btn:hover {
   background: #FFFDF9;
   border-color: var(--border-focus);
+}
+
+.project-btn.primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.project-btn.primary:hover {
+  background: #A03D1E;
+  border-color: #A03D1E;
+}
+
+.project-btn.danger {
+  color: #A93226;
+}
+
+.project-btn.danger:hover {
+  background: #FADBD8;
+  border-color: #E6B0AA;
 }
 
 .project-btn.icon-only {
@@ -763,6 +790,21 @@ html, body {
 .script-btn:hover {
   background: #FFFDF9;
   border-color: var(--border-focus);
+}
+
+.script-btn.icon-only {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.script-btn.icon-only svg {
+  display: block;
 }
 
 .script-btn.primary {

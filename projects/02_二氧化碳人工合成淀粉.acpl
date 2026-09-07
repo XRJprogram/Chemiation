@@ -1,0 +1,179 @@
+# ============================================================
+# Chemiation 反应机理推演脚本 (ACPL)
+# 反应名称: 二氧化碳人工全合成淀粉 (ASAP机理)
+# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算
+# ============================================================
+
+reaction "二氧化碳人工全合成淀粉 (ASAP机理)"
+equation "CO₂ + H₂ → C₁ (甲醇) → C₃ (DHA) → C₆ (葡萄糖) → (C₆H₁₀O₅)ₙ (直链淀粉)"
+category "前沿人工合成路线"
+summary "中科院 ASAP 经典路线：CO₂经加氢还原(C₁)、C-C偶联(C₃)、半缩醛成环(C₆)至α-1,4-糖苷键聚合(淀粉)。"
+
+step "1. 原料活化与加氢还原 (CO₂ → C₁)" {
+  note "CO₂ 线性分子与 3 个 H₂ 氢气分子吸附活化，加氢还原为 C₁ 前体甲醇 (CH₃OH) 与水。"
+  action "底物基态"
+
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  atom C1 C 0.00 0.00 0.00
+  atom O1 O -1.80 0.00 0.20
+  atom O2 O 1.80 0.00 -0.20
+  atom H1 H -1.60 1.80 0.50
+  atom H2 H -0.80 1.80 0.50
+  atom H3 H 0.00 2.00 -0.40
+  atom H4 H 0.80 2.00 -0.40
+  atom H5 H 1.60 1.80 0.50
+  atom H6 H 2.40 1.80 0.50
+
+  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
+  bond C1 O1 2
+  bond C1 O2 2
+  bond H1 H2 1
+  bond H3 H4 1
+  bond H5 H6 1
+}
+
+step "2. C-C 偶联缩合生成 C₃ 前体 (DHA)" {
+  note "C₁ 单元在甲醛缩合酶作用下发生碳碳偶联，合成具有对称结构的三碳酮糖二羟基丙酮 (DHA)。"
+  action "C-C偶联"
+
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  atom C1 C -1.60 -0.40 0.10
+  atom C2 C 0.00 0.40 0.00
+  atom C3 C 1.60 -0.40 -0.10
+  atom O2 O 0.00 1.80 0.00
+  atom O1 O -2.60 0.60 0.20
+  atom HO1 H -3.40 0.40 0.30
+  atom O3 O 2.60 0.60 -0.20
+  atom HO3 H 3.40 0.40 -0.30
+  atom H11 H -1.60 -1.20 0.90
+  atom H12 H -1.60 -1.00 -0.90
+  atom H31 H 1.60 -1.20 0.90
+  atom H32 H 1.60 -1.00 -0.90
+
+  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
+  bond C1 C2 1
+  bond C2 C3 1
+  bond C2 O2 2
+  bond C1 O1 1
+  bond O1 HO1 1
+  bond C3 O3 1
+  bond O3 HO3 1
+  bond C1 H11 1
+  bond C1 H12 1
+  bond C3 H31 1
+  bond C3 H32 1
+}
+
+step "3. 醛醇缩合成环生成 C₆ 葡萄糖吡喃环" {
+  note "三碳单元经醛醇缩合形成己糖链，并发生分子内半缩醛加成闭环，构筑经典六元椅式吡喃环。"
+  action "成吡喃环"
+
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  atom O5 O 0.20 1.30 -0.20
+  atom C1 C 1.40 0.60 0.10
+  atom C2 C 1.20 -0.80 -0.20
+  atom C3 C -0.20 -1.40 0.10
+  atom C4 C -1.30 -0.60 -0.10
+  atom C5 C -1.10 0.80 0.20
+  atom C6 C -2.20 1.60 -0.20
+  atom O1 O 2.50 1.20 -0.30
+  atom H1O H 3.20 0.80 -0.30
+  atom O2 O 2.20 -1.60 0.30
+  atom H2O H 2.80 -1.40 0.60
+  atom O3 O -0.40 -2.60 -0.20
+  atom H3O H -0.20 -3.20 0.30
+  atom O4 O -2.40 -1.30 0.40
+  atom H4O H -3.10 -0.90 0.50
+  atom O6 O -3.30 1.00 0.30
+  atom H6O H -3.80 1.60 0.40
+  atom H1 H 1.60 0.60 1.10
+  atom H2 H 1.10 -0.80 -1.20
+  atom H3 H -0.20 -1.40 1.10
+  atom H4 H -1.40 -0.50 -1.10
+  atom H5 H -1.10 0.80 1.20
+  atom H61 H -2.50 2.40 0.30
+  atom H62 H -1.90 1.90 -1.10
+
+  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
+  bond C1 C2 1
+  bond C2 C3 1
+  bond C3 C4 1
+  bond C4 C5 1
+  bond C5 O5 1
+  bond O5 C1 1
+  bond C5 C6 1
+  bond C6 O6 1
+  bond O6 H6O 1
+  bond C1 O1 1
+  bond O1 H1O 1
+  bond C1 H1 1
+  bond C2 O2 1
+  bond O2 H2O 1
+  bond C2 H2 1
+  bond C3 O3 1
+  bond O3 H3O 1
+  bond C3 H3 1
+  bond C4 O4 1
+  bond O4 H4O 1
+  bond C4 H4 1
+  bond C5 H5 1
+  bond C6 H61 1
+  bond C6 H62 1
+}
+
+step "4. α-1,4-糖苷键缩聚生成直链淀粉分子链" {
+  note "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，延伸构建直链淀粉骨架，完成人工全合成！"
+  action "淀粉聚合"
+  polymer "n" tag "直链淀粉单体最简重复单元 · [C₆H₁₀O₅]ₙ" exclude "Ow Hw1 Hw2"
+
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  atom O5 O 0.20 1.30 -0.20
+  atom C1 C 1.40 0.60 0.10
+  atom C2 C 1.20 -0.80 -0.20
+  atom C3 C -0.20 -1.40 0.10
+  atom C4 C -1.30 -0.60 -0.10
+  atom C5 C -1.10 0.80 0.20
+  atom C6 C -2.20 1.60 -0.20
+  atom O6 O -3.30 1.00 0.30
+  atom H6O H -3.80 1.60 0.40
+  atom O2 O 2.20 -1.60 0.30
+  atom H2O H 2.80 -1.40 0.60
+  atom O3 O -0.40 -2.60 -0.20
+  atom H3O H -0.20 -3.20 0.30
+  atom O4 O -2.40 -1.30 0.40
+  atom H1 H 1.60 0.60 1.10
+  atom H2 H 1.10 -0.80 -1.20
+  atom H3 H -0.20 -1.40 1.10
+  atom H4 H -1.40 -0.50 -1.10
+  atom H5 H -1.10 0.80 1.20
+  atom H61 H -2.50 2.40 0.30
+  atom H62 H -1.90 1.90 -1.10
+  atom Ow O 3.40 -2.50 -0.50
+  atom Hw1 H 2.80 -3.10 -0.80
+  atom Hw2 H 4.10 -2.90 -0.20
+
+  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
+  bond C1 C2 1
+  bond C2 C3 1
+  bond C3 C4 1
+  bond C4 C5 1
+  bond C5 O5 1
+  bond O5 C1 1
+  bond C5 C6 1
+  bond C6 O6 1
+  bond O6 H6O 1
+  bond C1 H1 1
+  bond C2 O2 1
+  bond O2 H2O 1
+  bond C2 H2 1
+  bond C3 O3 1
+  bond O3 H3O 1
+  bond C3 H3 1
+  bond C4 O4 1
+  bond C4 H4 1
+  bond C5 H5 1
+  bond C6 H61 1
+  bond C6 H62 1
+  bond Ow Hw1 1
+  bond Ow Hw2 1
+}

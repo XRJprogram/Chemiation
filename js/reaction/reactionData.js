@@ -14,7 +14,6 @@ const REACTION_PRESETS = [
     name: "乙酸与乙醇费歇尔酯化反应",
     equation: "CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O",
     category: "经典有机机理",
-    deltaH: "-ΔH (平衡放热)",
     summary: "经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。",
     steps: [
       {
@@ -159,7 +158,6 @@ const REACTION_PRESETS = [
     name: "二氧化碳人工全合成淀粉 (ASAP机理)",
     equation: "CO₂ + H₂ → C₁ (甲醇) → C₃ (DHA) → C₆ (葡萄糖) → (C₆H₁₀O₅)ₙ (直链淀粉)",
     category: "前沿人工合成路线",
-    deltaH: "-ΔH (多酶级联催化)",
     summary: "中科院 ASAP 经典路线：CO₂经加氢还原(C₁)、C-C偶联(C₃)、半缩醛成环(C₆)至α-1,4-糖苷键聚合(淀粉)。",
     steps: [
       {
@@ -358,7 +356,6 @@ const REACTION_PRESETS = [
     name: "甲烷自由基氯代反应机理",
     equation: "CH₄ + Cl₂ —(hν)→ CH₃Cl + HCl",
     category: "自由基反应",
-    deltaH: "-104 kJ/mol (放热)",
     summary: "经典烷烃自由基取代：光解均裂引发、高活性氯原子夺氢、甲基自由基偶联生成一氯甲烷与HCl。",
     steps: [
       {
@@ -441,7 +438,6 @@ const REACTION_PRESETS = [
     name: "二氧化碳催化加氢制甲醇",
     equation: "CO₂ + 3H₂ ⇌ CH₃OH + H₂O",
     category: "人工碳中和路线",
-    deltaH: "-ΔH (催化放热)",
     summary: "人工碳中和多相催化：CO₂活化加氢、C=O键逐步还原、氢解脱氧生成甲醇与副产物水。",
     steps: [
       {
@@ -534,7 +530,6 @@ const REACTION_PRESETS = [
     name: "哈伯-博施法合成氨机理",
     equation: "N₂ + 3H₂ ⇌ 2NH₃",
     category: "工业无机催化",
-    deltaH: "-92.4 kJ/mol (放热)",
     summary: "工业合成氨经典机理：N≡N三键与H-H协同解离活化、金属表面加氢、最终生成2个三角锥氨分子。",
     steps: [
       {

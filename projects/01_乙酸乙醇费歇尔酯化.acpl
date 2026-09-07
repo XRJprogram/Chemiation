@@ -1,0 +1,134 @@
+# ============================================================
+# Chemiation 反应机理推演脚本 (ACPL)
+# 反应名称: 乙酸与乙醇费歇尔酯化反应
+# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算
+# ============================================================
+
+reaction "乙酸与乙醇费歇尔酯化反应"
+equation "CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O"
+category "经典有机机理"
+summary "经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。"
+
+step "1. 反应物底物靠近碰撞" {
+  note "乙酸 (CH₃COOH) 与乙醇 (CH₃CH₂OH) 受热碰撞靠近，全体系 10 个氢原子处于稳定共价键连。"
+  action "底物靠近"
+
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  atom C1 C -3.60 -0.60 0.20
+  atom H11 H -4.40 -0.20 0.80
+  atom H12 H -3.50 -1.70 0.30
+  atom H13 H -3.80 -0.40 -0.80
+  atom C2 C -2.20 0.20 0.00
+  atom O1 O -2.00 1.50 -0.30
+  atom O2 O -1.20 -0.70 0.20
+  atom H1 H -0.30 -0.40 0.20
+  atom O3 O 1.60 0.40 -0.30
+  atom H2 H 1.40 1.30 -0.60
+  atom C3 C 2.80 -0.20 -0.10
+  atom H31 H 2.80 -1.10 -0.70
+  atom H32 H 2.70 -0.50 0.90
+  atom C4 C 4.10 0.60 0.30
+  atom H41 H 4.10 1.50 -0.30
+  atom H42 H 5.00 0.10 0.20
+  atom H43 H 4.10 0.90 1.30
+
+  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
+  bond C1 C2 1
+  bond C1 H11 1
+  bond C1 H12 1
+  bond C1 H13 1
+  bond C2 O1 2
+  bond C2 O2 1
+  bond O2 H1 1
+  bond O3 H2 1
+  bond O3 C3 1
+  bond C3 H31 1
+  bond C3 H32 1
+  bond C3 C4 1
+  bond C4 H41 1
+  bond C4 H42 1
+  bond C4 H43 1
+}
+
+step "2. 亲核加成与四面体中间体" {
+  note "乙醇 O3 进攻羰基碳形成 C2-O3 键，质子协同转移至离去氧原子生成水前体。"
+  action "四面体中间体"
+
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  atom C1 C -2.50 -1.20 0.60
+  atom H11 H -3.40 -1.00 1.10
+  atom H12 H -2.00 -2.00 1.00
+  atom H13 H -2.70 -1.40 -0.40
+  atom C2 C -1.10 -0.40 0.10
+  atom O1 O -1.40 1.10 -0.40
+  atom O2 O -1.00 -1.30 -1.10
+  atom H1 H -1.50 -2.10 -1.00
+  atom H2 H -0.30 -1.60 -1.40
+  atom O3 O 0.30 0.20 0.30
+  atom C3 C 1.60 -0.40 0.20
+  atom H31 H 1.60 -1.20 -0.50
+  atom H32 H 1.70 -0.80 1.20
+  atom C4 C 2.80 0.40 -0.20
+  atom H41 H 2.80 1.20 0.50
+  atom H42 H 3.70 -0.20 -0.20
+  atom H43 H 2.70 0.80 -1.20
+
+  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
+  bond C1 C2 1
+  bond C1 H11 1
+  bond C1 H12 1
+  bond C1 H13 1
+  bond C2 O1 1
+  bond C2 O2 1
+  bond O2 H1 1
+  bond O2 H2 1
+  bond C2 O3 1
+  bond O3 C3 1
+  bond C3 H31 1
+  bond C3 H32 1
+  bond C3 C4 1
+  bond C4 H41 1
+  bond C4 H42 1
+  bond C4 H43 1
+}
+
+step "3. 消除脱水产物生成" {
+  note "C2-O2 键断开消除脱水生成水分子，C=O 双键重建生成乙酸乙酯。"
+  action "消除成酯"
+
+  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
+  atom C1 C -2.80 -0.70 0.40
+  atom H11 H -3.60 -0.30 1.00
+  atom H12 H -2.50 -1.70 0.70
+  atom H13 H -3.00 -0.70 -0.70
+  atom C2 C -1.40 0.10 0.00
+  atom O1 O -1.50 1.50 -0.30
+  atom O3 O -0.20 -0.60 0.20
+  atom C3 C 1.10 0.00 -0.10
+  atom H31 H 1.10 0.80 -0.80
+  atom H32 H 1.10 -0.60 0.80
+  atom C4 C 2.40 -0.70 -0.30
+  atom H41 H 2.40 -1.50 0.40
+  atom H42 H 3.30 -0.10 -0.30
+  atom H43 H 2.40 -1.10 -1.30
+  atom O2 O 0.50 -3.00 -1.60
+  atom H1 H -0.10 -3.60 -1.90
+  atom H2 H 1.30 -3.40 -1.40
+
+  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
+  bond C1 C2 1
+  bond C1 H11 1
+  bond C1 H12 1
+  bond C1 H13 1
+  bond C2 O1 2
+  bond C2 O3 1
+  bond O3 C3 1
+  bond C3 H31 1
+  bond C3 H32 1
+  bond C3 C4 1
+  bond C4 H41 1
+  bond C4 H42 1
+  bond C4 H43 1
+  bond O2 H1 1
+  bond O2 H2 1
+}
