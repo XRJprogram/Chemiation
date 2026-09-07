@@ -365,6 +365,35 @@ class ReactionApp {
   }
 
   switchTab(tabName) {
+    if (tabName === 'steps' && this.isScriptDirty && this.scriptEditor) {
+      try {
+        const text = this.scriptEditor.value;
+        const parsedReaction = ReactionScriptEngine.parse(text);
+        this.hideScriptError();
+
+        this.presets[this.currentReactionIndex] = parsedReaction;
+        this.savePresetsToStorage();
+
+        if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
+        if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
+        if (this.reactionCategory) this.reactionCategory.textContent = parsedReaction.category || '机理推演';
+        if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
+
+        if (this.presetSelect && this.presetSelect.options[this.currentReactionIndex]) {
+          this.presetSelect.options[this.currentReactionIndex].textContent = `${this.currentReactionIndex + 1}. ${parsedReaction.name}`;
+        }
+
+        this.buildStepsList(parsedReaction.steps);
+        this.buildTimelineTrack(parsedReaction.steps);
+        this.markScriptDirty(false, '已同步');
+      } catch (err) {
+        // 脚本存在语法错误：严格拦截！不更新且不渲染推演内容，提示报错并保留在编辑区
+        this.showScriptError(err.message);
+        this.markScriptDirty(true, '语法错误');
+        return;
+      }
+    }
+
     this.activeTab = tabName;
     if (this.tabBtnSteps) this.tabBtnSteps.classList.toggle('active', tabName === 'steps');
     if (this.tabBtnScript) this.tabBtnScript.classList.toggle('active', tabName === 'script');
@@ -660,6 +689,7 @@ class ReactionApp {
       this.switchTab('steps');
     } catch (err) {
       this.showScriptError(err.message);
+      this.markScriptDirty(true, '语法错误');
     }
   }
 
@@ -691,7 +721,7 @@ class ReactionApp {
       this.markScriptDirty(false, '已保存');
     } catch (err) {
       this.showScriptError(err.message);
-      this.markScriptDirty(false, '语法错误');
+      this.markScriptDirty(true, '语法错误');
     }
   }
 
@@ -800,9 +830,15 @@ class ReactionApp {
 
     if (this.ideGutter) {
       const lineCount = (code.split('\n').length) || 1;
+      let errLine = null;
+      if (this.scriptErrorToast && this.scriptErrorToast.style.display === 'block') {
+        const lineMatch = this.scriptErrorToast.textContent.match(/第\s*(\d+)\s*行/);
+        if (lineMatch) errLine = parseInt(lineMatch[1], 10);
+      }
       let gutterHtml = '';
       for (let i = 1; i <= lineCount; i++) {
-        gutterHtml += `<div>${i}</div>`;
+        const isErr = i === errLine ? ' class="gutter-error"' : '';
+        gutterHtml += `<div${isErr}>${i}</div>`;
       }
       this.ideGutter.innerHTML = gutterHtml;
     }
@@ -864,13 +900,51 @@ class ReactionApp {
 
   showScriptError(msg) {
     if (!this.scriptErrorToast) return;
-    this.scriptErrorToast.textContent = `语法错误: ${msg}`;
+    const cleanMsg = msg.replace(/^语法错误:\s*/, '');
+    this.scriptErrorToast.innerHTML = `
+      <div style="display: flex; align-items: flex-start; gap: 8px;">
+        <span style="font-size: 13px; line-height: 1.2;">⚠️</span>
+        <div style="flex: 1; word-break: break-word;">
+          <div style="font-weight: 700; margin-bottom: 2px; color: #B84A28;">语法校验拦截 · 无法更新推演</div>
+          <div style="opacity: 0.95;">${this.escapeHtml(cleanMsg)}</div>
+        </div>
+      </div>
+    `;
     this.scriptErrorToast.style.display = 'block';
+
+    const lineMatch = msg.match(/第\s*(\d+)\s*行/);
+    if (lineMatch && this.ideGutter) {
+      const errLine = parseInt(lineMatch[1], 10);
+      const gutterLines = this.ideGutter.querySelectorAll('div');
+      gutterLines.forEach((div, idx) => {
+        if (idx + 1 === errLine) {
+          div.classList.add('gutter-error');
+        } else {
+          div.classList.remove('gutter-error');
+        }
+      });
+    }
   }
 
   hideScriptError() {
-    if (!this.scriptErrorToast) return;
-    this.scriptErrorToast.style.display = 'none';
+    if (this.scriptErrorToast) {
+      this.scriptErrorToast.style.display = 'none';
+      this.scriptErrorToast.innerHTML = '';
+    }
+    if (this.ideGutter) {
+      const gutterLines = this.ideGutter.querySelectorAll('.gutter-error');
+      gutterLines.forEach(div => div.classList.remove('gutter-error'));
+    }
+  }
+
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 }
 

@@ -873,13 +873,15 @@ html, body {
 }
 
 .script-error-toast {
-  padding: 8px 12px;
+  padding: 9px 12px;
   border-radius: 6px;
-  background: rgba(184, 74, 40, 0.12);
-  border: 1px solid rgba(184, 74, 40, 0.4);
-  color: #8C2E12;
-  font-size: 11.5px;
+  background: rgba(184, 74, 40, 0.14);
+  border: 1px solid rgba(184, 74, 40, 0.45);
+  color: #6C1E0A;
+  font-size: 12px;
+  line-height: 1.5;
   font-family: var(--font-mono);
+  margin-bottom: 8px;
   display: none;
 }
 
@@ -916,6 +918,13 @@ html, body {
 
 .ide-gutter div {
   height: 21px;
+}
+
+.ide-gutter div.gutter-error {
+  background: rgba(184, 74, 40, 0.55);
+  color: #FFF;
+  font-weight: 700;
+  border-radius: 2px;
 }
 
 .ide-code-wrap {
