@@ -337,11 +337,14 @@ class ReactionApp {
       card.dataset.stepIndex = idx;
 
       const cleanTitle = step.name.replace(/^\d+\.\s*/, '');
+      const isPolymer = !!(step.polymer || step.isPolymer || (step.name && (step.name.includes('淀粉') || step.name.includes('聚合'))));
+      const polymerBadge = isPolymer ? `<span class="step-card-badge" style="background:#FFF0E6;color:#B84A28;border-color:#F5C6AA;margin-left:4px;">[ ]ₙ 聚合物</span>` : '';
       card.innerHTML = `
         <div class="step-card-top">
           <div class="step-card-num">${idx + 1}</div>
           <div class="step-card-title">${cleanTitle}</div>
           <span class="step-card-badge">${(step.action && step.action.desc) || '反应'}</span>
+          ${polymerBadge}
         </div>
         <div class="step-card-note">${step.note || ''}</div>
       `;

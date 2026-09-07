@@ -277,6 +277,19 @@ const REACTION_PRESETS = [
       {
         name: "4. α-1,4-糖苷键缩聚生成直链淀粉分子链",
         note: "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，延伸构建直链淀粉骨架，完成人工全合成！",
+        polymer: {
+          label: "n",
+          tag: "直链淀粉聚合重复单元 · [C₆H₁₀O₅]ₙ",
+          excludeIds: ["Ow1", "Hw1", "Hw2", "Ow2", "Hw3", "Hw4"],
+          leftBond: {
+            atomId: "O4A",
+            vector: [-1.3, 0.1, 0]
+          },
+          rightBond: {
+            atomId: "C1B",
+            vector: [1.3, -0.6, 0.1]
+          }
+        },
         atoms: [
           // 左环 A
           { id: "O5A", element: "O", x: -2.2, y: 1.1, z: -0.2 },
@@ -292,8 +305,8 @@ const REACTION_PRESETS = [
           { id: "H2AO", element: "H", x: -0.1, y: -2.1, z: 0.4 },
           { id: "O3A", element: "O", x: -2.5, y: -2.4, z: -0.2 },
           { id: "H3AO", element: "H", x: -2.3, y: -3.0, z: 0.2 },
-          { id: "O4A", element: "O", x: -4.5, y: -1.2, z: 0.3 },
-          { id: "H4AO", element: "H", x: -5.2, y: -0.8, z: 0.4 },
+          // 4-位糖苷桥氧 (向左延伸穿出括号，与上一单元 C1 相连)
+          { id: "O4A", element: "O", x: -4.6, y: -0.1, z: 0.2 },
           { id: "H1A", element: "H", x: -1.0, y: 0.5, z: 1.1 },
           { id: "H2A", element: "H", x: -1.3, y: -0.8, z: -1.2 },
           { id: "H3A", element: "H", x: -2.4, y: -1.3, z: 1.1 },
@@ -309,14 +322,13 @@ const REACTION_PRESETS = [
           { id: "C4B", element: "C", x: 1.1, y: -0.6, z: -0.1 },
           { id: "C3B", element: "C", x: 2.2, y: -1.3, z: 0.1 },
           { id: "C2B", element: "C", x: 3.4, y: -0.8, z: -0.2 },
+          // 1-位端基碳 (向右下延伸穿出括号，与下一单元 O4 相连)
           { id: "C1B", element: "C", x: 3.5, y: 0.5, z: 0.1 },
           { id: "O5B", element: "O", x: 2.4, y: 1.1, z: -0.2 },
           { id: "C5B", element: "C", x: 1.2, y: 0.7, z: 0.2 },
           { id: "C6B", element: "C", x: 0.2, y: 1.5, z: -0.2 },
           { id: "O6B", element: "O", x: -0.7, y: 1.1, z: 0.3 },
           { id: "H6BO", element: "H", x: -1.2, y: 1.6, z: 0.4 },
-          { id: "O1B", element: "O", x: 4.6, y: 1.1, z: -0.2 },
-          { id: "H1BO", element: "H", x: 5.2, y: 0.7, z: -0.2 },
           { id: "O2B", element: "O", x: 4.4, y: -1.5, z: 0.2 },
           { id: "H2BO", element: "H", x: 4.9, y: -1.3, z: 0.5 },
           { id: "O3B", element: "O", x: 2.1, y: -2.4, z: -0.2 },
@@ -329,10 +341,15 @@ const REACTION_PRESETS = [
           { id: "H6B1", element: "H", x: 0.0, y: 2.2, z: 0.3 },
           { id: "H6B2", element: "H", x: 0.4, y: 1.8, z: -1.1 },
 
-          // 脱除的水分子
-          { id: "Ow", element: "O", x: 0.0, y: -2.4, z: -0.8 },
-          { id: "Hw1", element: "H", x: -0.6, y: -3.0, z: -1.1 },
-          { id: "Hw2", element: "H", x: 0.7, y: -2.8, z: -0.7 }
+          // 脱除的水分子 1 (环间 α-1,4 缩合生成)
+          { id: "Ow1", element: "O", x: -1.2, y: -2.6, z: -0.6 },
+          { id: "Hw1", element: "H", x: -1.8, y: -3.1, z: -0.8 },
+          { id: "Hw2", element: "H", x: -0.5, y: -3.0, z: -0.4 },
+
+          // 脱除的水分子 2 (链间缩聚生成)
+          { id: "Ow2", element: "O", x: 1.2, y: -2.6, z: -0.6 },
+          { id: "Hw3", element: "H", x: 0.5, y: -3.0, z: -0.4 },
+          { id: "Hw4", element: "H", x: 1.8, y: -3.1, z: -0.8 }
         ],
         bonds: [
           // 左环 A 键
@@ -351,7 +368,6 @@ const REACTION_PRESETS = [
           { atom1Id: "O3A", atom2Id: "H3AO", order: 1 },
           { atom1Id: "C3A", atom2Id: "H3A", order: 1 },
           { atom1Id: "C4A", atom2Id: "O4A", order: 1 },
-          { atom1Id: "O4A", atom2Id: "H4AO", order: 1 },
           { atom1Id: "C4A", atom2Id: "H4A", order: 1 },
           { atom1Id: "C5A", atom2Id: "C6A", order: 1 },
           { atom1Id: "C5A", atom2Id: "H5A", order: 1 },
@@ -377,8 +393,6 @@ const REACTION_PRESETS = [
           { atom1Id: "C2B", atom2Id: "O2B", order: 1 },
           { atom1Id: "O2B", atom2Id: "H2BO", order: 1 },
           { atom1Id: "C2B", atom2Id: "H2B", order: 1 },
-          { atom1Id: "C1B", atom2Id: "O1B", order: 1 },
-          { atom1Id: "O1B", atom2Id: "H1BO", order: 1 },
           { atom1Id: "C1B", atom2Id: "H1B", order: 1 },
           { atom1Id: "C5B", atom2Id: "C6B", order: 1 },
           { atom1Id: "C5B", atom2Id: "H5B", order: 1 },
@@ -387,9 +401,11 @@ const REACTION_PRESETS = [
           { atom1Id: "C6B", atom2Id: "H6B1", order: 1 },
           { atom1Id: "C6B", atom2Id: "H6B2", order: 1 },
 
-          // 水分子
-          { atom1Id: "Ow", atom2Id: "Hw1", order: 1 },
-          { atom1Id: "Ow", atom2Id: "Hw2", order: 1 }
+          // 2 分子脱除的水分子
+          { atom1Id: "Ow1", atom2Id: "Hw1", order: 1 },
+          { atom1Id: "Ow1", atom2Id: "Hw2", order: 1 },
+          { atom1Id: "Ow2", atom2Id: "Hw3", order: 1 },
+          { atom1Id: "Ow2", atom2Id: "Hw4", order: 1 }
         ],
         action: { type: "product", desc: "淀粉聚合" }
       }

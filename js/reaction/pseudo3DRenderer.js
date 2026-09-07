@@ -251,23 +251,29 @@ class Pseudo3DRenderer {
           scale: 1
         });
       } else if (cur && !nxt) {
+        // 平滑渐隐消退：自 1 平滑下降至 0，二次平滑缓动，杜绝提前截断与突变
+        const fadeOut = Math.max(0, 1 - t);
+        const smoothFade = fadeOut * fadeOut;
         interpolatedAtoms.push({
           id,
           element: cur.element,
-          x: cur.x + (cur.x * 0.2) * t,
-          y: cur.y + (cur.y * 0.2) * t,
-          z: cur.z + (cur.z * 0.2) * t,
-          opacity: Math.max(0, 1 - t * 1.3),
-          scale: Math.max(0.2, 1 - t * 0.8)
+          x: cur.x + (cur.x * 0.15) * t,
+          y: cur.y + (cur.y * 0.15) * t,
+          z: cur.z + (cur.z * 0.15) * t,
+          opacity: smoothFade,
+          scale: Math.max(0.08, 1 - t * 0.5)
         });
       } else if (!cur && nxt) {
+        // 平滑渐现进入：自 0 平滑上升至 1
+        const fadeIn = Math.min(1, Math.max(0, t));
+        const smoothIn = fadeIn * (2 - fadeIn);
         interpolatedAtoms.push({
           id,
           element: nxt.element,
-          x: nxt.x * (0.85 + 0.15 * t),
-          y: nxt.y * (0.85 + 0.15 * t),
-          z: nxt.z * (0.85 + 0.15 * t),
-          opacity: Math.min(1, t * 1.4),
+          x: nxt.x * (0.88 + 0.12 * t),
+          y: nxt.y * (0.88 + 0.12 * t),
+          z: nxt.z * (0.88 + 0.12 * t),
+          opacity: smoothIn,
           scale: Math.min(1, 0.4 + 0.6 * t)
         });
       }
@@ -425,7 +431,9 @@ class Pseudo3DRenderer {
       const r = Math.round(this.palette.atomBack.r + (this.palette.atomFront.r - this.palette.atomBack.r) * depthFactor);
       const g = Math.round(this.palette.atomBack.g + (this.palette.atomFront.g - this.palette.atomBack.g) * depthFactor);
       const b = Math.round(this.palette.atomBack.b + (this.palette.atomFront.b - this.palette.atomBack.b) * depthFactor);
-      atom.color = `rgba(${r}, ${g}, ${b}, ${atom.opacity || 1})`;
+      const atomOpacity = typeof atom.opacity === 'number' ? Math.max(0, Math.min(1, atom.opacity)) : 1;
+      atom.opacity = atomOpacity;
+      atom.color = `rgba(${r}, ${g}, ${b}, ${atomOpacity})`;
       atom.rgb = { r, g, b };
       atom.clipRadius = Math.max(7, atom.fontSize * 0.44);
 
@@ -499,6 +507,9 @@ class Pseudo3DRenderer {
         this.renderAtom(ctx, item.data);
       }
     });
+
+    // 绘制高分子聚合物 []n 大括号组件
+    this.renderPolymerBrackets(ctx, projectedAtoms);
 
     if (this.hoveredAtom) {
       this.renderHoverTooltip(ctx, this.hoveredAtom);
@@ -839,7 +850,11 @@ class Pseudo3DRenderer {
   }
 
   renderAtom(ctx, atom) {
+    const opacity = typeof atom.opacity === 'number' ? atom.opacity : 1;
+    if (opacity <= 0.005) return;
+
     ctx.save();
+    ctx.globalAlpha = opacity;
 
     ctx.font = `700 ${atom.fontSize}px 'Century Gothic', CenturyGothic, AppleGothic, sans-serif`;
     ctx.textAlign = 'center';
@@ -883,6 +898,9 @@ class Pseudo3DRenderer {
     const centerY = this.height * 0.5 + this.panY;
 
     atoms.forEach(atom => {
+      if ((atom.opacity !== undefined && atom.opacity <= 0.05) || (atom.scale && atom.scale < 0.2)) {
+        return;
+      }
       const rot = this.rotatePoint(atom);
       const sx = centerX + rot.x * this.zoom;
       const sy = centerY - rot.y * this.zoom;
@@ -918,6 +936,320 @@ class Pseudo3DRenderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, atom.sx, boxY + boxH * 0.5);
+    ctx.restore();
+  }
+
+  /**
+   * 高分子聚合物 []n 酷炫化学大括号组件
+   * 根据聚合物重复单元原子空间投影坐标动态框选并附带聚合度下标 n 与延长虚键
+   */
+  renderPolymerBrackets(ctx, projectedAtoms) {
+    if (!projectedAtoms || projectedAtoms.length === 0) return;
+
+    const getStepPolymer = step => {
+      if (!step) return null;
+      if (step.polymer) return step.polymer;
+      if (step.isPolymer) return { label: 'n', tag: '高分子聚合物单元 · []ₙ' };
+      if (step.name && (step.name.includes('淀粉') || step.name.includes('聚合') || step.name.includes('聚合物'))) {
+        return {
+          label: 'n',
+          tag: '直链淀粉聚合单元 · [C₆H₁₀O₅]ₙ',
+          excludeIds: ['Ow', 'Hw1', 'Hw2']
+        };
+      }
+      return null;
+    };
+
+    const curPolymer = getStepPolymer(this.currentStepData);
+    const nxtPolymer = getStepPolymer(this.nextStepData);
+
+    let bracketOpacity = 0;
+    let activeConfig = null;
+
+    if (this.transitionProgress >= 1 || !this.nextStepData) {
+      if (!curPolymer) return;
+      bracketOpacity = 1;
+      activeConfig = curPolymer;
+    } else {
+      if (curPolymer && nxtPolymer) {
+        bracketOpacity = 1;
+        activeConfig = nxtPolymer;
+      } else if (curPolymer && !nxtPolymer) {
+        bracketOpacity = Math.max(0, 1 - this.transitionProgress);
+        activeConfig = curPolymer;
+      } else if (!curPolymer && nxtPolymer) {
+        bracketOpacity = Math.min(1, this.transitionProgress);
+        activeConfig = nxtPolymer;
+      } else {
+        return;
+      }
+    }
+
+    if (bracketOpacity <= 0.01 || !activeConfig) return;
+
+    const excludeSet = new Set(activeConfig.excludeIds || []);
+    const polymerAtoms = projectedAtoms.filter(a => {
+      if (excludeSet.has(a.id)) return false;
+      if (activeConfig.atomIds && activeConfig.atomIds.length > 0) {
+        return activeConfig.atomIds.includes(a.id);
+      }
+      if (a.opacity !== undefined && a.opacity <= 0.08) return false;
+      return true;
+    });
+
+    if (polymerAtoms.length < 2) return;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    let avgDepth = 0;
+    polymerAtoms.forEach(a => {
+      if (a.sx < minX) minX = a.sx;
+      if (a.sx > maxX) maxX = a.sx;
+      if (a.sy < minY) minY = a.sy;
+      if (a.sy > maxY) maxY = a.sy;
+      avgDepth += (a.depthFactor !== undefined ? a.depthFactor : 0.5);
+    });
+    avgDepth /= polymerAtoms.length;
+
+    // 留白边距自适应缩放
+    const padX = Math.max(22, 26 * (this.zoom / 42));
+    const padY = Math.max(20, 24 * (this.zoom / 42));
+    const leftX = minX - padX;
+    const rightX = maxX + padX;
+    const topY = minY - padY;
+    const bottomY = maxY + padY;
+    const boxHeight = bottomY - topY;
+    const capLen = Math.min(26, Math.max(14, boxHeight * 0.1));
+
+    ctx.save();
+
+    // 1. 微光聚合物保护区背景 (极淡暖色)
+    ctx.fillStyle = `rgba(184, 74, 40, ${0.02 * bracketOpacity})`;
+    ctx.beginPath();
+    ctx.rect(leftX, topY, rightX - leftX, boxHeight);
+    ctx.fill();
+
+    // 2. 左括号 [
+    const bracketColor = `rgba(184, 74, 40, ${0.9 * bracketOpacity})`;
+    const lineWidth = Math.max(2.0, 2.0 + avgDepth * 1.2);
+    ctx.strokeStyle = bracketColor;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'square';
+    ctx.lineJoin = 'miter';
+
+    ctx.beginPath();
+    ctx.moveTo(leftX + capLen, topY);
+    ctx.lineTo(leftX, topY);
+    ctx.lineTo(leftX, bottomY);
+    ctx.lineTo(leftX + capLen, bottomY);
+    ctx.stroke();
+
+    // 3. 右括号 ]
+    ctx.beginPath();
+    ctx.moveTo(rightX - capLen, topY);
+    ctx.lineTo(rightX, topY);
+    ctx.lineTo(rightX, bottomY);
+    ctx.lineTo(rightX - capLen, bottomY);
+    ctx.stroke();
+
+    // 4. 聚合化学键直接穿透大括号伸出 (Polymerization chemical bonds extending directly through brackets)
+    const centerX = this.width * 0.5 + this.panX;
+    const centerY = this.height * 0.5 + this.panY;
+
+    // 4.1 提取/自动识别左右两端参与聚合的原子与伸出方向向量
+    let leftConfig = activeConfig.leftBond || activeConfig.leftTerminal;
+    let rightConfig = activeConfig.rightBond || activeConfig.rightTerminal;
+
+    // 默认/智能备选：按原子 ID 或 空间极值查找
+    if (!leftConfig) {
+      const candidateO4 = polymerAtoms.find(a => a.id === 'O4A' || a.id === 'O4' || a.id === 'Ob_left');
+      if (candidateO4) {
+        leftConfig = { atomId: candidateO4.id, vector: [-1.3, 0.1, 0] };
+      }
+    }
+
+    if (!rightConfig) {
+      const candidateC1 = polymerAtoms.find(a => a.id === 'C1B' || a.id === 'C1' || a.id === 'Cb_right');
+      if (candidateC1) {
+        rightConfig = { atomId: candidateC1.id, vector: [1.3, -0.6, 0.1] };
+      }
+    }
+
+    // 收集所有已配置的聚合端点
+    const rawConfigs = [leftConfig, rightConfig].filter(cfg => cfg && cfg.atomId);
+
+    // 若无配置，智能降级：取当前屏幕坐标系最左与最右原子
+    if (rawConfigs.length === 0 && polymerAtoms.length >= 2) {
+      const sortedByX = [...polymerAtoms].sort((a, b) => a.sx - b.sx);
+      rawConfigs.push(
+        { atomId: sortedByX[0].id, vector: [-1.3, 0, 0] },
+        { atomId: sortedByX[sortedByX.length - 1].id, vector: [1.3, 0, 0] }
+      );
+    }
+
+    // 关联投影后的实际原子对象
+    const terminalItems = rawConfigs.map(cfg => {
+      const atom = projectedAtoms.find(a => a.id === cfg.atomId);
+      return atom ? { config: cfg, atom } : null;
+    }).filter(Boolean);
+
+    // 🌟 核心改进：动态视差自适应与“左右就近延伸”
+    // 视角在三维空间中旋转时，参与聚合的两个端点在屏幕上的投影 X 坐标 (sx) 会发生互换或偏移。
+    // 按当前投影屏幕的 sx 升序排序：sx 较小者必然处于分子左侧，就近穿透左括号 (leftX)；
+    // sx 较大者必然处于分子右侧，就近穿透右括号 (rightX)。绝不产生跨越整个分子的交叉错位！
+    if (terminalItems.length >= 2) {
+      terminalItems.sort((a, b) => a.atom.sx - b.atom.sx);
+    }
+
+    const renderExtendingBond = (item, isLeft) => {
+      if (!item || !item.atom) return;
+      const { config: termConfig, atom } = item;
+
+      // 提取该端点在三维空间中的特征延伸方向向量
+      const v3 = termConfig.vector || (isLeft ? [-1.3, 0.1, 0] : [1.3, -0.6, 0.1]);
+      const target3D = {
+        x: atom.x + v3[0],
+        y: atom.y + v3[1],
+        z: atom.z + v3[2]
+      };
+      const rotTarget = this.rotatePoint(target3D);
+      const targetSX = centerX + rotTarget.x * this.zoom;
+      const targetSY = centerY - rotTarget.y * this.zoom;
+
+      let dx = targetSX - atom.sx;
+      let dy = targetSY - atom.sy;
+
+      // 视向就近约束：确保延伸方向必须朝向所分配的大括号一侧（左侧为向左负方向，右侧为向右正方向）
+      // 避免视角旋转到侧面或背后时，由于局部键角指向导致连线向内折返
+      if (isLeft && dx > -0.15) {
+        dx = -Math.max(0.5, Math.abs(dx));
+      } else if (!isLeft && dx < 0.15) {
+        dx = Math.max(0.5, Math.abs(dx));
+      }
+
+      const dirDist = Math.hypot(dx, dy) || 1;
+      let ux = dx / dirDist;
+      let uy = dy / dirDist;
+
+      const bracketX = isLeft ? leftX : rightX;
+      let crossX = bracketX;
+      let crossY = atom.sy;
+
+      // 计算射线与大括号垂直骨架线的交点 (t 必然为正，因为 bracketX 与 atom.sx 的相对位置与 ux 符号一致)
+      if (Math.abs(ux) > 0.001) {
+        const t = (bracketX - atom.sx) / ux;
+        if (t > 0) {
+          crossY = atom.sy + uy * t;
+        }
+      }
+      // 将穿透交点严格限制在大括号可视高程区间内（留出顶部/底部折角余量）
+      crossY = Math.max(topY + 14, Math.min(bottomY - 14, crossY));
+
+      // 根据实际起点与穿透交点重新校准实际方向向量，确保线段平滑精准、毫无折线歧义
+      const effDx = crossX - atom.sx;
+      const effDy = crossY - atom.sy;
+      const effDist = Math.hypot(effDx, effDy) || 1;
+      const finalUx = effDx / effDist;
+      const finalUy = effDy / effDist;
+
+      const extLen = Math.max(24, 30 * (this.zoom / 42));
+      const midExtX = crossX + finalUx * (extLen * 0.52);
+      const midExtY = crossY + finalUy * (extLen * 0.52);
+      const outerX = crossX + finalUx * extLen;
+      const outerY = crossY + finalUy * extLen;
+
+      ctx.save();
+      const bondWidth = Math.max(1.8, 2.0 + avgDepth * 1.4);
+      ctx.lineWidth = bondWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // (A) 括号内侧段：从聚合原子字符外边缘平滑连接至穿透括号交点 (实线化学键)
+      const clip = atom.clipRadius || 10;
+      const startX = atom.sx + finalUx * clip;
+      const startY = atom.sy + finalUy * clip;
+
+      // 仅当原子在括号内侧时绘制内部连接段
+      if ((isLeft && startX > crossX) || (!isLeft && startX < crossX)) {
+        const bondGrad = ctx.createLinearGradient(startX, startY, crossX, crossY);
+        bondGrad.addColorStop(0, `rgba(${this.palette.bondFront.r}, ${this.palette.bondFront.g}, ${this.palette.bondFront.b}, ${0.95 * bracketOpacity})`);
+        bondGrad.addColorStop(1, `rgba(184, 74, 40, ${0.9 * bracketOpacity})`);
+        ctx.strokeStyle = bondGrad;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(crossX, crossY);
+        ctx.stroke();
+      }
+
+      // (B) 穿透括号线处的微型立体锚固节点 (强化化学键穿过大括号的立体视觉)
+      ctx.fillStyle = `rgba(184, 74, 40, ${bracketOpacity})`;
+      ctx.beginPath();
+      ctx.arc(crossX, crossY, bondWidth * 0.95, 0, Math.PI * 2);
+      ctx.fill();
+
+      // (C) 伸出括号外侧段：前半段坚挺实线，后半段开链虚线延伸
+      // 前半段实线直接伸出括号
+      ctx.strokeStyle = `rgba(184, 74, 40, ${0.92 * bracketOpacity})`;
+      ctx.beginPath();
+      ctx.moveTo(crossX, crossY);
+      ctx.lineTo(midExtX, midExtY);
+      ctx.stroke();
+
+      // 后半段虚线表示链节无限延伸
+      ctx.strokeStyle = `rgba(184, 74, 40, ${0.8 * bracketOpacity})`;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(midExtX, midExtY);
+      ctx.lineTo(outerX, outerY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // (D) 链端延展提示微点
+      ctx.fillStyle = `rgba(184, 74, 40, ${0.9 * bracketOpacity})`;
+      ctx.beginPath();
+      ctx.arc(outerX, outerY, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    };
+
+    if (terminalItems.length === 1) {
+      const isLeft = terminalItems[0].atom.sx < (leftX + rightX) * 0.5;
+      renderExtendingBond(terminalItems[0], isLeft);
+    } else if (terminalItems.length >= 2) {
+      renderExtendingBond(terminalItems[0], true);
+      renderExtendingBond(terminalItems[terminalItems.length - 1], false);
+    }
+
+    // 5. 聚合度下标 [ ]n 酷炫排印
+    const indexLabel = activeConfig.label || 'n';
+    const indexFontSize = Math.max(19, Math.round(22 * (0.85 + avgDepth * 0.35)));
+    ctx.font = `italic 700 ${indexFontSize}px 'Century Gothic', CenturyGothic, AppleGothic, sans-serif`;
+    ctx.fillStyle = `rgba(184, 74, 40, ${bracketOpacity})`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(indexLabel, rightX + 8, bottomY + 4);
+
+    // 6. 顶部微型学术胶囊标签
+    if (activeConfig.tag) {
+      ctx.font = `700 11.5px 'Century Gothic', CenturyGothic, AppleGothic, sans-serif`;
+      const tw = ctx.measureText(activeConfig.tag).width;
+      const tagX = (leftX + rightX) * 0.5;
+      const tagY = topY - 14;
+
+      ctx.fillStyle = `rgba(250, 246, 233, ${0.94 * bracketOpacity})`;
+      ctx.strokeStyle = `rgba(184, 74, 40, ${0.4 * bracketOpacity})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(tagX - tw * 0.5 - 10, tagY - 10, tw + 20, 20, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(184, 74, 40, ${bracketOpacity})`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(activeConfig.tag, tagX, tagY);
+    }
+
     ctx.restore();
   }
 }

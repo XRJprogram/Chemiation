@@ -31,6 +31,13 @@ const ReactionScriptEngine = {
       lines.push(`step "${step.name || `步骤 ${idx + 1}`}" {`);
       if (step.note) lines.push(`  note "${step.note.replace(/"/g, '\\"')}"`);
       if (step.action && step.action.desc) lines.push(`  action "${step.action.desc.replace(/"/g, '\\"')}"`);
+      if (step.polymer) {
+        const p = typeof step.polymer === 'object' ? step.polymer : { label: String(step.polymer) };
+        const labelStr = p.label || 'n';
+        const tagStr = p.tag ? ` tag "${p.tag.replace(/"/g, '\\"')}"` : '';
+        const exclStr = Array.isArray(p.excludeIds) && p.excludeIds.length ? ` exclude "${p.excludeIds.join(' ')}"` : '';
+        lines.push(`  polymer "${labelStr}"${tagStr}${exclStr}`);
+      }
       lines.push('');
       lines.push('  # 原子定义: atom <ID> <元素> [可选X Y Z坐标]');
       (step.atoms || []).forEach(a => {
@@ -156,6 +163,20 @@ const ReactionScriptEngine = {
         const actMatch = line.match(/^action\s+"([^"]+)"/i);
         if (actMatch) {
           currentStep.action = { type: 'action', desc: actMatch[1] };
+          continue;
+        }
+
+        if (/^polymer\b/i.test(line)) {
+          const quotes = Array.from(line.matchAll(/"([^"]+)"/g)).map(m => m[1]);
+          const exclMatch = line.match(/exclude\s+"([^"]+)"/i);
+          const label = quotes[0] || 'n';
+          const tag = quotes.length > 1 && (!exclMatch || quotes[1] !== exclMatch[1]) ? quotes[1] : '';
+          const excludeIds = exclMatch ? exclMatch[1].split(/\s+/).filter(Boolean) : [];
+          currentStep.polymer = {
+            label,
+            tag,
+            excludeIds
+          };
           continue;
         }
 
