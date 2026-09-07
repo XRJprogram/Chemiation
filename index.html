@@ -198,21 +198,14 @@
               </div>
             </div>
 
-            <!-- 快捷模板一键插入工具栏 -->
-            <div class="script-templates-bar">
-              <span class="template-label">模板:</span>
-              <button class="template-pill" data-template="new_step" title="插入新的空白基元步骤">+ 步骤</button>
-              <button class="template-pill" data-template="addition_elimination" title="插入亲电加成/消除反应机理模板">加成消除</button>
-              <button class="template-pill" data-template="catalysis_step" title="插入金属表面/配位催化机理模板">配位催化</button>
-              <button class="template-pill" data-template="radical_step" title="插入自由基均裂与链传递模板">自由基</button>
-              <button class="template-pill" data-template="polymer_step" title="插入高分子缩聚/加聚大括号模板">聚合物</button>
-              <button class="template-pill" data-template="reaction_blank" title="插入完整全新反应模板">新反应</button>
-            </div>
-
             <div id="script-error-toast" class="script-error-toast"></div>
 
-            <div class="script-editor-wrap">
-              <textarea id="script-editor" class="script-editor" spellcheck="false" placeholder="在此编写或修改 ACPL 反应推演脚本..."></textarea>
+            <div class="ide-container">
+              <div id="ide-gutter" class="ide-gutter"><div>1</div></div>
+              <div class="ide-code-wrap">
+                <pre id="ide-highlight" class="ide-highlight" aria-hidden="true"><code id="ide-code"></code></pre>
+                <textarea id="script-editor" class="script-editor ide-input" spellcheck="false" placeholder="在此编写或修改 ACPL 反应推演脚本..."></textarea>
+              </div>
             </div>
           </div>
         </div>

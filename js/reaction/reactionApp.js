@@ -5,7 +5,7 @@
 
 class ReactionApp {
   constructor() {
-    this.storageKey = 'chemiation_reactions_v2';
+    this.storageKey = 'chemiation_reactions_v3';
     this.presets = this.loadInitialPresets();
     this.currentReactionIndex = 0;
     this.currentStepIndex = 0;
@@ -83,8 +83,11 @@ class ReactionApp {
     this.stepsListContainer = document.getElementById('steps-list-container');
     this.stepCounterText = document.getElementById('step-counter-text');
 
-    // 脚本编辑器相关
+    // 脚本编辑器相关 (IDE 风格高亮与行号)
     this.scriptEditor = document.getElementById('script-editor');
+    this.ideGutter = document.getElementById('ide-gutter');
+    this.ideHighlight = document.getElementById('ide-highlight');
+    this.ideCode = document.getElementById('ide-code');
     this.btnRunScript = document.getElementById('btn-run-script');
     this.btnResetScript = document.getElementById('btn-reset-script');
     this.scriptErrorToast = document.getElementById('script-error-toast');
@@ -236,23 +239,35 @@ class ReactionApp {
       this.btnResetScript.addEventListener('click', () => this.resetScriptToCurrent());
     }
 
-    // 快捷模板一键插入
-    const templatePills = document.querySelectorAll('.template-pill');
-    templatePills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const t = pill.dataset.template;
-        const text = ReactionScriptEngine.getQuickTemplate(t);
-        if (this.scriptEditor) {
-          if (t === 'new_step') {
-            this.scriptEditor.value += text;
-          } else {
-            this.scriptEditor.value = text;
-          }
-          this.hideScriptError();
+    // ACPL 脚本 IDE 编辑器交互（高亮、行号、Tab缩进与滚动同步）
+    if (this.scriptEditor) {
+      this.scriptEditor.addEventListener('input', () => {
+        this.updateIDE();
+        this.markScriptDirty(true);
+      });
+
+      this.scriptEditor.addEventListener('scroll', () => {
+        if (this.ideHighlight) {
+          this.ideHighlight.scrollTop = this.scriptEditor.scrollTop;
+          this.ideHighlight.scrollLeft = this.scriptEditor.scrollLeft;
+        }
+        if (this.ideGutter) {
+          this.ideGutter.scrollTop = this.scriptEditor.scrollTop;
+        }
+      });
+
+      this.scriptEditor.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = this.scriptEditor.selectionStart;
+          const end = this.scriptEditor.selectionEnd;
+          this.scriptEditor.value = this.scriptEditor.value.substring(0, start) + '  ' + this.scriptEditor.value.substring(end);
+          this.scriptEditor.selectionStart = this.scriptEditor.selectionEnd = start + 2;
+          this.updateIDE();
           this.markScriptDirty(true);
         }
       });
-    });
+    }
 
     // 播放与步进
     if (this.prevBtn) {
@@ -356,8 +371,12 @@ class ReactionApp {
     if (this.tabPaneSteps) this.tabPaneSteps.style.display = tabName === 'steps' ? 'flex' : 'none';
     if (this.tabPaneScript) this.tabPaneScript.style.display = tabName === 'script' ? 'flex' : 'none';
 
-    if (tabName === 'script' && this.scriptEditor && !this.scriptEditor.value.trim()) {
-      this.resetScriptToCurrent();
+    if (tabName === 'script') {
+      if (this.scriptEditor && !this.scriptEditor.value.trim()) {
+        this.resetScriptToCurrent();
+      } else {
+        this.updateIDE();
+      }
     }
   }
 
@@ -397,6 +416,7 @@ class ReactionApp {
     // 同步到脚本编辑器
     if (this.scriptEditor) {
       this.scriptEditor.value = ReactionScriptEngine.serialize(reaction);
+      this.updateIDE();
     }
     this.hideScriptError();
 
@@ -682,6 +702,7 @@ class ReactionApp {
     const reaction = this.presets[this.currentReactionIndex];
     if (reaction && this.scriptEditor) {
       this.scriptEditor.value = ReactionScriptEngine.serialize(reaction);
+      this.updateIDE();
       this.hideScriptError();
       this.markScriptDirty(false, '已还原');
     }
@@ -764,6 +785,81 @@ class ReactionApp {
         this.fileSaveStatus.classList.add('saved');
       }
     }
+  }
+
+  /**
+   * 刷新 ACPL IDE 编辑器：同步语法高亮与行号列
+   */
+  updateIDE() {
+    if (!this.scriptEditor) return;
+    const code = this.scriptEditor.value;
+
+    if (this.ideCode) {
+      this.ideCode.innerHTML = this.highlightACPL(code);
+    }
+
+    if (this.ideGutter) {
+      const lineCount = (code.split('\n').length) || 1;
+      let gutterHtml = '';
+      for (let i = 1; i <= lineCount; i++) {
+        gutterHtml += `<div>${i}</div>`;
+      }
+      this.ideGutter.innerHTML = gutterHtml;
+    }
+
+    if (this.ideHighlight) {
+      this.ideHighlight.scrollTop = this.scriptEditor.scrollTop;
+      this.ideHighlight.scrollLeft = this.scriptEditor.scrollLeft;
+    }
+    if (this.ideGutter) {
+      this.ideGutter.scrollTop = this.scriptEditor.scrollTop;
+    }
+  }
+
+  /**
+   * ACPL 脚本语法高亮解析器（单趟精准词法正则高亮）
+   */
+  highlightACPL(text) {
+    if (!text) return '';
+
+    const tokenRegex = /(#.*$)|("(?:[^"\\]|\\.)*")|\b(reaction|step|atom|bond|polymer|order|tag|leftBond|rightBond|exclude|excludeIds|vector|note|equation|summary|category)\b|\b(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Fe|Cu|Zn|Br|I|Pt|Pd|Au)\b|(?<!\w)(-?\d+(?:\.\d+)?)(?!\w)|([{}[\]])/gm;
+
+    let result = '';
+    let lastIndex = 0;
+    let match;
+
+    const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    while ((match = tokenRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        result += escape(text.slice(lastIndex, match.index));
+      }
+      const [full, comment, str, kw, elem, num, punct] = match;
+      if (comment) {
+        result += `<span class="tok-comment">${escape(comment)}</span>`;
+      } else if (str) {
+        result += `<span class="tok-string">${escape(str)}</span>`;
+      } else if (kw) {
+        result += `<span class="tok-keyword">${kw}</span>`;
+      } else if (elem) {
+        result += `<span class="tok-element">${elem}</span>`;
+      } else if (num) {
+        result += `<span class="tok-number">${num}</span>`;
+      } else if (punct) {
+        result += `<span class="tok-punct">${punct}</span>`;
+      }
+      lastIndex = tokenRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      result += escape(text.slice(lastIndex));
+    }
+
+    if (text.endsWith('\n')) {
+      result += ' ';
+    }
+
+    return result;
   }
 
   showScriptError(msg) {

@@ -31,35 +31,62 @@ step "1. 原料活化与加氢还原 (CO₂ → C₁)" {
   bond H5 H6 1
 }
 
-step "2. C-C 偶联缩合生成 C₃ 前体 (DHA)" {
-  note "C₁ 单元在甲醛缩合酶作用下发生碳碳偶联，合成具有对称结构的三碳酮糖二羟基丙酮 (DHA)。"
+step "2. C₁ 缩合生成双三碳前体 (2×C₃: DHA 与 GAP)" {
+  note "两分子 C₁ 经甲醛缩合酶与异构酶转化形成二羟基丙酮 (DHA) 与甘油醛 (GAP)，双三碳前体对准吸附准备发生碳碳偶联。"
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
-  atom C1 C -1.60 -0.40 0.10
-  atom C2 C 0.00 0.40 0.00
-  atom C3 C 1.60 -0.40 -0.10
-  atom O2 O 0.00 1.80 0.00
-  atom O1 O -2.60 0.60 0.20
-  atom HO1 H -3.40 0.40 0.30
-  atom O3 O 2.60 0.60 -0.20
-  atom HO3 H 3.40 0.40 -0.30
-  atom H11 H -1.60 -1.20 0.90
-  atom H12 H -1.60 -1.00 -0.90
-  atom H31 H 1.60 -1.20 0.90
-  atom H32 H 1.60 -1.00 -0.90
+  # 第一分子三碳糖：二羟基丙酮 DHA (C1, C2, C3, O1, O2, O3, 6H)
+  atom C1 C 2.80 0.80 0.10
+  atom C2 C 2.40 -0.60 -0.20
+  atom C3 C 1.00 -1.20 0.10
+  atom O1 O 3.80 1.40 -0.20
+  atom H1O H 4.50 1.00 -0.20
+  atom O2 O 3.20 -1.50 0.20
+  atom H2O H 3.90 -1.30 0.50
+  atom O3 O 0.80 -2.40 -0.20
+  atom H3O H 1.00 -3.00 0.30
+  atom H1 H 3.00 0.70 1.10
+  atom H2 H 2.30 -0.60 -1.20
+  atom H3 H 0.90 -1.20 1.10
+
+  # 第二分子三碳糖：3-磷酸甘油醛前体 GAP (C4, C5, C6, O4, O5, O6, 6H)
+  atom C4 C -2.80 -0.60 -0.10
+  atom C5 C -2.60 0.80 0.20
+  atom C6 C -3.70 1.60 -0.20
+  atom O4 O -3.80 -1.30 0.40
+  atom H4O H -4.50 -0.90 0.50
+  atom O5 O -1.50 1.40 -0.20
+  atom O6 O -4.80 1.00 0.30
+  atom H6O H -5.30 1.60 0.40
+  atom H4 H -2.90 -0.50 -1.10
+  atom H5 H -2.60 0.80 1.20
+  atom H61 H -4.00 2.40 0.30
+  atom H62 H -3.40 1.90 -1.10
 
   # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
   bond C1 C2 1
   bond C2 C3 1
-  bond C2 O2 2
   bond C1 O1 1
-  bond O1 HO1 1
+  bond O1 H1O 1
+  bond C2 O2 1
+  bond O2 H2O 1
   bond C3 O3 1
-  bond O3 HO3 1
-  bond C1 H11 1
-  bond C1 H12 1
-  bond C3 H31 1
-  bond C3 H32 1
+  bond O3 H3O 1
+  bond C1 H1 1
+  bond C2 H2 1
+  bond C3 H3 1
+
+  bond C4 C5 1
+  bond C5 C6 1
+  bond C4 O4 1
+  bond O4 H4O 1
+  bond C5 O5 1
+  bond C6 O6 1
+  bond O6 H6O 1
+  bond C4 H4 1
+  bond C5 H5 1
+  bond C6 H61 1
+  bond C6 H62 1
 }
 
 step "3. 醛醇缩合成环生成 C₆ 葡萄糖吡喃环" {
@@ -119,8 +146,8 @@ step "3. 醛醇缩合成环生成 C₆ 葡萄糖吡喃环" {
 }
 
 step "4. α-1,4-糖苷键缩聚生成直链淀粉分子链" {
-  note "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，延伸构建直链淀粉骨架，完成人工全合成！"
-  polymer "n" tag "直链淀粉单体最简重复单元 · [C₆H₁₀O₅]ₙ" exclude "Ow Hw1 Hw2"
+  note "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，脱除的半缩醛羟基 (O1-H1O) 与 4-位质子 (H4O) 就地结合生成水分子！"
+  polymer "n" tag "直链淀粉单体最简重复单元 · [C₆H₁₀O₅]ₙ" exclude "O1 H1O H4O" leftBond O4 [-1.4, -0.2, 0] rightBond C1 [1.4, 0.4, 0]
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标]
   atom O5 O 0.20 1.30 -0.20
@@ -144,9 +171,11 @@ step "4. α-1,4-糖苷键缩聚生成直链淀粉分子链" {
   atom H5 H -1.10 0.80 1.20
   atom H61 H -2.50 2.40 0.30
   atom H62 H -1.90 1.90 -1.10
-  atom Ow O 3.40 -2.50 -0.50
-  atom Hw1 H 2.80 -3.10 -0.80
-  atom Hw2 H 4.10 -2.90 -0.20
+
+  # 缩聚脱除的 1 分子水 (由上一步的 O1, H1O, H4O 就地结合生成，位于括号外侧右上方)
+  atom O1 O 3.20 2.20 -0.20
+  atom H1O H 3.80 2.70 0.10
+  atom H4O H 2.50 2.70 -0.40
 
   # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]
   bond C1 C2 1
@@ -170,6 +199,8 @@ step "4. α-1,4-糖苷键缩聚生成直链淀粉分子链" {
   bond C5 H5 1
   bond C6 H61 1
   bond C6 H62 1
-  bond Ow Hw1 1
-  bond Ow Hw2 1
+
+  # 就地脱水生成的水分子内键
+  bond O1 H1O 1
+  bond O1 H4O 1
 }

@@ -180,34 +180,63 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "2. C-C 偶联缩合生成 C₃ 前体 (DHA)",
-        note: "C₁ 单元在甲醛缩合酶作用下发生碳碳偶联，合成具有对称结构的三碳酮糖二羟基丙酮 (DHA)。",
+        name: "2. C₁ 缩合生成双三碳前体 (2×C₃: DHA 与 GAP)",
+        note: "两分子 C₁ 经甲醛缩合酶与异构酶转化形成二羟基丙酮 (DHA) 与甘油醛 (GAP)，双三碳前体对准吸附准备发生碳碳偶联。",
         atoms: [
-          { id: "C1", element: "C", x: -1.6, y: -0.4, z: 0.1 },
-          { id: "C2", element: "C", x: 0, y: 0.4, z: 0 },
-          { id: "C3", element: "C", x: 1.6, y: -0.4, z: -0.1 },
-          { id: "O2", element: "O", x: 0, y: 1.8, z: 0 },
-          { id: "O1", element: "O", x: -2.6, y: 0.6, z: 0.2 },
-          { id: "HO1", element: "H", x: -3.4, y: 0.4, z: 0.3 },
-          { id: "O3", element: "O", x: 2.6, y: 0.6, z: -0.2 },
-          { id: "HO3", element: "H", x: 3.4, y: 0.4, z: -0.3 },
-          { id: "H11", element: "H", x: -1.6, y: -1.2, z: 0.9 },
-          { id: "H12", element: "H", x: -1.6, y: -1.0, z: -0.9 },
-          { id: "H31", element: "H", x: 1.6, y: -1.2, z: 0.9 },
-          { id: "H32", element: "H", x: 1.6, y: -1.0, z: -0.9 }
+          // 第一分子三碳糖：二羟基丙酮 DHA (C1, C2, C3, O1, O2, O3, 6H)
+          { id: "C1", element: "C", x: 2.8, y: 0.8, z: 0.1 },
+          { id: "C2", element: "C", x: 2.4, y: -0.6, z: -0.2 },
+          { id: "C3", element: "C", x: 1.0, y: -1.2, z: 0.1 },
+          { id: "O1", element: "O", x: 3.8, y: 1.4, z: -0.2 },
+          { id: "H1O", element: "H", x: 4.5, y: 1.0, z: -0.2 },
+          { id: "O2", element: "O", x: 3.2, y: -1.5, z: 0.2 },
+          { id: "H2O", element: "H", x: 3.9, y: -1.3, z: 0.5 },
+          { id: "O3", element: "O", x: 0.8, y: -2.4, z: -0.2 },
+          { id: "H3O", element: "H", x: 1.0, y: -3.0, z: 0.3 },
+          { id: "H1", element: "H", x: 3.0, y: 0.7, z: 1.1 },
+          { id: "H2", element: "H", x: 2.3, y: -0.6, z: -1.2 },
+          { id: "H3", element: "H", x: 0.9, y: -1.2, z: 1.1 },
+
+          // 第二分子三碳糖：3-磷酸甘油醛前体 GAP (C4, C5, C6, O4, O5, O6, 6H)
+          { id: "C4", element: "C", x: -2.8, y: -0.6, z: -0.1 },
+          { id: "C5", element: "C", x: -2.6, y: 0.8, z: 0.2 },
+          { id: "C6", element: "C", x: -3.7, y: 1.6, z: -0.2 },
+          { id: "O4", element: "O", x: -3.8, y: -1.3, z: 0.4 },
+          { id: "H4O", element: "H", x: -4.5, y: -0.9, z: 0.5 },
+          { id: "O5", element: "O", x: -1.5, y: 1.4, z: -0.2 },
+          { id: "O6", element: "O", x: -4.8, y: 1.0, z: 0.3 },
+          { id: "H6O", element: "H", x: -5.3, y: 1.6, z: 0.4 },
+          { id: "H4", element: "H", x: -2.9, y: -0.5, z: -1.1 },
+          { id: "H5", element: "H", x: -2.6, y: 0.8, z: 1.2 },
+          { id: "H61", element: "H", x: -4.0, y: 2.4, z: 0.3 },
+          { id: "H62", element: "H", x: -3.4, y: 1.9, z: -1.1 }
         ],
         bonds: [
+          // 第一分子 DHA 键连
           { atom1Id: "C1", atom2Id: "C2", order: 1 },
           { atom1Id: "C2", atom2Id: "C3", order: 1 },
-          { atom1Id: "C2", atom2Id: "O2", order: 2 },
           { atom1Id: "C1", atom2Id: "O1", order: 1 },
-          { atom1Id: "O1", atom2Id: "HO1", order: 1 },
+          { atom1Id: "O1", atom2Id: "H1O", order: 1 },
+          { atom1Id: "C2", atom2Id: "O2", order: 1 },
+          { atom1Id: "O2", atom2Id: "H2O", order: 1 },
           { atom1Id: "C3", atom2Id: "O3", order: 1 },
-          { atom1Id: "O3", atom2Id: "HO3", order: 1 },
-          { atom1Id: "C1", atom2Id: "H11", order: 1 },
-          { atom1Id: "C1", atom2Id: "H12", order: 1 },
-          { atom1Id: "C3", atom2Id: "H31", order: 1 },
-          { atom1Id: "C3", atom2Id: "H32", order: 1 }
+          { atom1Id: "O3", atom2Id: "H3O", order: 1 },
+          { atom1Id: "C1", atom2Id: "H1", order: 1 },
+          { atom1Id: "C2", atom2Id: "H2", order: 1 },
+          { atom1Id: "C3", atom2Id: "H3", order: 1 },
+
+          // 第二分子 GAP 键连
+          { atom1Id: "C4", atom2Id: "C5", order: 1 },
+          { atom1Id: "C5", atom2Id: "C6", order: 1 },
+          { atom1Id: "C4", atom2Id: "O4", order: 1 },
+          { atom1Id: "O4", atom2Id: "H4O", order: 1 },
+          { atom1Id: "C5", atom2Id: "O5", order: 1 },
+          { atom1Id: "C6", atom2Id: "O6", order: 1 },
+          { atom1Id: "O6", atom2Id: "H6O", order: 1 },
+          { atom1Id: "C4", atom2Id: "H4", order: 1 },
+          { atom1Id: "C5", atom2Id: "H5", order: 1 },
+          { atom1Id: "C6", atom2Id: "H61", order: 1 },
+          { atom1Id: "C6", atom2Id: "H62", order: 1 }
         ]
       },
       {
@@ -268,11 +297,11 @@ const REACTION_PRESETS = [
       },
       {
         name: "4. α-1,4-糖苷键缩聚生成直链淀粉分子链",
-        note: "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，延伸构建直链淀粉骨架，完成人工全合成！",
+        note: "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，脱除的半缩醛羟基 (O1-H1O) 与 4-位质子 (H4O) 就地结合生成水分子！",
         polymer: {
           label: "n",
           tag: "直链淀粉单体最简重复单元 · [C₆H₁₀O₅]ₙ",
-          excludeIds: ["Ow", "Hw1", "Hw2"],
+          excludeIds: ["O1", "H1O", "H4O"],
           leftBond: {
             atomId: "O4",
             vector: [-1.4, -0.2, 0]
@@ -307,10 +336,10 @@ const REACTION_PRESETS = [
           { id: "H61", element: "H", x: -2.5, y: 2.4, z: 0.3 },
           { id: "H62", element: "H", x: -1.9, y: 1.9, z: -1.1 },
 
-          // 缩聚脱除的 1 分子水 (1O, 2H，位于大括号外侧)
-          { id: "Ow", element: "O", x: 3.4, y: -2.5, z: -0.5 },
-          { id: "Hw1", element: "H", x: 2.8, y: -3.1, z: -0.8 },
-          { id: "Hw2", element: "H", x: 4.1, y: -2.9, z: -0.2 }
+          // 缩聚脱除的 1 分子水 (由上一步的 O1, H1O, H4O 就地结合生成，位于括号外侧右上方)
+          { id: "O1", element: "O", x: 3.2, y: 2.2, z: -0.2 },
+          { id: "H1O", element: "H", x: 3.8, y: 2.7, z: 0.1 },
+          { id: "H4O", element: "H", x: 2.5, y: 2.7, z: -0.4 }
         ],
         bonds: [
           // 吡喃六元环骨架与侧基键
@@ -336,9 +365,9 @@ const REACTION_PRESETS = [
           { atom1Id: "C6", atom2Id: "H61", order: 1 },
           { atom1Id: "C6", atom2Id: "H62", order: 1 },
 
-          // 脱除的水分子内键
-          { atom1Id: "Ow", atom2Id: "Hw1", order: 1 },
-          { atom1Id: "Ow", atom2Id: "Hw2", order: 1 }
+          // 就地脱水生成的水分子内键
+          { atom1Id: "O1", atom2Id: "H1O", order: 1 },
+          { atom1Id: "O1", atom2Id: "H4O", order: 1 }
         ]
       }
     ]

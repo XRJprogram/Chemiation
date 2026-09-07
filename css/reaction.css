@@ -271,10 +271,11 @@ html, body {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-dark-brown);
-  background: rgba(94, 65, 47, 0.08);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
   padding: 2px 6px;
   border-radius: 4px;
+  border: 1px solid rgba(184, 74, 40, 0.2);
 }
 
 .toast-title {
@@ -409,10 +410,11 @@ html, body {
   font-family: var(--font-mono);
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--color-dark-brown);
-  background: rgba(94, 65, 47, 0.08);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
   padding: 2px 7px;
   border-radius: 4px;
+  border: 1px solid rgba(184, 74, 40, 0.2);
 }
 
 .btn-toggle-workspace {
@@ -860,39 +862,6 @@ html, body {
   background: #A03D1E;
 }
 
-.script-templates-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 2px 0 6px 0;
-}
-
-.template-label {
-  font-size: 11.5px;
-  color: var(--color-mid-brown);
-  font-weight: 600;
-}
-
-.template-pill {
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  background: rgba(243, 236, 224, 0.6);
-  color: var(--color-deep-brown);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.template-pill:hover {
-  background: #FFFDF9;
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  transform: translateY(-1px);
-}
-
 .status-mode-tag {
   display: inline-flex;
   align-items: center;
@@ -914,32 +883,126 @@ html, body {
   display: none;
 }
 
-.script-editor-wrap {
+/* ==========================================================================
+   ACPL IDE 风格代码编辑器 (行号列 + 实时语法高亮)
+   ========================================================================== */
+.ide-container {
   flex: 1;
-  min-height: 280px;
+  min-height: 340px;
   display: flex;
-  flex-direction: column;
+  background: #18110B;
+  border: 1px solid rgba(62, 38, 22, 0.45);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+  position: relative;
 }
 
-.script-editor {
-  width: 100%;
-  flex: 1;
-  min-height: 280px;
-  background: var(--bg-dark-code);
-  color: #FAF6E9;
-  border: 1px solid var(--color-deep-brown);
-  border-radius: 8px;
-  padding: 12px 14px;
+.ide-gutter {
+  width: 42px;
+  min-width: 42px;
+  background: #201710;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  color: #7A624E;
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.65;
-  resize: none;
-  outline: none;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+  line-height: 21px;
+  padding: 12px 8px 12px 0;
+  text-align: right;
+  user-select: none;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-.script-editor:focus {
-  border-color: var(--color-accent-gold);
+.ide-gutter div {
+  height: 21px;
+}
+
+.ide-code-wrap {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ide-highlight,
+.ide-input {
+  margin: 0;
+  padding: 12px 14px;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 21px;
+  letter-spacing: 0px;
+  tab-size: 2;
+  -moz-tab-size: 2;
+  white-space: pre;
+  word-wrap: normal;
+  word-break: normal;
+  box-sizing: border-box;
+}
+
+.ide-highlight {
+  position: absolute;
+  inset: 0;
+  color: #E8DEC8;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.ide-highlight code {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.ide-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: transparent;
+  caret-color: #F5B041;
+  resize: none;
+  outline: none;
+  overflow: auto;
+  z-index: 2;
+}
+
+.ide-input::selection {
+  background: rgba(184, 74, 40, 0.45);
+  color: transparent;
+}
+
+/* 语法高亮 Token 色彩 (深沉古雅 IDE 质感) */
+.tok-comment {
+  color: #8D7662;
+  font-style: italic;
+}
+
+.tok-string {
+  color: #E5C07B; /* 暖金字符串 */
+}
+
+.tok-keyword {
+  color: #E06C75; /* 关键字：赭红 / 珊瑚 */
+  font-weight: 600;
+}
+
+.tok-element {
+  color: #98C379; /* 化学元素：生机翠绿 */
+  font-weight: 700;
+}
+
+.tok-number {
+  color: #61AFEF; /* 坐标与数字：青蓝 */
+}
+
+.tok-punct {
+  color: #D19A66; /* 大括号与分隔符：金铜 */
 }
 
 
