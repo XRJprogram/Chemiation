@@ -74,8 +74,7 @@ html, body {
   background: rgba(250, 246, 233, 0.95);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-color);
-  position: relative;
-  z-index: 100001;
+  z-index: 50;
 }
 
 .brand-section {
@@ -146,46 +145,6 @@ html, body {
   border: 1px solid var(--border-color);
 }
 
-/* 页眉右侧区域 (反应式与全屏时出现的缩小窗口按钮) */
-.header-right-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-shrink-btn {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 11px;
-  border-radius: 6px;
-  border: 1px solid var(--color-accent);
-  background: var(--color-accent);
-  color: #fff;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(184, 74, 40, 0.25);
-  transition: all 0.16s ease;
-  user-select: none;
-  animation: headerShrinkFadeIn 0.2s ease-out;
-}
-
-.header-shrink-btn:hover {
-  background: #A03D1E;
-  border-color: #A03D1E;
-  transform: translateY(-1px);
-}
-
-.header-shrink-btn svg {
-  flex-shrink: 0;
-}
-
-@keyframes headerShrinkFadeIn {
-  from { opacity: 0; transform: translateX(8px); }
-  to { opacity: 1; transform: translateX(0); }
-}
 
 /* 主工作区布局：左侧画布视口 + 右侧推演侧边栏 */
 .main-workspace {
@@ -851,26 +810,29 @@ html, body {
   height: 100%;
 }
 
+/* 全屏编写模式：主容器铺满整个视口 */
 .tab-pane-script.fullscreen {
   position: fixed;
-  top: 54px;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   width: 100vw;
-  height: calc(100vh - 54px);
+  height: 100vh;
   z-index: 100000;
   background: var(--bg-primary);
-  padding: 14px 20px;
+  padding: 16px 24px;
   box-sizing: border-box;
   display: flex !important;
   flex-direction: column;
+  gap: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+.tab-pane-script.fullscreen .script-toolbar {
+  flex-shrink: 0;
 }
 
 .tab-pane-script.fullscreen .ide-container {
   flex: 1;
-  height: calc(100vh - 54px - 66px);
+  height: calc(100vh - 76px);
   min-height: 0;
 }
 
@@ -880,29 +842,65 @@ html, body {
   border-color: var(--color-deep-brown);
 }
 
-.exit-fullscreen-btn {
-  display: none;
-  align-items: center;
-  gap: 5px;
-  background: rgba(94, 65, 47, 0.08);
-  color: var(--color-deep-brown);
-  border: 1px solid var(--border-color);
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
+/* 全屏状态下工具栏右侧按钮定制：只保留【保存】和【缩小】 */
+.tab-pane-script.fullscreen #btn-reset-script,
+.tab-pane-script.fullscreen #btn-run-script {
+  display: none !important;
+}
+
+/* 放大 / 缩小双态单按钮控制 */
+#btn-fullscreen-script {
+  position: relative;
   transition: all 0.15s ease;
 }
 
-.exit-fullscreen-btn:hover {
+/* 默认（普通侧边栏模式）：显示放大图标，隐藏缩小图标与文字 */
+#btn-fullscreen-script .icon-expand {
+  display: block;
+}
+
+#btn-fullscreen-script .icon-shrink,
+#btn-fullscreen-script .label-shrink {
+  display: none !important;
+}
+
+/* 全屏模式下的缩小按钮：隐藏放大图标，显示缩小图标与文字 */
+.tab-pane-script.fullscreen #btn-fullscreen-script {
+  width: auto !important;
+  min-width: 68px;
+  height: 28px;
+  padding: 0 10px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   background: var(--color-accent);
   color: #fff;
   border-color: var(--color-accent);
+  box-shadow: 0 2px 6px rgba(184, 74, 40, 0.25);
 }
 
-.tab-pane-script.fullscreen .exit-fullscreen-btn {
-  display: inline-flex !important;
+.tab-pane-script.fullscreen #btn-fullscreen-script:hover {
+  background: #A03D1E;
+  border-color: #A03D1E;
+}
+
+.tab-pane-script.fullscreen #btn-fullscreen-script .icon-expand {
+  display: none !important;
+}
+
+.tab-pane-script.fullscreen #btn-fullscreen-script .icon-shrink {
+  display: block !important;
+  color: #fff;
+  stroke: #fff;
+}
+
+.tab-pane-script.fullscreen #btn-fullscreen-script .label-shrink {
+  display: inline-block !important;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
 }
 
 .script-toolbar {
@@ -956,6 +954,11 @@ html, body {
   color: var(--color-deep-brown);
   cursor: pointer;
   transition: all 0.15s;
+}
+
+.script-btn svg,
+.script-btn span {
+  pointer-events: none;
 }
 
 .script-btn:hover {
