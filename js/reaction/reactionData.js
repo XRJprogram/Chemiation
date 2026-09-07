@@ -60,8 +60,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C4", atom2Id: "H41", order: 1 },
           { atom1Id: "C4", atom2Id: "H42", order: 1 },
           { atom1Id: "C4", atom2Id: "H43", order: 1 }
-        ],
-        action: { type: "approach", desc: "底物靠近" }
+        ]
       },
       {
         name: "2. 亲核加成与四面体中间体",
@@ -102,8 +101,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C4", atom2Id: "H41", order: 1 },
           { atom1Id: "C4", atom2Id: "H42", order: 1 },
           { atom1Id: "C4", atom2Id: "H43", order: 1 }
-        ],
-        action: { type: "intermediate", desc: "四面体中间体" }
+        ]
       },
       {
         name: "3. 消除脱水产物生成",
@@ -147,8 +145,7 @@ const REACTION_PRESETS = [
 
           { atom1Id: "O2", atom2Id: "H1", order: 1 },
           { atom1Id: "O2", atom2Id: "H2", order: 1 }
-        ],
-        action: { type: "product", desc: "消除成酯" }
+        ]
       }
     ]
   },
@@ -180,8 +177,7 @@ const REACTION_PRESETS = [
           { atom1Id: "H1", atom2Id: "H2", order: 1 },
           { atom1Id: "H3", atom2Id: "H4", order: 1 },
           { atom1Id: "H5", atom2Id: "H6", order: 1 }
-        ],
-        action: { type: "start", desc: "底物基态" }
+        ]
       },
       {
         name: "2. C-C 偶联缩合生成 C₃ 前体 (DHA)",
@@ -212,8 +208,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C1", atom2Id: "H12", order: 1 },
           { atom1Id: "C3", atom2Id: "H31", order: 1 },
           { atom1Id: "C3", atom2Id: "H32", order: 1 }
-        ],
-        action: { type: "intermediate", desc: "C-C偶联" }
+        ]
       },
       {
         name: "3. 醛醇缩合成环生成 C₆ 葡萄糖吡喃环",
@@ -269,8 +264,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C5", atom2Id: "H5", order: 1 },
           { atom1Id: "C6", atom2Id: "H61", order: 1 },
           { atom1Id: "C6", atom2Id: "H62", order: 1 }
-        ],
-        action: { type: "ring_form", desc: "成吡喃环" }
+        ]
       },
       {
         name: "4. α-1,4-糖苷键缩聚生成直链淀粉分子链",
@@ -345,8 +339,7 @@ const REACTION_PRESETS = [
           // 脱除的水分子内键
           { atom1Id: "Ow", atom2Id: "Hw1", order: 1 },
           { atom1Id: "Ow", atom2Id: "Hw2", order: 1 }
-        ],
-        action: { type: "product", desc: "淀粉聚合" }
+        ]
       }
     ]
   },
@@ -378,8 +371,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C1", atom2Id: "H3", order: 1 },
           { atom1Id: "C1", atom2Id: "H4", order: 1 },
           { atom1Id: "Cl1", atom2Id: "Cl2", order: 1 }
-        ],
-        action: { type: "start", desc: "底物基态" }
+        ]
       },
       {
         name: "2. 光解均裂与自由基夺氢",
@@ -403,8 +395,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C1", atom2Id: "H3", order: 1 },
           { atom1Id: "C1", atom2Id: "H4", order: 1 },
           { atom1Id: "H1", atom2Id: "Cl1", order: 1 }
-        ],
-        action: { type: "intermediate", desc: "夺氢过渡" }
+        ]
       },
       {
         name: "3. 链传递产物生成",
@@ -427,8 +418,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C1", atom2Id: "H3", order: 1 },
           { atom1Id: "C1", atom2Id: "H4", order: 1 },
           { atom1Id: "H1", atom2Id: "Cl1", order: 1 }
-        ],
-        action: { type: "product", desc: "成键产物" }
+        ]
       }
     ]
   },
@@ -461,8 +451,7 @@ const REACTION_PRESETS = [
           { atom1Id: "H1", atom2Id: "H2", order: 1 },
           { atom1Id: "H3", atom2Id: "H4", order: 1 },
           { atom1Id: "H5", atom2Id: "H6", order: 1 }
-        ],
-        action: { type: "start", desc: "底物基态" }
+        ]
       },
       {
         name: "2. 催化加氢与脱氧过渡态",
@@ -491,8 +480,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C1", atom2Id: "H5", order: 1 },
           { atom1Id: "O2", atom2Id: "H3", order: 1 },
           { atom1Id: "O2", atom2Id: "H4", order: 1 }
-        ],
-        action: { type: "intermediate", desc: "还原过渡" }
+        ]
       },
       {
         name: "3. 终产物生成：甲醇与水分子",
@@ -519,8 +507,7 @@ const REACTION_PRESETS = [
           { atom1Id: "C1", atom2Id: "H5", order: 1 },
           { atom1Id: "O2", atom2Id: "H3", order: 1 },
           { atom1Id: "O2", atom2Id: "H4", order: 1 }
-        ],
-        action: { type: "product", desc: "甲醇生成" }
+        ]
       }
     ]
   },
@@ -552,8 +539,7 @@ const REACTION_PRESETS = [
           { atom1Id: "H1", atom2Id: "H2", order: 1 },
           { atom1Id: "H4", atom2Id: "H5", order: 1 },
           { atom1Id: "H3", atom2Id: "H6", order: 1 }
-        ],
-        action: { type: "start", desc: "表面吸附" }
+        ]
       },
       {
         name: "2. 协同解离与加氢过渡态",
@@ -579,8 +565,7 @@ const REACTION_PRESETS = [
           { atom1Id: "N2", atom2Id: "H4", order: 1 },
           { atom1Id: "N2", atom2Id: "H5", order: 1 },
           { atom1Id: "H3", atom2Id: "H6", order: 1 }
-        ],
-        action: { type: "intermediate", desc: "解离加氢" }
+        ]
       },
       {
         name: "3. 终步加氢完成生成氨气",
@@ -605,8 +590,7 @@ const REACTION_PRESETS = [
           { atom1Id: "N2", atom2Id: "H4", order: 1 },
           { atom1Id: "N2", atom2Id: "H5", order: 1 },
           { atom1Id: "N2", atom2Id: "H6", order: 1 }
-        ],
-        action: { type: "product", desc: "氨气脱附" }
+        ]
       }
     ]
   }

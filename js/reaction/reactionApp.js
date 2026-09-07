@@ -414,14 +414,10 @@ class ReactionApp {
       card.dataset.stepIndex = idx;
 
       const cleanTitle = step.name.replace(/^\d+\.\s*/, '');
-      const isPolymer = !!(step.polymer || step.isPolymer || (step.name && (step.name.includes('淀粉') || step.name.includes('聚合'))));
-      const polymerBadge = isPolymer ? `<span class="step-card-badge" style="background:#FFF0E6;color:#B84A28;border-color:#F5C6AA;margin-left:4px;">[ ]ₙ 聚合物</span>` : '';
       card.innerHTML = `
         <div class="step-card-top">
           <div class="step-card-num">${idx + 1}</div>
           <div class="step-card-title">${cleanTitle}</div>
-          <span class="step-card-badge">${(step.action && step.action.desc) || '反应'}</span>
-          ${polymerBadge}
         </div>
         <div class="step-card-note">${step.note || ''}</div>
       `;
@@ -713,7 +709,6 @@ class ReactionApp {
           {
             name: '1. 反应物碰撞吸附',
             note: '底物分子靠近并形成瞬态接触。',
-            action: { type: 'adsorb', desc: '碰撞活化' },
             atoms: [
               { id: 'A1', element: 'C', x: -1.5, y: 0, z: 0 },
               { id: 'A2', element: 'O', x: 1.5, y: 0, z: 0 }

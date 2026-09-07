@@ -29,7 +29,6 @@ const ReactionScriptEngine = {
     (reaction.steps || []).forEach((step, idx) => {
       lines.push(`step "${step.name || `步骤 ${idx + 1}`}" {`);
       if (step.note) lines.push(`  note "${step.note.replace(/"/g, '\\"')}"`);
-      if (step.action && step.action.desc) lines.push(`  action "${step.action.desc.replace(/"/g, '\\"')}"`);
       if (step.polymer) {
         const p = typeof step.polymer === 'object' ? step.polymer : { label: String(step.polymer) };
         const labelStr = p.label || 'n';
@@ -134,7 +133,6 @@ const ReactionScriptEngine = {
         currentStep = {
           name: stepMatch[1],
           note: '',
-          action: { type: 'step', desc: '反应进行' },
           atoms: [],
           bonds: []
         };
@@ -157,9 +155,8 @@ const ReactionScriptEngine = {
           continue;
         }
 
-        const actMatch = line.match(/^action\s+"([^"]+)"/i);
-        if (actMatch) {
-          currentStep.action = { type: 'action', desc: actMatch[1] };
+        // 兼容旧脚本中的 action 声明，静默跳过
+        if (/^action\s+/i.test(line)) {
           continue;
         }
 
@@ -262,7 +259,6 @@ const ReactionScriptEngine = {
     if (type === 'new_step') {
       return `\nstep "新反应步骤" {
   note "在此输入该基元反应步骤的机理描述与电子转移说明。"
-  action "成键/断键"
 
   # 原子定义: atom <ID> <元素> [X Y Z(可选)]
   atom C1 C -1.0 0 0
@@ -280,7 +276,6 @@ const ReactionScriptEngine = {
     if (type === 'addition_elimination') {
       return `\nstep "亲电加成/消除反应" {
   note "亲电试剂进攻 C=C 不饱和双键，π 键解离，形成饱和烷基卤代/醇类中间体。"
-  action "亲电加成"
 
   atom C1 C -1.2 0 0
   atom C2 C 1.2 0 0
@@ -298,7 +293,6 @@ const ReactionScriptEngine = {
     if (type === 'catalysis_step') {
       return `\nstep "催化剂表面配位与活化" {
   note "中心催化原子与底物配位，削弱靶反应键能，显著降低反应活化能。"
-  action "配位催化"
 
   atom M1 Fe 0 -1.0 0
   atom N1 N -1.2 0.8 0
@@ -316,7 +310,6 @@ const ReactionScriptEngine = {
     if (type === 'radical_step') {
       return `\nstep "自由基均裂与链传递" {
   note "光照或受热导致共价键均裂产生单电子自由基，夺取底物原子引发链传递。"
-  action "自由基传递"
 
   atom C1 C -1.5 0 0
   atom H1 H -0.3 0 0
@@ -333,7 +326,6 @@ const ReactionScriptEngine = {
     if (type === 'polymer_step') {
       return `\nstep "单体聚合生成高分子" {
   note "单体首尾脱水/脱除小分子后缩合，主链化学键就近穿出大括号截断形成重复单元。"
-  action "缩聚/加聚"
 
   # 聚合物括号语法: polymer "<聚合度下标如 n>" ["说明标签"] [exclude "<副产物原子ID列表>"]
   polymer "n" "[单体最简重复单元]ₙ" exclude "Ow Hw1 Hw2"
@@ -361,7 +353,6 @@ summary "在此输入关于该反应原理、过渡态与机理路径的详细�
 
 step "1. 反应物底物吸附与碰撞" {
   note "底物分子靠近，化学键受到极化并准备重构。"
-  action "碰撞活化"
 
   atom A1 C -1.5 0 0
   atom A2 O 1.5 0 0
@@ -374,7 +365,6 @@ step "1. 反应物底物吸附与碰撞" {
 
 step "2. 产物分子生成与脱附" {
   note "新化学键形成，完成基元反应并脱附离开。"
-  action "产物生成"
 
   atom A1 C -0.8 0 0
   atom A2 O 0.8 0 0
