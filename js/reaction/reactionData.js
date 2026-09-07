@@ -153,9 +153,9 @@ const REACTION_PRESETS = [
   {
     id: "co2-to-starch",
     name: "二氧化碳人工全合成淀粉 (ASAP机理)",
-    equation: "CO₂ + H₂ → C₁ (甲醇) → C₃ (DHA) → C₆ (葡萄糖) → (C₆H₁₀O₅)ₙ (直链淀粉)",
+    equation: "CO₂ + H₂ → C₁ (甲醇) → C₃ (DHA) → 2×C₃ (DHA+GAP) → C₆ (葡萄糖) → (C₆H₁₀O₅)ₙ (直链淀粉)",
     category: "前沿人工合成路线",
-    summary: "中科院 ASAP 经典路线：CO₂经加氢还原(C₁)、C-C偶联(C₃)、半缩醛成环(C₆)至α-1,4-糖苷键聚合(淀粉)。",
+    summary: "中科院 ASAP 经典路线：CO₂经加氢还原(C₁)、C-C偶联(C₃)、三碳糖复制异构(2×C₃)、半缩醛成环(C₆)至α-1,4-糖苷键聚合(淀粉)。",
     steps: [
       {
         name: "1. 原料活化与加氢还原 (CO₂ → C₁)",
@@ -180,8 +180,39 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "2. C₁ 缩合生成双三碳前体 (2×C₃: DHA 与 GAP)",
-        note: "两分子 C₁ 经甲醛缩合酶与异构酶转化形成二羟基丙酮 (DHA) 与甘油醛 (GAP)，双三碳前体对准吸附准备发生碳碳偶联。",
+        name: "2. C₁ 酶促缩合生成单分子三碳前体 (C₃: DHA)",
+        note: "甲醇/甲醛前体经甲醛缩合酶与磷酸酶级联催化，形成首个稳定的三碳糖骨架 —— 二羟基丙酮 (DHA)。",
+        atoms: [
+          { id: "C1", element: "C", x: 0.8, y: 0.8, z: 0.1 },
+          { id: "C2", element: "C", x: 0.4, y: -0.6, z: -0.2 },
+          { id: "C3", element: "C", x: -1.0, y: -1.2, z: 0.1 },
+          { id: "O1", element: "O", x: 1.8, y: 1.4, z: -0.2 },
+          { id: "H1O", element: "H", x: 2.5, y: 1.0, z: -0.2 },
+          { id: "O2", element: "O", x: 1.2, y: -1.5, z: 0.2 },
+          { id: "H2O", element: "H", x: 1.9, y: -1.3, z: 0.5 },
+          { id: "O3", element: "O", x: -1.2, y: -2.4, z: -0.2 },
+          { id: "H3O", element: "H", x: -1.0, y: -3.0, z: 0.3 },
+          { id: "H1", element: "H", x: 1.0, y: 0.7, z: 1.1 },
+          { id: "H2", element: "H", x: 0.3, y: -0.6, z: -1.2 },
+          { id: "H3", element: "H", x: -1.1, y: -1.2, z: 1.1 }
+        ],
+        bonds: [
+          { atom1Id: "C1", atom2Id: "C2", order: 1 },
+          { atom1Id: "C2", atom2Id: "C3", order: 1 },
+          { atom1Id: "C1", atom2Id: "O1", order: 1 },
+          { atom1Id: "O1", atom2Id: "H1O", order: 1 },
+          { atom1Id: "C2", atom2Id: "O2", order: 1 },
+          { atom1Id: "O2", atom2Id: "H2O", order: 1 },
+          { atom1Id: "C3", atom2Id: "O3", order: 1 },
+          { atom1Id: "O3", atom2Id: "H3O", order: 1 },
+          { atom1Id: "C1", atom2Id: "H1", order: 1 },
+          { atom1Id: "C2", atom2Id: "H2", order: 1 },
+          { atom1Id: "C3", atom2Id: "H3", order: 1 }
+        ]
+      },
+      {
+        name: "3. 三碳糖前体复制与立体异构 (C₃ → 2×C₃: DHA 与 GAP)",
+        note: "第二分子三碳糖经酶促级联生成并复制到位，二羟基丙酮 (DHA) 与甘油醛 (GAP) 对称对准吸附，准备发生碳碳偶联。",
         atoms: [
           // 第一分子三碳糖：二羟基丙酮 DHA (C1, C2, C3, O1, O2, O3, 6H)
           { id: "C1", element: "C", x: 2.8, y: 0.8, z: 0.1 },
@@ -240,7 +271,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "3. 醛醇缩合成环生成 C₆ 葡萄糖吡喃环",
+        name: "4. 醛醇缩合成环生成 C₆ 葡萄糖吡喃环",
         note: "三碳单元经醛醇缩合形成己糖链，并发生分子内半缩醛加成闭环，构筑经典六元椅式吡喃环。",
         atoms: [
           { id: "O5", element: "O", x: 0.2, y: 1.3, z: -0.2 },
@@ -296,7 +327,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "4. α-1,4-糖苷键缩聚生成直链淀粉分子链",
+        name: "5. α-1,4-糖苷键缩聚生成直链淀粉分子链",
         note: "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，脱除的半缩醛羟基 (O1-H1O) 与 4-位质子 (H4O) 就地结合生成水分子！",
         polymer: {
           label: "n",

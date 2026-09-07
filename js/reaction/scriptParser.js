@@ -1,12 +1,12 @@
 /**
- * Chemiation - Reaction Script (ACPL) Serializer & Parser
+ * Chemiation - Reaction Script (CCPL) Serializer & Parser
  * 极简反应推演脚本引擎：
  * 1. 简单易上手：支持人类可读的极简高阶语法，无需用户手动计算和输入三维浮点坐标！
  * 2. 智能三维排版 (Auto-Layout)：若用户仅提供原子与连接拓扑（如 bond C1-O1），引擎自动解算三维 VSEPR 空间坐标
  * 3. 模板化一键生成：内置反应模板与片段库，一键插入与修改
  */
 
-const VALID_ACPL_ELEMENTS = new Set([
+const VALID_CCPL_ELEMENTS = new Set([
   'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne',
   'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca',
   'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
@@ -23,7 +23,7 @@ const VALID_ACPL_ELEMENTS = new Set([
   'R', 'X', 'M'
 ]);
 
-function stripACPLInlineComment(line) {
+function stripCCPLInlineComment(line) {
   let inQuote = false;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
@@ -49,14 +49,14 @@ function stripACPLInlineComment(line) {
 
 const ReactionScriptEngine = {
   /**
-   * 将反应对象序列化为简洁易读的 ACPL 脚本文本
+   * 将反应对象序列化为简洁易读的 CCPL 脚本文本
    */
   serialize(reaction) {
     if (!reaction) return '';
 
     const lines = [];
     lines.push('# ============================================================');
-    lines.push('# Chemiation 反应机理推演脚本 (ACPL)');
+    lines.push('# Chemiation 反应机理推演脚本 (CCPL)');
     lines.push(`# 反应名称: ${reaction.name || '未命名反应'}`);
     lines.push('# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算');
     lines.push('# ============================================================\n');
@@ -104,11 +104,11 @@ const ReactionScriptEngine = {
   },
 
   /**
-   * 将 ACPL 脚本解析为反应对象，进行严格语法校验与空间构型解算
+   * 将 CCPL 脚本解析为反应对象，进行严格语法校验与空间构型解算
    */
   parse(scriptText) {
     if (!scriptText || !scriptText.trim()) {
-      throw new Error('脚本内容为空，请输入有效的 ACPL 推演脚本');
+      throw new Error('脚本内容为空，请输入有效的 CCPL 推演脚本');
     }
 
     const trimmed = scriptText.trim();
@@ -173,7 +173,7 @@ const ReactionScriptEngine = {
     for (let i = 0; i < lines.length; i++) {
       const lineNum = i + 1;
       const rawLine = lines[i];
-      const line = stripACPLInlineComment(rawLine);
+      const line = stripCCPLInlineComment(rawLine);
 
       if (!line) continue;
 
@@ -352,7 +352,7 @@ const ReactionScriptEngine = {
           }
           const rawElem = parts[2];
           const normElem = rawElem.charAt(0).toUpperCase() + rawElem.slice(1).toLowerCase();
-          if (!VALID_ACPL_ELEMENTS.has(normElem)) {
+          if (!VALID_CCPL_ELEMENTS.has(normElem)) {
             throw new Error(`第 ${lineNum} 行语法错误: 未知的化学元素符号 "${rawElem}"`);
           }
           if (parts.length !== 3 && parts.length !== 6) {
@@ -371,7 +371,7 @@ const ReactionScriptEngine = {
         const rawElem = match[2];
         const normElem = rawElem.charAt(0).toUpperCase() + rawElem.slice(1).toLowerCase();
 
-        if (!VALID_ACPL_ELEMENTS.has(normElem)) {
+        if (!VALID_CCPL_ELEMENTS.has(normElem)) {
           throw new Error(`第 ${lineNum} 行语法错误: 未知的化学元素符号 "${rawElem}"`);
         }
 
@@ -552,7 +552,7 @@ const ReactionScriptEngine = {
     }
 
     if (type === 'reaction_blank') {
-      return `# Chemiation 反应机理推演脚本 (ACPL)
+      return `# Chemiation 反应机理推演脚本 (CCPL)
 reaction "新建化学反应"
 equation "A + B ⇌ C + D"
 category "反应机理推演"

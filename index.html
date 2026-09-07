@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chemiation · 化学反应原理机理推演工坊 (ReactionPrinciple)</title>
-  <meta name="description" content="基于纯2D Canvas与空间伪3D纵深映射的化学反应机理推演工坊，支持化学键双向渐变、纯字母排印、氢原子全程严格守恒、聚合物大括号规范、右侧机理推演工作区与极简 ACPL 推演脚本编写。">
+  <meta name="description" content="基于纯2D Canvas与空间伪3D纵深映射的化学反应机理推演工坊，支持化学键双向渐变、纯字母排印、氢原子全程严格守恒、聚合物大括号规范、右侧机理推演工作区与极简 CCPL 推演脚本编写。">
   <!-- 字体引入 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/reaction.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
         <div class="brand-logo">
           <span>CHEMIATION</span>
         </div>
-        <a id="header-docs-btn" href="docs.html" target="_blank" class="header-docs-btn" title="查看 ACPL 语法手册与编写规范">
+        <a id="header-docs-btn" href="docs.html" target="_blank" class="header-docs-btn" title="查看 CCPL 语法手册与编写规范">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
@@ -120,7 +120,7 @@
               <polyline points="16 18 22 12 16 6"></polyline>
               <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
-            <span>ACPL 脚本</span>
+            <span>CCPL 脚本</span>
           </button>
         </div>
 
@@ -169,11 +169,11 @@
             </div>
           </div>
 
-          <!-- 选项卡 2: 推演脚本编写 (简易 ACPL 编辑器) -->
+          <!-- 选项卡 2: 推演脚本编写 (CCPL 脚本编辑器) -->
           <div id="tab-pane-script" class="tab-pane-script">
             <div class="script-toolbar">
               <div class="script-toolbar-left">
-                <span class="script-title">ACPL 推演脚本</span>
+                <span class="script-title">CCPL 推演脚本</span>
                 <span id="file-save-status" class="file-save-status">已同步</span>
               </div>
               <div class="script-btn-group">
@@ -182,6 +182,11 @@
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                     <polyline points="17 21 17 13 7 13 7 21"></polyline>
                     <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                </button>
+                <button id="btn-fullscreen-script" class="script-btn icon-only" title="全屏编写模式 (快捷键: F11 / Esc 退出)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
                   </svg>
                 </button>
                 <button id="btn-reset-script" class="script-btn icon-only" title="还原当前机理">
@@ -204,7 +209,7 @@
               <div id="ide-gutter" class="ide-gutter"><div>1</div></div>
               <div class="ide-code-wrap">
                 <pre id="ide-highlight" class="ide-highlight" aria-hidden="true"><code id="ide-code"></code></pre>
-                <textarea id="script-editor" class="script-editor ide-input" spellcheck="false" placeholder="在此编写或修改 ACPL 反应推演脚本..."></textarea>
+                <textarea id="script-editor" class="script-editor ide-input" spellcheck="false" placeholder="在此编写或修改 CCPL 反应推演脚本..."></textarea>
               </div>
             </div>
           </div>

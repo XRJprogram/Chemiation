@@ -2,7 +2,7 @@
  * Chemiation - Chemical Reaction Principle & Pseudo-3D Deduction
  * 参考 Anychem 布局架构设计：
  * - 左侧：纯 2D Canvas 拟态伪 3D 纵深视口（纯字母排印、化学键渐变、旋转/平移/无级缩放）
- * - 右侧：反应推演工作区（机理步骤卡片流、ACPL 脚本编辑器、时序时间轴与控制器、宽度可拖拽）
+ * - 右侧：反应推演工作区（机理步骤卡片流、CCPL 脚本编辑器、时序时间轴与控制器、宽度可拖拽）
  * - 纯净独立，淡黄宣纸与深棕学术工坊质感
  */
 
@@ -770,13 +770,39 @@ html, body {
 }
 
 /* ==========================================================================
-   选项卡 2：ACPL 脚本编辑器 (参考 Anychem)
+   选项卡 2：CCPL 脚本编辑器 (参考 Anychem)
    ========================================================================== */
 .tab-pane-script {
   display: none;
   flex-direction: column;
   gap: 12px;
   height: 100%;
+}
+
+.tab-pane-script.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-primary);
+  padding: 16px 22px;
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.tab-pane-script.fullscreen .ide-container {
+  flex: 1;
+  height: calc(100vh - 76px);
+  min-height: 0;
+}
+
+.script-btn.active {
+  background: var(--color-deep-brown);
+  color: var(--bg-primary);
+  border-color: var(--color-deep-brown);
 }
 
 .script-toolbar {
@@ -886,7 +912,7 @@ html, body {
 }
 
 /* ==========================================================================
-   ACPL IDE 风格代码编辑器 (行号列 + 实时语法高亮)
+   CCPL IDE 风格代码编辑器 (行号列 + 实时语法高亮)
    ========================================================================== */
 .ide-container {
   flex: 1;
@@ -901,23 +927,25 @@ html, body {
 }
 
 .ide-gutter {
-  width: 42px;
-  min-width: 42px;
+  width: 44px;
+  min-width: 44px;
   background: #201710;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   color: #7A624E;
   font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 21px;
-  padding: 12px 8px 12px 0;
+  font-size: 13px;
+  line-height: 22px;
+  padding: 12px 8px 32px 0;
   text-align: right;
   user-select: none;
   overflow: hidden;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .ide-gutter div {
-  height: 21px;
+  height: 22px;
+  line-height: 22px;
 }
 
 .ide-gutter div.gutter-error {
@@ -937,11 +965,12 @@ html, body {
 .ide-highlight,
 .ide-input {
   margin: 0;
-  padding: 12px 14px;
-  border: none;
+  padding: 12px 14px 32px 14px;
+  border: 0;
+  outline: none;
   font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 21px;
+  font-size: 13px;
+  line-height: 22px;
   letter-spacing: 0px;
   tab-size: 2;
   -moz-tab-size: 2;
@@ -949,6 +978,10 @@ html, body {
   word-wrap: normal;
   word-break: normal;
   box-sizing: border-box;
+  font-weight: 400 !important;
+  font-variant-ligatures: none !important;
+  font-feature-settings: "liga" 0, "calt" 0 !important;
+  -webkit-font-smoothing: antialiased;
 }
 
 .ide-highlight {
@@ -965,6 +998,13 @@ html, body {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+  font-weight: 400 !important;
+  font-variant-ligatures: none !important;
+}
+
+.ide-highlight code span {
+  font-weight: inherit !important;
+  font-variant-ligatures: inherit !important;
 }
 
 .ide-input {
@@ -976,9 +1016,10 @@ html, body {
   color: transparent;
   caret-color: #F5B041;
   resize: none;
-  outline: none;
   overflow: auto;
   z-index: 2;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) #18110B;
 }
 
 .ide-input::selection {
@@ -986,32 +1027,59 @@ html, body {
   color: transparent;
 }
 
-/* 语法高亮 Token 色彩 (深沉古雅 IDE 质感) */
+/* 极简专业暗黑 IDE 滚动条（彻底去除圆润胶囊/药丸滑块） */
+.ide-input::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.ide-input::-webkit-scrollbar-track {
+  background: #18110B;
+}
+
+.ide-input::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.ide-input::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+.ide-input::-webkit-scrollbar-corner {
+  background: #18110B;
+}
+
+/* 语法高亮 Token 色彩 (深沉古雅 IDE 质感) - 继承 font-weight: 400 杜绝光标字宽漂移 */
 .tok-comment {
   color: #8D7662;
   font-style: italic;
+  font-weight: 400 !important;
 }
 
 .tok-string {
   color: #E5C07B; /* 暖金字符串 */
+  font-weight: 400 !important;
 }
 
 .tok-keyword {
   color: #E06C75; /* 关键字：赭红 / 珊瑚 */
-  font-weight: 600;
+  font-weight: 400 !important;
 }
 
 .tok-element {
   color: #98C379; /* 化学元素：生机翠绿 */
-  font-weight: 700;
+  font-weight: 400 !important;
 }
 
 .tok-number {
   color: #61AFEF; /* 坐标与数字：青蓝 */
+  font-weight: 400 !important;
 }
 
 .tok-punct {
   color: #D19A66; /* 大括号与分隔符：金铜 */
+  font-weight: 400 !important;
 }
 
 

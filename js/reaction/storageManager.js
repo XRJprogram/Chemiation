@@ -166,17 +166,17 @@ class StorageManager {
   }
 
   /**
-   * 扫描目录；若为空或无 .acpl 文件，则自动将 4 个初始样例写入本地磁盘
+   * 扫描目录；若为空或无 .ccpl/.acpl 文件，则自动将 4 个初始样例写入本地磁盘
    */
   async scanAndInitIfNeeded() {
     if (!this.dirHandle) return;
 
     let scannedFiles = await this.scanFiles();
 
-    // 检查是否存在 .acpl 文件
-    const acplFiles = scannedFiles.filter(f => f.name.toLowerCase().endsWith('.acpl'));
+    // 检查是否存在 .ccpl 或 .acpl 文件
+    const ccplFiles = scannedFiles.filter(f => f.type === 'ccpl');
 
-    if (acplFiles.length === 0) {
+    if (ccplFiles.length === 0) {
       // 目录为空或没有机理文件，自动释放 4 大经典样例
       await this.initDefaultSamples();
       scannedFiles = await this.scanFiles();
@@ -186,7 +186,7 @@ class StorageManager {
   }
 
   /**
-   * 扫描项目目录中的所有 .acpl 与 .json 文件
+   * 扫描项目目录中的所有 .ccpl, .acpl 与 .json 文件
    */
   async scanFiles() {
     if (!this.dirHandle) return [];
@@ -195,8 +195,8 @@ class StorageManager {
       for await (const [name, handle] of this.dirHandle.entries()) {
         if (handle.kind === 'file') {
           const lower = name.toLowerCase();
-          if (lower.endsWith('.acpl')) {
-            list.push({ name, handle, type: 'acpl' });
+          if (lower.endsWith('.ccpl') || lower.endsWith('.acpl')) {
+            list.push({ name, handle, type: 'ccpl' });
           } else if (name === 'chemiation.json') {
             list.push({ name, handle, type: 'json' });
           }
@@ -221,19 +221,19 @@ class StorageManager {
     // 4 大经典核心样例
     const samplePresets = [
       {
-        filename: '01_乙酸乙醇费歇尔酯化.acpl',
+        filename: '01_乙酸乙醇费歇尔酯化.ccpl',
         id: 'esterification'
       },
       {
-        filename: '02_二氧化碳人工合成淀粉.acpl',
+        filename: '02_二氧化碳人工合成淀粉.ccpl',
         id: 'co2-to-starch'
       },
       {
-        filename: '03_甲烷自由基光解氯代.acpl',
+        filename: '03_甲烷自由基光解氯代.ccpl',
         id: 'methane-chlorination'
       },
       {
-        filename: '04_哈伯博施法合成氨.acpl',
+        filename: '04_哈伯博施法合成氨.ccpl',
         id: 'haber-bosch'
       }
     ];
@@ -244,8 +244,8 @@ class StorageManager {
         : null;
 
       if (presetData) {
-        const acplContent = ReactionScriptEngine.serialize(presetData);
-        await this.writeFile(sample.filename, acplContent);
+        const ccplContent = ReactionScriptEngine.serialize(presetData);
+        await this.writeFile(sample.filename, ccplContent);
       }
     }
 
@@ -255,7 +255,7 @@ class StorageManager {
       version: '1.0',
       createdTime: new Date().toISOString(),
       generator: 'Chemiation ReactionPrinciple Studio',
-      lastOpenedFile: '01_乙酸乙醇费歇尔酯化.acpl',
+      lastOpenedFile: '01_乙酸乙醇费歇尔酯化.ccpl',
       description: 'Chemiation 化学反应原理机理推演项目工作区'
     };
 
@@ -290,18 +290,18 @@ class StorageManager {
     if (!this.dirHandle) throw new Error('未打开项目目录');
 
     let cleanName = (displayName || '未命名反应').trim().replace(/[\\/:*?"<>|]/g, '_');
-    if (!cleanName.endsWith('.acpl')) {
-      cleanName += '.acpl';
+    if (!cleanName.endsWith('.ccpl')) {
+      cleanName += '.ccpl';
     }
 
     // 编号自增前缀
-    const acplCount = this.files.filter(f => f.type === 'acpl').length;
-    const prefix = String(acplCount + 1).padStart(2, '0') + '_';
+    const ccplCount = this.files.filter(f => f.type === 'ccpl').length;
+    const prefix = String(ccplCount + 1).padStart(2, '0') + '_';
     const finalFilename = /^\d{2}_/.test(cleanName) ? cleanName : `${prefix}${cleanName}`;
 
-    // 初始 ACPL 骨架模板
-    const initialContent = `# Chemiation 反应机理推演脚本 (ACPL)
-reaction "${cleanName.replace(/\.acpl$/i, '')}"
+    // 初始 CCPL 骨架模板
+    const initialContent = `# Chemiation 反应机理推演脚本 (CCPL)
+reaction "${cleanName.replace(/\.ccpl$/i, '')}"
 equation "A + B ⇌ C + D"
 category "自定义反应机理"
 summary "在此输入关于该反应原理、过渡态与机理特征的简述。"

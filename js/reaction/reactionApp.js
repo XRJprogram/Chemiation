@@ -5,7 +5,7 @@
 
 class ReactionApp {
   constructor() {
-    this.storageKey = 'chemiation_reactions_v3';
+    this.storageKey = 'chemiation_reactions_v4';
     this.presets = this.loadInitialPresets();
     this.currentReactionIndex = 0;
     this.currentStepIndex = 0;
@@ -60,6 +60,7 @@ class ReactionApp {
     this.btnDeleteReaction = document.getElementById('btn-delete-reaction');
     this.fileSaveStatus = document.getElementById('file-save-status');
     this.btnSaveScript = document.getElementById('btn-save-script');
+    this.btnFullscreenScript = document.getElementById('btn-fullscreen-script');
 
     // 反应总体信息 (已移除 deltaH)
     this.reactionTitle = document.getElementById('reaction-title');
@@ -213,9 +214,21 @@ class ReactionApp {
     if (this.btnSaveScript) {
       this.btnSaveScript.addEventListener('click', () => this.saveCurrentScript());
     }
-    if (this.scriptEditor) {
-      this.scriptEditor.addEventListener('input', () => this.markScriptDirty(true));
+    if (this.btnFullscreenScript) {
+      this.btnFullscreenScript.addEventListener('click', () => this.toggleFullscreenScript());
     }
+
+    // 全局快捷键: Esc 退出脚本全屏，F11 切换脚本全屏
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (this.tabPaneScript && this.tabPaneScript.classList.contains('fullscreen')) {
+          this.toggleFullscreenScript(false);
+        }
+      } else if (e.key === 'F11' && this.activeTab === 'script') {
+        e.preventDefault();
+        this.toggleFullscreenScript();
+      }
+    });
 
     // 选项卡切换 (机理步骤 vs 脚本编写)
     if (this.tabBtnSteps && this.tabBtnScript) {
@@ -239,7 +252,7 @@ class ReactionApp {
       this.btnResetScript.addEventListener('click', () => this.resetScriptToCurrent());
     }
 
-    // ACPL 脚本 IDE 编辑器交互（高亮、行号、Tab缩进与滚动同步）
+    // CCPL 脚本 IDE 编辑器交互（高亮、行号、Tab缩进与滚动同步）
     if (this.scriptEditor) {
       this.scriptEditor.addEventListener('input', () => {
         this.updateIDE();
@@ -394,6 +407,10 @@ class ReactionApp {
       }
     }
 
+    if (tabName !== 'script' && this.tabPaneScript && this.tabPaneScript.classList.contains('fullscreen')) {
+      this.toggleFullscreenScript(false);
+    }
+
     this.activeTab = tabName;
     if (this.tabBtnSteps) this.tabBtnSteps.classList.toggle('active', tabName === 'steps');
     if (this.tabBtnScript) this.tabBtnScript.classList.toggle('active', tabName === 'script');
@@ -406,6 +423,44 @@ class ReactionApp {
       } else {
         this.updateIDE();
       }
+    }
+  }
+
+  /**
+   * 切换 CCPL 脚本编辑器全屏编写模式
+   */
+  toggleFullscreenScript(forceState) {
+    if (!this.tabPaneScript) return;
+    const isCurrentlyFullscreen = this.tabPaneScript.classList.contains('fullscreen');
+    const targetState = typeof forceState === 'boolean' ? forceState : !isCurrentlyFullscreen;
+
+    if (targetState) {
+      this.tabPaneScript.classList.add('fullscreen');
+      if (this.btnFullscreenScript) {
+        this.btnFullscreenScript.classList.add('active');
+        this.btnFullscreenScript.title = '退出全屏模式 (Esc / F11)';
+        this.btnFullscreenScript.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+          </svg>
+        `;
+      }
+    } else {
+      this.tabPaneScript.classList.remove('fullscreen');
+      if (this.btnFullscreenScript) {
+        this.btnFullscreenScript.classList.remove('active');
+        this.btnFullscreenScript.title = '全屏编写模式 (快捷键: F11 / Esc 退出)';
+        this.btnFullscreenScript.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+        `;
+      }
+    }
+
+    this.updateIDE();
+    if (this.scriptEditor) {
+      this.scriptEditor.focus();
     }
   }
 
@@ -818,14 +873,14 @@ class ReactionApp {
   }
 
   /**
-   * 刷新 ACPL IDE 编辑器：同步语法高亮与行号列
+   * 刷新 CCPL IDE 编辑器：同步语法高亮与行号列
    */
   updateIDE() {
     if (!this.scriptEditor) return;
     const code = this.scriptEditor.value;
 
     if (this.ideCode) {
-      this.ideCode.innerHTML = this.highlightACPL(code);
+      this.ideCode.innerHTML = this.highlightCCPL(code);
     }
 
     if (this.ideGutter) {
@@ -853,9 +908,9 @@ class ReactionApp {
   }
 
   /**
-   * ACPL 脚本语法高亮解析器（单趟精准词法正则高亮）
+   * CCPL 脚本语法高亮解析器（单趟精准词法正则高亮）
    */
-  highlightACPL(text) {
+  highlightCCPL(text) {
     if (!text) return '';
 
     const tokenRegex = /(#.*$)|("(?:[^"\\]|\\.)*")|\b(reaction|step|atom|bond|polymer|order|tag|leftBond|rightBond|exclude|excludeIds|vector|note|equation|summary|category)\b|\b(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Fe|Cu|Zn|Br|I|Pt|Pd|Au)\b|(?<!\w)(-?\d+(?:\.\d+)?)(?!\w)|([{}[\]])/gm;

@@ -33,14 +33,13 @@
    - **智能排除小分子**：自动识别并排除副产物小分子（如缩合脱除的水分子），保持聚合物重复单元严谨纯粹。
    - **学术聚合排印**：支持 Century Gothic 粗斜体聚合度下标（如 `[ ]ₙ`）及顶部微型学术胶囊标签。
 
-6. **AnyChem 风格右置工作区 + 自研 ACPL 脚本引擎 (Reaction Script Engine)**：
-   - **可调宽度侧边栏**：支持边缘鼠标拖动自由调节工作区宽度（320px ～ 760px），支持一键折叠收起。
-   - **自研极简 ACPL 脚本**：无需手动填写 $(x, y, z)$ 三维坐标，支持力导向空间排布，可实时编辑脚本并一键运行推演。
+6. **AnyChem 风格右置工作区 + 自研 CCPL 脚本引擎 (Chemiation Chemical Principle Language)**：
+   - **可调宽度侧边栏**：支持边缘鼠标拖动自由调节工作区宽度（320px ～ 760px），支持一键平滑折叠收起。
+   - **自研极简 CCPL 脚本**：无需手动填写 $(x, y, z)$ 三维坐标，支持力导向空间排布，提供 IDE 级实时高亮、光标像素级对齐、全屏沉浸编写与一键运行推演。
    - **丰富的机理预设与模板库**：
      - 乙酸与乙醇费歇尔酯化机理
-     - 中科院 ASAP 二氧化碳人工全合成淀粉完整路线 (CO₂ → C₁ → C₃ → C₆ → 直链淀粉)
+     - 中科院 ASAP 二氧化碳人工全合成淀粉完整路线 (CO₂ → C₁ → C₃ → 2×C₃ → C₆ → 直链淀粉)
      - 甲烷自由基光解氯代机理
-     - 二氧化碳催化加氢制甲醇机理
      - 哈伯-博施法工业合成氨机理
 
 ---
@@ -49,11 +48,12 @@
 
 | 模块文件 | 定位与职能 |
 | :--- | :--- |
-| [`index.html`](index.html) / [`reaction.html`](reaction.html) | 主应用入口，包含 2D Canvas 拟态空间伪 3D 视口与右侧推演工作区 |
-| [`css/reaction.css`](css/reaction.css) | 极简淡黄宣纸视觉风格、工作区交互布局与时间轴轨道样式 |
+| [`index.html`](index.html) | 主应用入口，包含 2D Canvas 拟态空间伪 3D 视口、右侧推演工作区与全屏 CCPL 编辑器 |
+| [`docs.html`](docs.html) | CCPL 语法手册与编写规范完整文档 |
+| [`css/reaction.css`](css/reaction.css) | 极简淡黄宣纸视觉风格、工作区交互布局、时间轴轨道样式与暗黑 IDE 编辑器样式 |
 | [`js/reaction/pseudo3DRenderer.js`](js/reaction/pseudo3DRenderer.js) | 空间伪 3D 投影算法、景深色阶、断键/成键/迁移及聚合物大括号智能就近渲染引擎 |
 | [`js/reaction/reactionData.js`](js/reaction/reactionData.js) | IUPAC 元素质量数据、严谨化学机理分步步骤、原子三维坐标与聚合物拓扑数据集 |
-| [`js/reaction/scriptParser.js`](js/reaction/scriptParser.js) | 自研 ACPL (Reaction Script) 词法语法解析器、自动空间排布与序列化生成器 |
+| [`js/reaction/scriptParser.js`](js/reaction/scriptParser.js) | 自研 CCPL (Chemiation Chemical Principle Language) 词法语法解析器、自动空间排布与序列化生成器 |
 | [`js/reaction/reactionApp.js`](js/reaction/reactionApp.js) | 反应推演控制器、步骤时序轨道播放/步进驱动与全端事件交互中枢 |
 
 ---
@@ -62,7 +62,7 @@
 
 本项目为纯前端静态 Web 应用，无须任何编译打包构建工具：
 
-1. **直接双击** 打开目录下的 [`index.html`](index.html)（或 [`reaction.html`](reaction.html)），即可在现代浏览器中直接运行。
+1. **直接双击** 打开目录下的 [`index.html`](index.html)，即可在现代浏览器中直接运行。
 2. 或使用本地静态服务器体验：
    ```bash
    npx serve .
