@@ -74,7 +74,8 @@ html, body {
   background: rgba(250, 246, 233, 0.95);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-color);
-  z-index: 50;
+  position: relative;
+  z-index: 100001;
 }
 
 .brand-section {
@@ -143,6 +144,52 @@ html, body {
   padding: 4px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
+}
+
+/* 页眉右侧操作区 (全屏编写 / 缩小窗口控制) */
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-window-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(94, 65, 47, 0.05);
+  color: var(--color-deep-brown);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.header-window-btn:hover {
+  background: rgba(184, 74, 40, 0.1);
+  color: var(--color-accent);
+  border-color: rgba(184, 74, 40, 0.35);
+  transform: translateY(-1px);
+}
+
+.header-window-btn.active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px rgba(184, 74, 40, 0.25);
+}
+
+.header-window-btn.active:hover {
+  background: #A03D1E;
+}
+
+.header-window-btn svg {
+  flex-shrink: 0;
 }
 
 /* 主工作区布局：左侧画布视口 + 右侧推演侧边栏 */
@@ -811,21 +858,24 @@ html, body {
 
 .tab-pane-script.fullscreen {
   position: fixed;
-  inset: 0;
-  z-index: 99999;
+  top: 54px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - 54px);
+  z-index: 100000;
   background: var(--bg-primary);
-  padding: 16px 22px;
+  padding: 14px 20px;
   box-sizing: border-box;
   display: flex !important;
   flex-direction: column;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
 }
 
 .tab-pane-script.fullscreen .ide-container {
   flex: 1;
-  height: calc(100vh - 76px);
+  height: calc(100vh - 54px - 66px);
   min-height: 0;
 }
 
