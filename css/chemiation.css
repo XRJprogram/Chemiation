@@ -146,50 +146,45 @@ html, body {
   border: 1px solid var(--border-color);
 }
 
-/* 页眉右侧操作区 (全屏编写 / 缩小窗口控制) */
-.header-right-actions {
+/* 页眉右侧区域 (反应式与全屏时出现的缩小窗口按钮) */
+.header-right-group {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.header-window-btn {
-  display: inline-flex;
+.header-shrink-btn {
+  display: none;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 4px 11px;
   border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: rgba(94, 65, 47, 0.05);
-  color: var(--color-deep-brown);
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(184, 74, 40, 0.25);
   transition: all 0.16s ease;
   user-select: none;
+  animation: headerShrinkFadeIn 0.2s ease-out;
 }
 
-.header-window-btn:hover {
-  background: rgba(184, 74, 40, 0.1);
-  color: var(--color-accent);
-  border-color: rgba(184, 74, 40, 0.35);
+.header-shrink-btn:hover {
+  background: #A03D1E;
+  border-color: #A03D1E;
   transform: translateY(-1px);
 }
 
-.header-window-btn.active {
-  background: var(--color-accent);
-  color: #fff;
-  border-color: var(--color-accent);
-  box-shadow: 0 2px 8px rgba(184, 74, 40, 0.25);
-}
-
-.header-window-btn.active:hover {
-  background: #A03D1E;
-}
-
-.header-window-btn svg {
+.header-shrink-btn svg {
   flex-shrink: 0;
+}
+
+@keyframes headerShrinkFadeIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 /* 主工作区布局：左侧画布视口 + 右侧推演侧边栏 */

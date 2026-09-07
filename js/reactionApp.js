@@ -91,9 +91,7 @@ class ReactionApp {
     this.btnSaveScript = document.getElementById('btn-save-script');
     this.btnFullscreenScript = document.getElementById('btn-fullscreen-script');
     this.btnExitFullscreen = document.getElementById('btn-exit-fullscreen');
-    this.headerBtnFullscreen = document.getElementById('header-btn-fullscreen');
-    this.headerWindowText = document.getElementById('header-window-text');
-    this.headerWindowIcon = document.getElementById('header-window-icon');
+    this.headerBtnShrink = document.getElementById('header-btn-shrink');
     this.btnRunScript = document.getElementById('btn-run-script');
     this.btnResetScript = document.getElementById('btn-reset-script');
     this.scriptErrorToast = document.getElementById('script-error-toast');
@@ -225,18 +223,8 @@ class ReactionApp {
     if (this.btnExitFullscreen) {
       this.btnExitFullscreen.addEventListener('click', () => this.toggleFullscreenScript(false));
     }
-    if (this.headerBtnFullscreen) {
-      this.headerBtnFullscreen.addEventListener('click', () => {
-        const isFullscreen = this.tabPaneScript && this.tabPaneScript.classList.contains('fullscreen');
-        if (!isFullscreen) {
-          if (this.activeTab !== 'script') {
-            this.switchTab('script');
-          }
-          this.toggleFullscreenScript(true);
-        } else {
-          this.toggleFullscreenScript(false);
-        }
-      });
+    if (this.headerBtnShrink) {
+      this.headerBtnShrink.addEventListener('click', () => this.toggleFullscreenScript(false));
     }
 
     // 全局快捷键: Esc 退出脚本全屏，F11 切换脚本全屏
@@ -465,17 +453,8 @@ class ReactionApp {
           </svg>
         `;
       }
-      if (this.headerBtnFullscreen) {
-        this.headerBtnFullscreen.classList.add('active');
-        this.headerBtnFullscreen.title = '缩小窗口 (快捷键: Esc / F11)';
-      }
-      if (this.headerWindowText) {
-        this.headerWindowText.textContent = '缩小窗口';
-      }
-      if (this.headerWindowIcon) {
-        this.headerWindowIcon.innerHTML = `
-          <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-        `;
+      if (this.headerBtnShrink) {
+        this.headerBtnShrink.style.display = 'inline-flex';
       }
     } else {
       this.tabPaneScript.classList.remove('fullscreen');
@@ -488,17 +467,8 @@ class ReactionApp {
           </svg>
         `;
       }
-      if (this.headerBtnFullscreen) {
-        this.headerBtnFullscreen.classList.remove('active');
-        this.headerBtnFullscreen.title = '全屏编写模式 (快捷键: F11 / Esc 退出)';
-      }
-      if (this.headerWindowText) {
-        this.headerWindowText.textContent = '全屏编写';
-      }
-      if (this.headerWindowIcon) {
-        this.headerWindowIcon.innerHTML = `
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-        `;
+      if (this.headerBtnShrink) {
+        this.headerBtnShrink.style.display = 'none';
       }
     }
 
