@@ -50,11 +50,12 @@
 | :--- | :--- |
 | [`index.html`](index.html) | 主应用入口，包含 2D Canvas 拟态空间伪 3D 视口、右侧推演工作区与全屏 CCPL 编辑器 |
 | [`docs.html`](docs.html) | CCPL 语法手册与编写规范完整文档 |
-| [`css/reaction.css`](css/reaction.css) | 极简淡黄宣纸视觉风格、工作区交互布局、时间轴轨道样式与暗黑 IDE 编辑器样式 |
-| [`js/reaction/pseudo3DRenderer.js`](js/reaction/pseudo3DRenderer.js) | 空间伪 3D 投影算法、景深色阶、断键/成键/迁移及聚合物大括号智能就近渲染引擎 |
-| [`js/reaction/reactionData.js`](js/reaction/reactionData.js) | IUPAC 元素质量数据、严谨化学机理分步步骤、原子三维坐标与聚合物拓扑数据集 |
-| [`js/reaction/scriptParser.js`](js/reaction/scriptParser.js) | 自研 CCPL (Chemiation Chemical Principle Language) 词法语法解析器、自动空间排布与序列化生成器 |
-| [`js/reaction/reactionApp.js`](js/reaction/reactionApp.js) | 反应推演控制器、步骤时序轨道播放/步进驱动与全端事件交互中枢 |
+| [`css/chemiation.css`](css/chemiation.css) | 极简淡黄宣纸视觉风格、工作区交互布局、时间轴轨道样式与暗黑 IDE 编辑器样式 |
+| [`js/pseudo3DRenderer.js`](js/pseudo3DRenderer.js) | 空间伪 3D 投影算法、景深色阶、断键/成键/迁移及聚合物大括号智能就近渲染引擎 |
+| [`js/reactionData.js`](js/reactionData.js) | IUPAC 元素质量数据、严谨化学机理分步步骤、原子三维坐标与聚合物拓扑数据集 |
+| [`js/scriptParser.js`](js/scriptParser.js) | 自研 CCPL (Chemiation Chemical Principle Language) 词法语法解析器、自动空间排布与序列化生成器 |
+| [`js/storageManager.js`](js/storageManager.js) | 原生 File System Access API 与 IndexedDB 本地机理项目读写管理引擎 |
+| [`js/reactionApp.js`](js/reactionApp.js) | 反应推演控制器、步骤时序轨道播放/步进驱动与全端事件交互中枢 |
 
 ---
 

@@ -88,6 +88,9 @@ class ReactionApp {
     this.ideGutter = document.getElementById('ide-gutter');
     this.ideHighlight = document.getElementById('ide-highlight');
     this.ideCode = document.getElementById('ide-code');
+    this.btnSaveScript = document.getElementById('btn-save-script');
+    this.btnFullscreenScript = document.getElementById('btn-fullscreen-script');
+    this.btnExitFullscreen = document.getElementById('btn-exit-fullscreen');
     this.btnRunScript = document.getElementById('btn-run-script');
     this.btnResetScript = document.getElementById('btn-reset-script');
     this.scriptErrorToast = document.getElementById('script-error-toast');
@@ -215,6 +218,9 @@ class ReactionApp {
     }
     if (this.btnFullscreenScript) {
       this.btnFullscreenScript.addEventListener('click', () => this.toggleFullscreenScript());
+    }
+    if (this.btnExitFullscreen) {
+      this.btnExitFullscreen.addEventListener('click', () => this.toggleFullscreenScript(false));
     }
 
     // 全局快捷键: Esc 退出脚本全屏，F11 切换脚本全屏
@@ -436,7 +442,7 @@ class ReactionApp {
       this.tabPaneScript.classList.add('fullscreen');
       if (this.btnFullscreenScript) {
         this.btnFullscreenScript.classList.add('active');
-        this.btnFullscreenScript.title = '退出全屏模式 (Esc / F11)';
+        this.btnFullscreenScript.title = '缩小窗口 (Esc / F11)';
         this.btnFullscreenScript.innerHTML = `
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>

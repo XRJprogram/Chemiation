@@ -16,7 +16,7 @@ const REACTION_PRESETS = [
     summary: "经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。",
     steps: [
       {
-        name: "1. 反应物底物靠近碰撞",
+        name: "反应物底物靠近碰撞",
         note: "乙酸 (CH₃COOH) 与乙醇 (CH₃CH₂OH) 受热碰撞靠近，全体系 10 个氢原子处于稳定共价键连。",
         atoms: [
           // 乙酸 CH3COOH (2C, 2O, 4H)
@@ -62,7 +62,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "2. 亲核加成与四面体中间体",
+        name: "亲核加成与四面体中间体",
         note: "乙醇 O3 进攻羰基碳形成 C2-O3 键，质子协同转移至离去氧原子生成水前体。",
         atoms: [
           { id: "C1", element: "C", x: -2.5, y: -1.2, z: 0.6 },
@@ -103,7 +103,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "3. 消除脱水产物生成",
+        name: "消除脱水产物生成",
         note: "C2-O2 键断开消除脱水生成水分子，C=O 双键重建生成乙酸乙酯。",
         atoms: [
           // 乙酸乙酯终产物 CH3COOCH2CH3 (4C, 2O, 8H)
@@ -156,7 +156,7 @@ const REACTION_PRESETS = [
     summary: "中科院 ASAP 经典路线：CO₂经加氢还原(C₁)、C-C偶联(C₃)、三碳糖复制异构(2×C₃)、半缩醛成环(C₆)至α-1,4-糖苷键聚合(淀粉)。",
     steps: [
       {
-        name: "1. 原料活化与加氢还原 (CO₂ → C₁)",
+        name: "原料活化与加氢还原 (CO₂ → C₁)",
         note: "CO₂ 线性分子与 3 个 H₂ 氢气分子吸附活化，加氢还原为 C₁ 前体甲醇 (CH₃OH) 与水。",
         atoms: [
           { id: "C1", element: "C", x: 0, y: 0, z: 0 },
@@ -178,7 +178,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "2. C₁ 酶促缩合生成单分子三碳前体 (C₃: DHA)",
+        name: "C₁ 酶促缩合生成单分子三碳前体 (C₃: DHA)",
         note: "甲醇/甲醛前体经甲醛缩合酶与磷酸酶级联催化，形成首个稳定的三碳糖骨架 —— 二羟基丙酮 (DHA)。",
         atoms: [
           { id: "C1", element: "C", x: 0.8, y: 0.8, z: 0.1 },
@@ -209,7 +209,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "3. 三碳糖前体复制与立体异构 (C₃ → 2×C₃: DHA 与 GAP)",
+        name: "三碳糖前体复制与立体异构 (C₃ → 2×C₃: DHA 与 GAP)",
         note: "第二分子三碳糖经酶促级联生成并复制到位，二羟基丙酮 (DHA) 与甘油醛 (GAP) 对称对准吸附，准备发生碳碳偶联。",
         atoms: [
           // 第一分子三碳糖：二羟基丙酮 DHA (C1, C2, C3, O1, O2, O3, 6H)
@@ -269,7 +269,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "4. 醛醇缩合成环生成 C₆ 葡萄糖吡喃环",
+        name: "醛醇缩合成环生成 C₆ 葡萄糖吡喃环",
         note: "三碳单元经醛醇缩合形成己糖链，并发生分子内半缩醛加成闭环，构筑经典六元椅式吡喃环。",
         atoms: [
           { id: "O5", element: "O", x: 0.2, y: 1.3, z: -0.2 },
@@ -325,7 +325,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "5. α-1,4-糖苷键缩聚生成直链淀粉分子链",
+        name: "α-1,4-糖苷键缩聚生成直链淀粉分子链",
         note: "葡萄糖单元通过专一性 α-1,4-糖苷键脱水缩聚，脱除的半缩醛羟基 (O1-H1O) 与 4-位质子 (H4O) 就地结合生成水分子！",
         polymer: {
           label: "n",
@@ -409,7 +409,7 @@ const REACTION_PRESETS = [
     summary: "经典烷烃自由基取代：光解均裂引发、高活性氯原子夺氢、甲基自由基偶联生成一氯甲烷与HCl。",
     steps: [
       {
-        name: "1. 反应物底物处于基态",
+        name: "反应物底物处于基态",
         note: "甲烷 (CH₄) 与氯气 (Cl-Cl) 空间共存，4 个 C-H 键构型稳定。",
         atoms: [
           // 甲烷 CH4 (4个氢原子齐全)
@@ -431,7 +431,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "2. 光解均裂与自由基夺氢",
+        name: "光解均裂与自由基夺氢",
         note: "紫外光诱导 Cl-Cl 均裂断开，氯自由基夺取 H1 迁移生成 HCl 前体。",
         atoms: [
           // 甲基自由基型碳架
@@ -455,7 +455,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "3. 链传递产物生成",
+        name: "链传递产物生成",
         note: "甲基自由基与 Cl2 结合形成稳定的 C-Cl 单键，生成一氯甲烷与 HCl。",
         atoms: [
           // 一氯甲烷 CH3Cl
@@ -487,7 +487,7 @@ const REACTION_PRESETS = [
     summary: "人工碳中和多相催化：CO₂活化加氢、C=O键逐步还原、氢解脱氧生成甲醇与副产物水。",
     steps: [
       {
-        name: "1. CO₂ 与 3 个 H₂ 分子吸附",
+        name: "CO₂ 与 3 个 H₂ 分子吸附",
         note: "直线型 CO₂ 与 3 个 H₂ 氢气分子对准催化表面，体系原子完整受控。",
         atoms: [
           { id: "C1", element: "C", x: 0, y: 0, z: 0 },
@@ -510,7 +510,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "2. 催化加氢与脱氧过渡态",
+        name: "催化加氢与脱氧过渡态",
         note: "H-H 键裂解迁移加成至 C 与 O，C=O 还原为 C-O，生成水前体。",
         atoms: [
           // 还原中的碳基团 (C1, O1, H1, H2, H6)
@@ -539,7 +539,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "3. 终产物生成：甲醇与水分子",
+        name: "终产物生成：甲醇与水分子",
         note: "碳原子恢复四面体构型生成甲醇 (CH₃OH)，水分子脱附生成。",
         atoms: [
           // 甲醇分子 CH3OH (1C, 1O, 4H)
@@ -575,7 +575,7 @@ const REACTION_PRESETS = [
     summary: "工业合成氨经典机理：N≡N三键与H-H协同解离活化、金属表面加氢、最终生成2个三角锥氨分子。",
     steps: [
       {
-        name: "1. 反应物分子表面吸附基态",
+        name: "反应物分子表面吸附基态",
         note: "高键能 N≡N 分子与 3 个 H-H 氢分子吸附于铁催化剂表面晶格。",
         atoms: [
           // 氮分子 N2
@@ -597,7 +597,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "2. 协同解离与加氢过渡态",
+        name: "协同解离与加氢过渡态",
         note: "催化剂反馈活化使 N≡N 与 H-H 键解离，迁移形成对称的 NH₂* 表面活性基团与就位氢分子。",
         atoms: [
           // 第一个加氢中心 (N1, H1, H2)
@@ -623,7 +623,7 @@ const REACTION_PRESETS = [
         ]
       },
       {
-        name: "3. 终步加氢完成生成氨气",
+        name: "终步加氢完成生成氨气",
         note: "全部氢原子与氮彻底键合，生成稳定闭壳构型的 2 个氨分子 (2 NH₃) 并脱附释放。",
         atoms: [
           // 第一个 NH3 分子 (N1, H1, H2, H3)

@@ -8,7 +8,7 @@ reaction "乙酸与乙醇费歇尔酯化反应"
 equation "CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O"
 summary "经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。"
 
-step "1. 反应物底物靠近碰撞" {
+step "反应物底物靠近碰撞" {
   note "乙酸 (CH₃COOH) 与乙醇 (CH₃CH₂OH) 受热碰撞靠近，全体系 10 个氢原子处于稳定共价键连。"
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]
@@ -48,7 +48,7 @@ step "1. 反应物底物靠近碰撞" {
   bond C4 H43 1
 }
 
-step "2. 亲核加成与四面体中间体" {
+step "亲核加成与四面体中间体" {
   note "乙醇 O3 进攻羰基碳形成 C2-O3 键，质子协同转移至离去氧原子生成水前体。"
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]
@@ -89,7 +89,7 @@ step "2. 亲核加成与四面体中间体" {
   bond C4 H43 1
 }
 
-step "3. 消除脱水产物生成" {
+step "消除脱水产物生成" {
   note "C2-O2 键断开消除脱水生成水分子，C=O 双键重建生成乙酸乙酯。"
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]

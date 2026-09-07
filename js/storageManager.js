@@ -305,7 +305,7 @@ reaction "${cleanName.replace(/\.ccpl$/i, '')}"
 equation "A + B ⇌ C + D"
 summary "在此输入关于该反应原理、过渡态与机理特征的简述。"
 
-step "1. 反应物底物吸附/碰撞" {
+step "反应物底物吸附与碰撞" {
   note "反应底物靠近，化学键准备断裂或重构。"
 
   # 原子定义: atom <ID> <元素> [X Y Z 坐标(可选)]
@@ -319,7 +319,7 @@ step "1. 反应物底物吸附/碰撞" {
   bond A2 H2 1
 }
 
-step "2. 产物分子生成" {
+step "产物分子生成与脱附" {
   note "新键形成，反应完成并脱附释放。"
 
   atom A1 C -0.8 0 0

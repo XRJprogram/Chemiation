@@ -8,7 +8,7 @@ reaction "甲烷自由基氯代反应机理"
 equation "CH₄ + Cl₂ —(hν)→ CH₃Cl + HCl"
 summary "经典烷烃自由基取代：光解均裂引发、高活性氯原子夺氢、甲基自由基偶联生成一氯甲烷与HCl。"
 
-step "1. 反应物底物处于基态" {
+step "反应物底物处于基态" {
   note "甲烷 (CH₄) 与氯气 (Cl-Cl) 空间共存，4 个 C-H 键构型稳定。"
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]
@@ -28,7 +28,7 @@ step "1. 反应物底物处于基态" {
   bond Cl1 Cl2 1
 }
 
-step "2. 光解均裂与自由基夺氢" {
+step "光解均裂与自由基夺氢" {
   note "紫外光诱导 Cl-Cl 均裂断开，氯自由基夺取 H1 迁移生成 HCl 前体。"
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]
@@ -47,7 +47,7 @@ step "2. 光解均裂与自由基夺氢" {
   bond H1 Cl1 1
 }
 
-step "3. 链传递产物生成" {
+step "链传递产物生成" {
   note "甲基自由基与 Cl2 结合形成稳定的 C-Cl 单键，生成一氯甲烷与 HCl。"
 
   # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]

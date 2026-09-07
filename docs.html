@@ -325,8 +325,8 @@
     <!-- 3. 基元反应步骤 -->
     <section class="section-card">
       <h2>3. 基元反应步骤 (Step Block)</h2>
-      <p>每一个基元步骤使用 <code>step "步骤名称" { ... }</code> 代码块进行包裹：</p>
-      <pre><code><span class="keyword">step</span> <span class="string">"1. 反应物底物吸附与碰撞"</span> {
+      <p>每一个基元步骤使用 <code>step "步骤名称" { ... }</code> 代码块进行包裹。<strong>步骤无需手动填写序号（如 1. / 2.）</strong>，Chemiation 引擎会自动按书写顺序智能编排编号：</p>
+      <pre><code><span class="keyword">step</span> <span class="string">"反应物底物吸附与碰撞"</span> {
   <span class="comment"># 步骤原理阐释说明</span>
   <span class="keyword">note</span> <span class="string">"乙酸与乙醇分子受热靠近，羟基氧原子准备进攻羰基碳原子。"</span>
 
@@ -337,6 +337,9 @@
   <span class="comment"># 化学键声明</span>
   <span class="keyword">bond</span> C1 O1 2
 }</code></pre>
+      <div class="note-box">
+        <strong>💡 提示：</strong> 无需手动书写步骤序号，即使脚本中带有序号（如 <code>step "1. 步骤"</code>），引擎也会自动智能提取纯净步骤名并重新按顺序动态编号，增删步骤更加轻松快捷。
+      </div>
     </section>
 
     <!-- 4. 原子与化学键语法 -->

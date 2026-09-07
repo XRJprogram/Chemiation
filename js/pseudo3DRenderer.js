@@ -94,10 +94,9 @@ class Pseudo3DRenderer {
         const dx = clientX - this.lastMouseX;
         const dy = clientY - this.lastMouseY;
 
-        // 3D 自由空间旋转
+        // 3D 自由空间无边界全向旋转（支持横向与纵向 360°/720° 无限旋转）
         this.targetRotY += dx * 0.008;
         this.targetRotX += dy * 0.008;
-        this.targetRotX = Math.max(-1.45, Math.min(1.45, this.targetRotX));
 
         this.lastMouseX = clientX;
         this.lastMouseY = clientY;

@@ -67,7 +67,8 @@ const ReactionScriptEngine = {
     lines.push('');
 
     (reaction.steps || []).forEach((step, idx) => {
-      lines.push(`step "${step.name || `步骤 ${idx + 1}`}" {`);
+      const cleanName = (step.name || `步骤 ${idx + 1}`).replace(/^\s*(?:(?:第\s*)?\d+\s*(?:步|节)?|[一二三四五六七八九十]+)[\.、:\s-]\s*/i, '').trim() || (step.name || `步骤 ${idx + 1}`);
+      lines.push(`step "${cleanName}" {`);
       if (step.note) lines.push(`  note "${step.note.replace(/"/g, '\\"')}"`);
       if (step.polymer) {
         const p = typeof step.polymer === 'object' ? step.polymer : { label: String(step.polymer) };
@@ -219,8 +220,11 @@ const ReactionScriptEngine = {
 
         const stepMatch = line.match(/^step\s+"((?:[^"\\]|\\.)*)"(?:\s*\{)?\s*$/i);
         if (stepMatch) {
+          const rawName = stepMatch[1].replace(/\\"/g, '"');
+          // 步骤序号无需用户手写，自动智能去除前缀标号（如 "1. "、"步骤1: "、"一、"）
+          const cleanName = rawName.replace(/^\s*(?:(?:第\s*)?\d+\s*(?:步|节)?|[一二三四五六七八九十]+)[\.、:\s-]\s*/i, '').trim() || rawName;
           currentStep = {
-            name: stepMatch[1].replace(/\\"/g, '"'),
+            name: cleanName,
             note: '',
             atoms: [],
             bonds: []
@@ -232,7 +236,7 @@ const ReactionScriptEngine = {
           continue;
         }
         if (/^step\b/i.test(line)) {
-          throw new Error(`第 ${lineNum} 行语法错误: step 指令格式错误，必须包含双引号包裹的步骤名称与大括号，例如: step "1. 步骤名称" {`);
+          throw new Error(`第 ${lineNum} 行语法错误: step 指令格式错误，格式为: step "步骤名称" {（无需手动填写序号）`);
         }
 
         if (line === '}') {
@@ -599,7 +603,7 @@ reaction "新建化学反应"
 equation "A + B ⇌ C + D"
 summary "在此输入关于该反应原理、过渡态与机理路径的详细说明。"
 
-step "1. 反应物底物吸附与碰撞" {
+step "反应物底物吸附与碰撞" {
   note "底物分子靠近，化学键受到极化并准备重构。"
 
   atom A1 C -1.5 0 0
@@ -611,7 +615,7 @@ step "1. 反应物底物吸附与碰撞" {
   bond A2 H2 1
 }
 
-step "2. 产物分子生成与脱附" {
+step "产物分子生成与脱附" {
   note "新化学键形成，完成基元反应并脱附离开。"
 
   atom A1 C -0.8 0 0
