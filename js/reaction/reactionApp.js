@@ -15,16 +15,33 @@ class ReactionApp {
     this.playTimer = null;
     this.stepBaseDuration = 2800; // ms
 
+    // 本地项目文件夹与存储引擎
+    this.storage = new StorageManager();
+    this.isProjectMode = false;
+    this.activeProjectFile = '';
+    this.isScriptDirty = false;
+    this.projectReactions = [];
+
     this.initDOM();
     this.initRenderer();
     this.initResizable();
     this.bindEvents();
     this.loadReaction(0);
+    this.checkSavedProjectOnStartup();
   }
 
   initDOM() {
     this.canvas = document.getElementById('reaction-canvas');
     this.presetSelect = document.getElementById('preset-select');
+
+    // 项目文件夹相关 DOM
+    this.projectBar = document.getElementById('project-bar');
+    this.projectNameLabel = document.getElementById('project-name-label');
+    this.btnOpenProject = document.getElementById('btn-open-project');
+    this.btnNewReaction = document.getElementById('btn-new-reaction');
+    this.btnCloseProject = document.getElementById('btn-close-project');
+    this.fileSaveStatus = document.getElementById('file-save-status');
+    this.btnSaveScript = document.getElementById('btn-save-script');
 
     // 反应总体信息
     this.reactionTitle = document.getElementById('reaction-title');
@@ -138,11 +155,32 @@ class ReactionApp {
   }
 
   bindEvents() {
-    // 反应预设切换
+    // 反应预设或本地项目文件切换
     if (this.presetSelect) {
-      this.presetSelect.addEventListener('change', (e) => {
-        this.loadReaction(parseInt(e.target.value, 10));
+      this.presetSelect.addEventListener('change', async (e) => {
+        if (this.isProjectMode) {
+          await this.loadProjectFile(e.target.value);
+        } else {
+          this.loadReaction(parseInt(e.target.value, 10));
+        }
       });
+    }
+
+    // 本地项目文件夹操作绑定
+    if (this.btnOpenProject) {
+      this.btnOpenProject.addEventListener('click', () => this.handleOpenProject());
+    }
+    if (this.btnNewReaction) {
+      this.btnNewReaction.addEventListener('click', () => this.handleNewReaction());
+    }
+    if (this.btnCloseProject) {
+      this.btnCloseProject.addEventListener('click', () => this.handleCloseProject());
+    }
+    if (this.btnSaveScript) {
+      this.btnSaveScript.addEventListener('click', () => this.saveCurrentScript());
+    }
+    if (this.scriptEditor) {
+      this.scriptEditor.addEventListener('input', () => this.markScriptDirty(true));
     }
 
     // 选项卡切换 (机理步骤 vs 脚本编写)
@@ -180,6 +218,7 @@ class ReactionApp {
             this.scriptEditor.value = text;
           }
           this.hideScriptError();
+          this.markScriptDirty(true);
         }
       });
     });
@@ -208,12 +247,14 @@ class ReactionApp {
     }
 
     // 播放速率选择
-    this.speedPills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const speed = parseFloat(pill.dataset.speed || '1');
-        this.setPlaybackSpeed(speed);
+    if (this.speedPills) {
+      this.speedPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          const speed = parseFloat(pill.dataset.speed || '1');
+          this.setPlaybackSpeed(speed);
+        });
       });
-    });
+    }
 
     // 视口交互模式切换（旋转 vs 平移）
     if (this.btnToolRotate) {
@@ -250,6 +291,13 @@ class ReactionApp {
 
     // 全局快捷键
     window.addEventListener('keydown', (e) => {
+      // 支持 Ctrl + S (或 Cmd + S) 保存脚本到本地文件
+      if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyS' || e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        this.saveCurrentScript();
+        return;
+      }
+
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
       if (e.code === 'Space') {
@@ -537,7 +585,7 @@ class ReactionApp {
   /**
    * 运行自定义编写的推演脚本
    */
-  runCustomScript() {
+  async runCustomScript() {
     if (!this.scriptEditor) return;
     const text = this.scriptEditor.value;
 
@@ -545,24 +593,44 @@ class ReactionApp {
       const parsedReaction = ReactionScriptEngine.parse(text);
       this.hideScriptError();
 
-      // 将解析后的自定义反应插入或替换预设
-      const customIndex = this.presets.findIndex(p => p.id === parsedReaction.id || p.id === 'custom-active');
-      if (customIndex >= 0) {
-        this.presets[customIndex] = parsedReaction;
-        this.loadReaction(customIndex);
+      if (this.isProjectMode && this.activeProjectFile) {
+        // 项目模式：自动同步写盘并载入
+        await this.storage.writeFile(this.activeProjectFile, text);
+        this.presets = [parsedReaction];
+        this.currentReactionIndex = 0;
+        this.markScriptDirty(false, '已同步保存');
       } else {
-        parsedReaction.id = 'custom-active';
-        this.presets.unshift(parsedReaction);
+        // 内置预设模式：将解析后的自定义反应插入或替换预设
+        const customIndex = this.presets.findIndex(p => p.id === parsedReaction.id || p.id === 'custom-active');
+        if (customIndex >= 0) {
+          this.presets[customIndex] = parsedReaction;
+          this.currentReactionIndex = customIndex;
+        } else {
+          parsedReaction.id = 'custom-active';
+          this.presets.unshift(parsedReaction);
+          this.currentReactionIndex = 0;
 
-        // 更新下拉
-        if (this.presetSelect) {
-          const opt = document.createElement('option');
-          opt.value = 0;
-          opt.textContent = `★ ${parsedReaction.name} (自定义脚本)`;
-          this.presetSelect.insertBefore(opt, this.presetSelect.firstChild);
+          // 更新下拉
+          if (this.presetSelect) {
+            const opt = document.createElement('option');
+            opt.value = 0;
+            opt.textContent = `★ ${parsedReaction.name} (自定义脚本)`;
+            this.presetSelect.insertBefore(opt, this.presetSelect.firstChild);
+            this.presetSelect.value = 0;
+          }
         }
-        this.loadReaction(0);
       }
+
+      if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
+      if (this.reactionDeltaH) this.reactionDeltaH.textContent = parsedReaction.deltaH || 'ΔH';
+      if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
+      if (this.reactionCategory) this.reactionCategory.textContent = parsedReaction.category || '机理推演';
+      if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
+
+      this.buildStepsList(parsedReaction.steps);
+      this.buildTimelineTrack(parsedReaction.steps);
+      this.renderer.resetCamera();
+      this.goToStep(0, false);
 
       // 切回步骤机理页面查看效果
       this.switchTab('steps');
@@ -571,11 +639,25 @@ class ReactionApp {
     }
   }
 
-  resetScriptToCurrent() {
-    const reaction = this.presets[this.currentReactionIndex];
-    if (reaction && this.scriptEditor) {
-      this.scriptEditor.value = ReactionScriptEngine.serialize(reaction);
-      this.hideScriptError();
+  async resetScriptToCurrent() {
+    if (this.isProjectMode && this.activeProjectFile) {
+      try {
+        const content = await this.storage.readFile(this.activeProjectFile);
+        if (this.scriptEditor) {
+          this.scriptEditor.value = content;
+        }
+        this.hideScriptError();
+        this.markScriptDirty(false, '已还原');
+      } catch (err) {
+        console.error('[Chemiation] 还原本地文件失败:', err);
+      }
+    } else {
+      const reaction = this.presets[this.currentReactionIndex];
+      if (reaction && this.scriptEditor) {
+        this.scriptEditor.value = ReactionScriptEngine.serialize(reaction);
+        this.hideScriptError();
+        this.markScriptDirty(false, '已还原');
+      }
     }
   }
 
@@ -588,6 +670,330 @@ class ReactionApp {
   hideScriptError() {
     if (!this.scriptErrorToast) return;
     this.scriptErrorToast.style.display = 'none';
+  }
+
+  /* ==========================================================================
+     本地项目工作区管理 (Web File System Access API & IndexedDB)
+     ========================================================================== */
+
+  /**
+   * 启动时检查是否有记住的本地项目
+   */
+  async checkSavedProjectOnStartup() {
+    try {
+      const savedInfo = await this.storage.checkSavedDirectory();
+      if (!savedInfo || !savedInfo.handle) return;
+
+      if (savedInfo.permission === 'granted') {
+        const resumed = await this.storage.resumeSavedDirectory(savedInfo.handle);
+        if (resumed) {
+          await this.enterProjectMode();
+          return;
+        }
+      }
+
+      // 若权限需要用户交互确认，保留句柄待用户点击时唤醒
+      this.pendingResumeHandle = savedInfo.handle;
+      if (this.projectNameLabel) {
+        this.projectNameLabel.textContent = `恢复: ${savedInfo.name}`;
+        this.projectNameLabel.title = `点击恢复访问本地项目: ${savedInfo.name}`;
+      }
+      if (this.btnOpenProject) {
+        this.btnOpenProject.textContent = '恢复项目';
+      }
+    } catch (err) {
+      console.warn('[Chemiation] 检查历史项目异常:', err);
+    }
+  }
+
+  /**
+   * 处理打开或创建本地项目目录
+   */
+  async handleOpenProject() {
+    try {
+      if (this.pendingResumeHandle) {
+        const ok = await this.storage.resumeSavedDirectory(this.pendingResumeHandle);
+        this.pendingResumeHandle = null;
+        if (ok) {
+          await this.enterProjectMode();
+          return;
+        }
+      }
+
+      const ok = await this.storage.openDirectoryPicker();
+      if (ok) {
+        await this.enterProjectMode();
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('[Chemiation] 打开项目目录失败:', err);
+        alert('打开项目目录失败: ' + err.message);
+      }
+    }
+  }
+
+  /**
+   * 进入本地项目工作区模式
+   */
+  async enterProjectMode() {
+    this.isProjectMode = true;
+    if (this.projectBar) {
+      this.projectBar.classList.add('active-project');
+    }
+    if (this.projectNameLabel) {
+      this.projectNameLabel.textContent = this.storage.projectName || '项目工作区';
+      this.projectNameLabel.title = `已连接本地项目: ${this.storage.projectName}`;
+    }
+    if (this.btnOpenProject) {
+      this.btnOpenProject.textContent = '更换目录';
+    }
+    if (this.btnNewReaction) {
+      this.btnNewReaction.style.display = 'inline-flex';
+    }
+    if (this.btnCloseProject) {
+      this.btnCloseProject.style.display = 'inline-flex';
+    }
+    if (this.fileSaveStatus) {
+      this.fileSaveStatus.style.display = 'inline-block';
+    }
+    if (this.btnSaveScript) {
+      this.btnSaveScript.style.display = 'inline-flex';
+    }
+
+    // 刷新反应列表下拉框
+    const acplFiles = this.storage.files.filter(f => f.type === 'acpl');
+    if (this.presetSelect) {
+      this.presetSelect.innerHTML = '';
+      acplFiles.forEach(file => {
+        const opt = document.createElement('option');
+        opt.value = file.name;
+        opt.textContent = file.name.replace(/\.acpl$/i, '');
+        this.presetSelect.appendChild(opt);
+      });
+    }
+
+    // 确定载入哪个机理文件
+    let targetFile = acplFiles[0]?.name;
+    const jsonFile = this.storage.files.find(f => f.name === 'chemiation.json');
+    if (jsonFile) {
+      try {
+        const configStr = await this.storage.readFile('chemiation.json');
+        const config = JSON.parse(configStr);
+        if (config.lastOpenedFile && acplFiles.some(f => f.name === config.lastOpenedFile)) {
+          targetFile = config.lastOpenedFile;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (targetFile) {
+      await this.loadProjectFile(targetFile);
+    }
+  }
+
+  /**
+   * 从本地项目目录载入指定 .acpl 机理文件
+   */
+  async loadProjectFile(filename) {
+    if (!filename) return;
+    try {
+      const content = await this.storage.readFile(filename);
+      const reaction = ReactionScriptEngine.parse(content);
+
+      this.pause();
+      this.activeProjectFile = filename;
+      this.presets = [reaction];
+      this.currentReactionIndex = 0;
+
+      if (this.presetSelect) {
+        this.presetSelect.value = filename;
+      }
+
+      if (this.reactionTitle) this.reactionTitle.textContent = reaction.name;
+      if (this.reactionDeltaH) this.reactionDeltaH.textContent = reaction.deltaH || 'ΔH';
+      if (this.reactionEquation) this.reactionEquation.textContent = reaction.equation || '';
+      if (this.reactionCategory) this.reactionCategory.textContent = reaction.category || '本地机理脚本';
+      if (this.reactionDesc) this.reactionDesc.textContent = reaction.summary || '';
+
+      this.buildStepsList(reaction.steps);
+      this.buildTimelineTrack(reaction.steps);
+
+      if (this.scriptEditor) {
+        this.scriptEditor.value = content;
+      }
+
+      this.markScriptDirty(false, '已同步');
+      this.hideScriptError();
+
+      this.renderer.resetCamera();
+      this.goToStep(0, false);
+
+      // 记录到 chemiation.json
+      try {
+        const configStr = await this.storage.readFile('chemiation.json');
+        const config = JSON.parse(configStr);
+        config.lastOpenedFile = filename;
+        await this.storage.writeFile('chemiation.json', JSON.stringify(config, null, 2));
+      } catch (e) {
+        // ignore
+      }
+    } catch (err) {
+      console.error('[Chemiation] 载入/解析本地文件失败:', err);
+      this.showScriptError(err.message);
+    }
+  }
+
+  /**
+   * 保存当前编辑的推演脚本至本地文件 (Ctrl + S 或点击保存)
+   */
+  async saveCurrentScript() {
+    if (!this.scriptEditor) return;
+    const text = this.scriptEditor.value;
+
+    if (!this.isProjectMode) {
+      const confirmOpen = confirm('当前处于内置预设模式，文件修改仅在内存中生效。\n是否选择本地文件夹作为项目工作区，以将 4 大经典样例和您的修改实时写盘持久化？');
+      if (confirmOpen) {
+        await this.handleOpenProject();
+      }
+      return;
+    }
+
+    if (!this.activeProjectFile) {
+      alert('未选中任何机理文件');
+      return;
+    }
+
+    try {
+      await this.storage.writeFile(this.activeProjectFile, text);
+
+      // 尝试解析并即时更新视口与步骤
+      try {
+        const parsedReaction = ReactionScriptEngine.parse(text);
+        this.presets = [parsedReaction];
+        this.currentReactionIndex = 0;
+
+        if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
+        if (this.reactionDeltaH) this.reactionDeltaH.textContent = parsedReaction.deltaH || 'ΔH';
+        if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
+        if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
+
+        this.buildStepsList(parsedReaction.steps);
+        this.buildTimelineTrack(parsedReaction.steps);
+        this.goToStep(this.currentStepIndex || 0, false);
+        this.hideScriptError();
+        this.markScriptDirty(false, '已保存至本地');
+      } catch (parseErr) {
+        this.markScriptDirty(false, '已写盘 (语法警告)');
+        this.showScriptError(parseErr.message);
+      }
+    } catch (err) {
+      console.error('[Chemiation] 保存文件失败:', err);
+      alert('保存文件失败: ' + err.message);
+    }
+  }
+
+  /**
+   * 标记脚本脏状态 (有未保存更改)
+   */
+  markScriptDirty(dirty, statusText) {
+    this.isScriptDirty = dirty;
+    if (this.fileSaveStatus) {
+      if (dirty) {
+        this.fileSaveStatus.textContent = '未保存 *';
+        this.fileSaveStatus.classList.remove('saved');
+        this.fileSaveStatus.classList.add('dirty');
+      } else {
+        this.fileSaveStatus.textContent = statusText || '已同步';
+        this.fileSaveStatus.classList.remove('dirty');
+        this.fileSaveStatus.classList.add('saved');
+      }
+    }
+  }
+
+  /**
+   * 在当前项目中新建反应机理文件
+   */
+  async handleNewReaction() {
+    if (!this.isProjectMode) {
+      await this.handleOpenProject();
+      return;
+    }
+
+    const name = prompt('请输入新反应机理的名称 (例如: 乙醇催化氧化):', '');
+    if (!name || !name.trim()) return;
+
+    try {
+      const filename = await this.storage.createNewReactionFile(name.trim());
+
+      // 重新生成下拉选项
+      const acplFiles = this.storage.files.filter(f => f.type === 'acpl');
+      if (this.presetSelect) {
+        this.presetSelect.innerHTML = '';
+        acplFiles.forEach(file => {
+          const opt = document.createElement('option');
+          opt.value = file.name;
+          opt.textContent = file.name.replace(/\.acpl$/i, '');
+          this.presetSelect.appendChild(opt);
+        });
+      }
+
+      await this.loadProjectFile(filename);
+      this.switchTab('script');
+    } catch (err) {
+      console.error('[Chemiation] 新建反应文件失败:', err);
+      alert('新建反应机理失败: ' + err.message);
+    }
+  }
+
+  /**
+   * 退出本地项目模式，恢复内置样例
+   */
+  async handleCloseProject() {
+    if (this.isScriptDirty) {
+      const confirmClose = confirm('当前有未保存的脚本修改，退出项目工作区将放弃这些改动，是否确认退出？');
+      if (!confirmClose) return;
+    }
+
+    await this.storage.closeProject();
+    this.isProjectMode = false;
+    this.activeProjectFile = '';
+    this.isScriptDirty = false;
+
+    if (this.projectBar) {
+      this.projectBar.classList.remove('active-project');
+    }
+    if (this.projectNameLabel) {
+      this.projectNameLabel.textContent = '内置样例模式';
+      this.projectNameLabel.title = '当前为内置预设模式。点击右侧按钮选择本地文件夹作为项目工作区';
+    }
+    if (this.btnOpenProject) {
+      this.btnOpenProject.textContent = '打开项目目录';
+    }
+    if (this.btnNewReaction) {
+      this.btnNewReaction.style.display = 'none';
+    }
+    if (this.btnCloseProject) {
+      this.btnCloseProject.style.display = 'none';
+    }
+    if (this.fileSaveStatus) {
+      this.fileSaveStatus.style.display = 'none';
+    }
+
+    // 还原内置预设
+    this.presets = (typeof REACTION_PRESETS !== 'undefined') ? [...REACTION_PRESETS] : [];
+    if (this.presetSelect) {
+      this.presetSelect.innerHTML = '';
+      this.presets.forEach((p, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = p.name;
+        this.presetSelect.appendChild(opt);
+      });
+    }
+
+    this.loadReaction(0);
+    this.switchTab('steps');
   }
 }
 

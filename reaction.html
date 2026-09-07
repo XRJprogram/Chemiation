@@ -119,6 +119,25 @@
         <div class="workspace-content">
           <!-- 选项卡 1: 机理与步骤列表 (纯推演模式) -->
           <div id="tab-pane-steps" class="tab-pane-steps">
+            <!-- 本地项目工作区状态栏 -->
+            <div id="project-bar" class="project-bar">
+              <div class="project-info">
+                <span class="project-folder-icon">📁</span>
+                <span id="project-name-label" class="project-name-label" title="当前为内置预设模式。点击右侧按钮选择本地文件夹作为项目工作区">内置样例模式</span>
+              </div>
+              <div class="project-actions">
+                <button id="btn-open-project" class="project-btn" title="选择本地文件夹作为项目工作区 (自动写入4个初始样例)">
+                  打开项目目录
+                </button>
+                <button id="btn-new-reaction" class="project-btn" title="在当前项目目录新建反应机理文件" style="display: none;">
+                  + 新建
+                </button>
+                <button id="btn-close-project" class="project-btn icon-only" title="退出项目模式，恢复内置样例" style="display: none;">
+                  ✕
+                </button>
+              </div>
+            </div>
+
             <!-- 反应预设选择器 -->
             <div class="preset-select-wrap">
               <select id="preset-select" class="preset-select" aria-label="选择化学反应"></select>
@@ -147,8 +166,12 @@
           <!-- 选项卡 2: 推演脚本编写 (简易 ACPL 编辑器) -->
           <div id="tab-pane-script" class="tab-pane-script">
             <div class="script-toolbar">
-              <span class="script-title">ACPL 推演脚本</span>
+              <div class="script-toolbar-left">
+                <span class="script-title">ACPL 推演脚本</span>
+                <span id="file-save-status" class="file-save-status">已同步</span>
+              </div>
               <div class="script-btn-group">
+                <button id="btn-save-script" class="script-btn" title="保存至本地文件 (快捷键: Ctrl + S)">💾 保存</button>
                 <button id="btn-reset-script" class="script-btn" title="还原为当前反应预设">↺ 还原</button>
                 <button id="btn-run-script" class="script-btn primary" title="解析并立即运行推演脚本">▶ 解析运行</button>
               </div>
@@ -217,6 +240,7 @@
   <!-- 脚本加载 -->
   <script src="js/reaction/reactionData.js"></script>
   <script src="js/reaction/scriptParser.js"></script>
+  <script src="js/reaction/storageManager.js"></script>
   <script src="js/reaction/pseudo3DRenderer.js"></script>
   <script src="js/reaction/reactionApp.js"></script>
 </body>
