@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chemiation · CCPL 反应机理推演脚本语法手册 (CCPL Specification)</title>
+  <title>Chemiation · CCPL 反应机理推演脚本 语法手册 (CCPL Specification)</title>
   <meta name="description" content="Chemiation CCPL (Chemiation Chemical Principle Language) 官方语法手册与机理编写规范指南。">
+  <!-- 字体与 KaTeX 数学排版引入 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --bg-main: #F4EFE6;
@@ -285,26 +287,37 @@
       <span>CHEMIATION</span>
       <span class="brand-tag">CCPL v1.2 SPEC</span>
     </div>
-    <a href="index.html" class="back-btn">
-      <span>← 返回推演工坊</span>
-    </a>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="docs_en.html" class="back-btn" title="Switch to English Documentation">
+        <span>English</span>
+      </a>
+      <a href="https://github.com/XRJprogram/Chemiation" target="_blank" class="back-btn" title="查看 GitHub 仓库">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+        </svg>
+        <span>GitHub 仓库</span>
+      </a>
+      <a href="index.html" class="back-btn">
+        <span>返回</span>
+      </a>
+    </div>
   </header>
 
   <main class="docs-container">
     <div class="docs-hero">
       <h1>CCPL 反应机理推演脚本语法手册</h1>
-      <p>Chemiation Chemical Principle Language · 面向化学机理推演的极简声明式脚本规范</p>
+      <p>Chemiation Chemical Principle Language · 面向化学机理推演的极简脚本</p>
     </div>
 
     <!-- 1. 设计概述 -->
     <section class="section-card">
       <h2>1. 设计理念与概述</h2>
-      <p>CCPL (Chemiation Chemical Principle Language) 是 Chemiation 专为化学反应机理、过渡态演化与聚合物推演设计的极简 DSL 语法。其核心原则包括：</p>
+      <p>CCPL (Chemiation Chemical Principle Language) 是 Chemiation 专为化学反应机理设计的极简 DSL 语法。其核心原则包括：</p>
       <ul>
-        <li><strong>极简可读</strong>：去除冗余标点，采用自然声明式语法，无需编写繁重的 JSON 或代码。</li>
-        <li><strong>智能空间排布</strong>：用户无需手算三维空间坐标，声明原子和键后，引擎内置力导向算法自动解算空间立体构型。</li>
+        <li><strong>极简可读</strong>：采用自然声明式语法，无需编写繁重的 JSON 或复杂代码。</li>
+        <li><strong>自动空间排布</strong>：无需手动计算三维空间坐标，仅声明原子与化学键拓扑后，由排布算法自动解算分子的三维空间构型。</li>
         <li><strong>严格质量守恒</strong>：支持多基元步骤连续推演，消除“游离原子”悬空等非物理现象。</li>
-        <li><strong>纯粹机理导向</strong>：已全面精简冗余项（如移除旧版 deltaH 与繁琐动作标签等），专注电子转移、键的断裂与重组过程。</li>
+        <li><strong>纯粹机理导向</strong>：专注键的断裂与重组过程。</li>
       </ul>
     </section>
 
@@ -315,17 +328,26 @@
       <pre><code><span class="comment"># 反应全称（必填）</span>
 <span class="keyword">reaction</span> <span class="string">"乙酸与乙醇费歇尔酯化反应"</span>
 
-<span class="comment"># 化学反应总方程式（必填）</span>
-<span class="keyword">equation</span> <span class="string">"CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O"</span>
+<span class="comment"># 化学反应总方程式（必填，支持自然键盘输入 -> 或 <=>，底层自动格式化为 → 与 ⇌）</span>
+<span class="keyword">equation</span> <span class="string">"CH_3COOH + CH_3CH_2OH <=> CH_3COOCH_2CH_3 + H_2O"</span>
 
 <span class="comment"># 机理概述与背景说明（可选）</span>
 <span class="keyword">summary</span> <span class="string">"经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。"</span></code></pre>
+      <div class="note-box">
+        <strong>💡 上下标与化学式符号排印：</strong> 编写方程式、机理概述或步骤说明时，<strong>无需手动输入 Unicode 下标字符</strong>：
+        <ul style="margin: 6px 0 0 18px; padding: 0;">
+          <li><strong>化学式数字自动下标</strong>：元素符号或括号后跟随的普通数字（如 <code>CH3COOH</code>、<code>H2O</code>、<code>CO2</code>、<code>C6H12O6</code>）会自动解析排印为下标 <code>CH₃COOH</code>、<code>H₂O</code>、<code>CO₂</code>、<code>C₆H₁₂O₆</code>。</li>
+          <li><strong>显式下标语法</strong>：支持 <code>_2</code> 或 <code>_{10}</code>、<code>_n</code> 等语法（如 <code>H_2O</code> → <code>H₂O</code>，<code>[C6H10O5]_n</code> → <code>[C₆H₁₀O₅]ₙ</code>）。</li>
+          <li><strong>显式上标语法</strong>：支持 <code>^2</code>、<code>^{2+}</code>、<code>^+</code>、<code>^-</code> 等离子价态标记（如 <code>Fe^{3+}</code> → <code>Fe³⁺</code>）。</li>
+          <li><strong>反应箭头简写</strong>：直接键入 <code>-&gt;</code> 或 <code>--&gt;</code> 会自动规整为 <code>→</code>，键入 <code>&lt;=&gt;</code> 或 <code>==</code> 会自动规整为可逆双向平衡箭头 <code>⇌</code>，键入 <code>&lt;-&gt;</code> 为共振箭头 <code>↔</code>。</li>
+        </ul>
+      </div>
     </section>
 
     <!-- 3. 基元反应步骤 -->
     <section class="section-card">
       <h2>3. 基元反应步骤 (Step Block)</h2>
-      <p>每一个基元步骤使用 <code>step "步骤名称" { ... }</code> 代码块进行包裹。<strong>步骤无需手动填写序号（如 1. / 2.）</strong>，Chemiation 引擎会自动按书写顺序智能编排编号：</p>
+      <p>每一个基元步骤使用 <code>step "步骤名称" { ... }</code> 代码块进行包裹。<strong>步骤无需手动填写序号（如 1. / 2.）</strong>，Chemiation 引擎会自动按书写顺序编排编号：</p>
       <pre><code><span class="keyword">step</span> <span class="string">"反应物底物吸附与碰撞"</span> {
   <span class="comment"># 步骤原理阐释说明</span>
   <span class="keyword">note</span> <span class="string">"乙酸与乙醇分子受热靠近，羟基氧原子准备进攻羰基碳原子。"</span>
@@ -338,7 +360,7 @@
   <span class="keyword">bond</span> C1 O1 2
 }</code></pre>
       <div class="note-box">
-        <strong>💡 提示：</strong> 无需手动书写步骤序号，即使脚本中带有序号（如 <code>step "1. 步骤"</code>），引擎也会自动智能提取纯净步骤名并重新按顺序动态编号，增删步骤更加轻松快捷。
+        <strong>提示：</strong> 无需手动书写步骤序号，即使脚本中带有序号，也会重新按顺序动态编号。
       </div>
     </section>
 
@@ -364,7 +386,7 @@
           <tr>
             <td><code>atom &lt;ID&gt; &lt;Element&gt;</code></td>
             <td>不提供坐标，由引擎自动力导向立体排布</td>
-            <td>快速草拟反应、自动计算分子空间结构时</td>
+            <td>快速草拟反应、自动计算分子空间结构时（参见预设中的狄尔斯-阿尔德加成样例）</td>
           </tr>
         </tbody>
       </table>
@@ -373,6 +395,7 @@
       <p>语法：<code>bond &lt;原子ID1&gt; &lt;原子ID2&gt; [键级]</code></p>
       <ul>
         <li><code>bond C1 C2 1</code>：在 C1 与 C2 之间建立<strong>单键</strong>（默认）。</li>
+        <li><code>bond C1 C2 1.5</code>：在 C1 与 C2 之间建立<strong>芳香键 / 共振离域键</strong>（键级 1.5，一侧实线一侧虚线呈现）。</li>
         <li><code>bond C1 O1 2</code>：在 C1 与 O1 之间建立<strong>双键</strong>（如羰基 C=O）。</li>
         <li><code>bond N1 N2 3</code>：在 N1 与 N2 之间建立<strong>三键</strong>（如氮气分子 N≡N）。</li>
       </ul>
@@ -383,15 +406,25 @@
       <h3>4.3 自由基单电子 (radical) 与形式电荷 (charge)</h3>
       <p>在有机化学反应机理推演中，自由基、碳正/碳负离子与过渡态电荷中心的严谨表达至关重要：</p>
       <ul>
-        <li><strong>自由基中心 (radical)</strong>：标注单电子自由基（如氯原子自由基 $\text{Cl}\cdot$、甲基自由基 $\cdot\text{CH}_3$），将在原子右上角渲染出<strong>高对比度实心圆点（$\cdot$）</strong>。
+        <li><strong>自由基中心 (radical)</strong>：标注单电子自由基（如氯原子自由基 Cl<sup>·</sup>、甲基自由基 <sup>·</sup>CH<sub>3</sub>），将在原子右上角渲染出<strong>高对比度实心圆点（·）</strong>。
           <br>语法一（行内声明）：<code>atom C1 C -1.8 0 0 radical</code>
           <br>语法二（独立声明）：<code>radical C1 Cl2</code>
         </li>
-        <li><strong>形式电荷 (charge)</strong>：针对离子与过度成键/少键原子（如氧鎓阳离子 $\text{O}^+$、烷氧负离子 $\text{O}^-$、碳正离子 $\text{C}^+$），将在原子右上角渲染出教科书级<strong>圈加/圈减徽章（$\oplus$ 或 $\ominus$）</strong>。
+        <li><strong>形式电荷 (charge)</strong>：针对离子与过度成键/少键原子（如氧鎓阳离子 O<sup>+</sup>、烷氧负离子 O<sup>−</sup>、碳正离子 C<sup>+</sup>），将在原子右上角渲染出<strong>圈加/圈减徽章（⊕ 或 ⊖）</strong>。
           <br>语法一（行内声明）：<code>atom O1 O -1.4 1.1 0 charge=-1</code>、<code>atom O2 O -1.0 -1.3 0 charge=+1</code>
           <br>语法二（独立声明）：<code>charge O1 -1</code>、<code>charge O2 +1</code>
         </li>
-        <li><strong>机理智能推断兜底</strong>：若脚本中未显式指定，推演引擎亦会依据元素的共价成键数差异（如三键氧、单键氧负离子、均裂单原子自由基等）进行自动机理状态解算与标注呈现。</li>
+        <li><strong>高分子聚合物电荷隐匿抑制</strong>：当原子被聚合物大括号 <code>polymer</code> 囊括进入重复单元时，系统会自动抑制其反应性电荷与单电子标记，体现化学键封闭与中和规范。</li>
+      </ul>
+
+      <h3>4.4 芳香烃与大 Π 键规范 (aromatic，可选)</h3>
+      <p>在芳香烃或共轭环系步骤中，大 Π 键展示为<strong>完全可选</strong>特性。通过在步骤块内加入 <code>aromatic</code>（或简写 <code>pi</code>）声明，渲染器将在三维空间中呈现出经典的芳香内切虚线环与上下离域 π 电子云轨道：</p>
+      <pre><code><span class="comment"># 语法：aromatic "&lt;环原子ID列表...&gt;" [tag "&lt;学术标签说明&gt;"]</span>
+<span class="keyword">aromatic</span> <span class="string">"C1 C2 C3 C4 C5 C6"</span> <span class="keyword">tag</span> <span class="string">"Π_6^6"</span></code></pre>
+      <ul>
+        <li><strong>可选性设计</strong>：若步骤中不包含 <code>aromatic</code> 声明，系统仍可正常使用标准键级（如 <code>1.5</code> 或单双键交替）显示；仅在显式声明时开启离域大 Π 键空间投影。</li>
+        <li><strong>真实三维空间投影</strong>：自动根据环上原子三维坐标解算环平面的质心与法向量，在环平面内切绘制经典 Robinson 虚线环，并在分子平面上下 $\pm 0.38\text{ \AA}$ 处投影呈现半透明离域 $\pi$ 电子云轨道面与共轭轨道虚线。</li>
+        <li><strong>跨步骤动态生灭</strong>：在反应机理中，若大 Π 键在亲电加成中被破坏形成 Wheland 碳正离子中间体，并在脱质子后重新芳构化，大 Π 键电子云将在步骤切换过程中自然淡出与淡入。</li>
       </ul>
     </section>
 
@@ -399,14 +432,14 @@
     <section class="section-card">
       <h2>5. 高分子聚合物与大括号规范 (Polymer)</h2>
       <p>在聚合反应机理步骤中，可通过 <code>polymer</code> 语句开启聚合物大括号视图：</p>
-      <pre><code><span class="comment"># 语法：polymer "&lt;下标&gt;" ["说明文字"] [exclude "&lt;排除原子ID...&gt;"]</span>
-<span class="keyword">polymer</span> <span class="string">"n"</span> <span class="string">"直链淀粉单体最简重复单元 · [C₆H₁₀O₅]ₙ"</span> <span class="keyword">exclude</span> <span class="string">"Ow Hw1 Hw2"</span></code></pre>
+      <pre><code><span class="comment"># 语法：polymer "&lt;下标&gt;" ["说明文字"] [include "&lt;包含单元原子ID...&gt;" | exclude "&lt;排除副产物原子ID...&gt;"] (二选一)</span>
+<span class="keyword">polymer</span> <span class="string">"n"</span> <span class="string">"直链淀粉单体最简重复单元 · [C_6H_{10}O_5]_n"</span> <span class="keyword">include</span> <span class="string">"C1 C2 C3 C4 C5 C6 O2 O3 O5 O6"</span></code></pre>
 
       <h3>核心机制与设计考量：</h3>
       <ul>
-        <li><strong>单体最简重复单元原则</strong>：例如淀粉生成过程，严谨表示为吡喃葡萄糖单环脱水脱氧后的最简 $[C_6H_{10}O_5]_n$ 单元，结构纯粹简明。</li>
+        <li><strong>包含指定单元 (include) 与排除副产物 (exclude)</strong>：支持通过 <code>include</code> 明确框选聚合单元内的骨架原子，或通过 <code>exclude</code> 排除脱水缩合产生的离去小分子（二选一即可，如 <code>exclude "Ow Hw1 Hw2"</code>）。</li>
+        <li><strong>单体最简重复单元原则</strong>：例如淀粉生成过程，严谨表示为吡喃葡萄糖单环脱水脱氧后的最简 [C<sub>6</sub>H<sub>10</sub>O<sub>5</sub>]<sub><i>n</i></sub> 单元，结构纯粹简明。</li>
         <li><strong>动态就近延申截断机制</strong>：当视角拖拽旋转时，系统在每一帧动态计算大括号左侧与右侧的就近截断点，使化学键始终向左右就近延申至括号外，彻底解决跨视角“远距离交叉飞线”的视觉 Bug。</li>
-        <li><strong>排除独立副产物 (exclude)</strong>：缩聚反应常伴随脱除水分子等小分子副产物，使用 <code>exclude "Ow Hw1 Hw2"</code> 可将副产物原子移至大括号外侧独立展示。</li>
       </ul>
     </section>
 
@@ -447,6 +480,11 @@
             <td><code>聚合物</code></td>
             <td>高分子缩聚/加聚</td>
             <td>自动包含 polymer 大括号、就近截断与排除水分子</td>
+          </tr>
+          <tr>
+            <td><code>芳香取代</code></td>
+            <td>芳香亲电取代机理</td>
+            <td>包含苯环骨架、1.5 键级与 aromatic 大 Π 键声明</td>
           </tr>
           <tr>
             <td><code>新反应</code></td>

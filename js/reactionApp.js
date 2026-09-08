@@ -5,7 +5,9 @@
 
 class ReactionApp {
   constructor() {
-    this.storageKey = 'chemiation_reactions_v5';
+    this.storageKey = 'chemiation_reactions_v10';
+    this.langStorageKey = 'chemiation_lang_preference';
+    this.lang = this.loadLanguagePreference();
     this.presets = this.loadInitialPresets();
     this.currentReactionIndex = 0;
     this.currentStepIndex = 0;
@@ -18,26 +20,226 @@ class ReactionApp {
 
     this.isScriptDirty = false;
 
+    this.initI18n();
     this.initDOM();
     this.initRenderer();
     this.initResizable();
     this.bindEvents();
+    this.applyLanguage();
     this.loadReaction(0);
   }
 
+  loadLanguagePreference() {
+    try {
+      const saved = localStorage.getItem(this.langStorageKey);
+      if (saved === 'en' || saved === 'zh') return saved;
+    } catch (e) {}
+    return 'zh';
+  }
+
+  initI18n() {
+    this.i18n = {
+      zh: {
+        docsBtn: '语法手册',
+        repoBtn: 'GitHub 仓库',
+        workspaceTitle: '推演工作区',
+        tabSteps: '机理步骤',
+        tabScript: 'CCPL 脚本',
+        libraryTitle: '反应机理库',
+        btnNew: '+ 新建',
+        btnDelete: '🗑 删除',
+        stepsSequence: '步骤序列',
+        stepsHint: '点击直达任意步',
+        scriptTitle: 'CCPL 推演脚本',
+        statusSynced: '已同步',
+        statusSaving: '已保存',
+        statusDirty: '未保存',
+        statusError: '语法错误',
+        statusRestored: '已还原',
+        labelShrink: '缩小',
+        placeholderScript: '在此编写或修改 CCPL 反应推演脚本...',
+        stepCardNum: '步骤',
+        // 对话框与操作
+        duplicateNameTitle: '反应名称重复',
+        duplicateNameMsg: '机理库中已存在名为 "{name}" 的反应，请使用不同名称以避免混淆。',
+        newReactionTitle: '新建化学反应机理',
+        newReactionMsg: '请输入新反应机理的名称：',
+        newReactionDefault: '新建化学反应',
+        newReactionPlaceholder: '例如: 乙醇催化氧化机理',
+        createReactionBtn: '创建机理',
+        deleteReactionTitle: '删除当前反应机理',
+        deleteReactionMsg: '确定要从机理推演库中永久删除反应机理【{name}】吗？此操作无法撤销。',
+        deleteConfirmBtn: '删除机理',
+        deleteAlertTitle: '无法删除机理',
+        deleteAlertMsg: '反应库中至少需要保留 1 个推演机理，无法继续删除。',
+        confirmBtn: '确定',
+        cancelBtn: '取消',
+        playTooltip: '自动推演 (快捷键: Space)',
+        pauseTooltip: '暂停 (快捷键: Space)',
+        zoomInTitle: '放大 (滚轮向上)',
+        zoomOutTitle: '缩小 (滚轮向下)',
+        resetCamTitle: '视角复位居中 (快捷键: R)',
+        autoRotateTitle: '自动缓速自转',
+        expandWorkspaceTitle: '展开推演工作区',
+        collapseWorkspaceTitle: '收起推演工作区',
+        prevStepTitle: '上一步 (快捷键: ← 或 A)',
+        nextStepTitle: '下一步 (快捷键: → 或 D)',
+        resetStepTitle: '回到起点',
+        saveScriptTitle: '保存脚本 (快捷键: Ctrl + S)',
+        fullscreenTitle: '全屏编写模式 (快捷键: F11 / Esc 退出)',
+        exitFullscreenTitle: '缩小窗口 (快捷键: Esc / F11)',
+        resetScriptTitle: '还原当前机理',
+        runScriptTitle: '解析并立即运行推演'
+      },
+      en: {
+        docsBtn: 'Docs',
+        repoBtn: 'Repository',
+        workspaceTitle: 'Workspace',
+        tabSteps: 'Steps',
+        tabScript: 'CCPL Script',
+        libraryTitle: 'Mechanism Library',
+        btnNew: '+ New',
+        btnDelete: '🗑 Delete',
+        stepsSequence: 'Step Sequence',
+        stepsHint: 'Click to navigate',
+        scriptTitle: 'CCPL Script',
+        statusSynced: 'Synced',
+        statusSaving: 'Saved',
+        statusDirty: 'Unsaved',
+        statusError: 'Error',
+        statusRestored: 'Restored',
+        labelShrink: 'Collapse',
+        placeholderScript: 'Compose or edit CCPL deduction scripts here...',
+        stepCardNum: 'Step',
+        // Dialogs and operations
+        duplicateNameTitle: 'Duplicate Reaction Name',
+        duplicateNameMsg: 'A reaction named "{name}" already exists in the library. Please choose a unique name.',
+        newReactionTitle: 'New Reaction Mechanism',
+        newReactionMsg: 'Enter the name of the new reaction mechanism:',
+        newReactionDefault: 'New Chemical Reaction',
+        newReactionPlaceholder: 'e.g. Catalytic Oxidation of Ethanol',
+        createReactionBtn: 'Create',
+        deleteReactionTitle: 'Delete Current Mechanism',
+        deleteReactionMsg: 'Are you sure you want to permanently delete [{name}] from the library? This cannot be undone.',
+        deleteConfirmBtn: 'Delete',
+        deleteAlertTitle: 'Cannot Delete',
+        deleteAlertMsg: 'At least 1 reaction mechanism must be preserved in the library.',
+        confirmBtn: 'OK',
+        cancelBtn: 'Cancel',
+        playTooltip: 'Auto Play (Key: Space)',
+        pauseTooltip: 'Pause (Key: Space)',
+        zoomInTitle: 'Zoom In (Scroll Up)',
+        zoomOutTitle: 'Zoom Out (Scroll Down)',
+        resetCamTitle: 'Reset Camera (Key: R)',
+        autoRotateTitle: 'Auto Rotate',
+        expandWorkspaceTitle: 'Expand Workspace',
+        collapseWorkspaceTitle: 'Collapse Workspace',
+        prevStepTitle: 'Previous Step (Key: ← or A)',
+        nextStepTitle: 'Next Step (Key: → or D)',
+        resetStepTitle: 'Reset to Start',
+        saveScriptTitle: 'Save Script (Ctrl + S)',
+        fullscreenTitle: 'Fullscreen Mode (F11 / Esc)',
+        exitFullscreenTitle: 'Exit Fullscreen (Esc / F11)',
+        resetScriptTitle: 'Revert to Current',
+        runScriptTitle: 'Parse & Run Mechanism'
+      }
+    };
+  }
+
+  t(key, params = {}) {
+    const dict = this.i18n[this.lang] || this.i18n.zh;
+    let str = dict[key] || this.i18n.zh[key] || key;
+    Object.keys(params).forEach(k => {
+      str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), params[k]);
+    });
+    return str;
+  }
+
+  toggleLanguage() {
+    this.lang = this.lang === 'zh' ? 'en' : 'zh';
+    try {
+      localStorage.setItem(this.langStorageKey, this.lang);
+    } catch (e) {}
+    this.applyLanguage();
+  }
+
+  applyLanguage() {
+    const dict = this.i18n[this.lang] || this.i18n.zh;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (dict[key]) {
+        el.textContent = dict[key];
+      }
+    });
+
+    if (this.scriptEditor) {
+      this.scriptEditor.placeholder = dict.placeholderScript;
+    }
+
+    if (this.btnZoomIn) this.btnZoomIn.title = dict.zoomInTitle;
+    if (this.btnZoomOut) this.btnZoomOut.title = dict.zoomOutTitle;
+    if (this.btnResetCam) this.btnResetCam.title = dict.resetCamTitle;
+    if (this.btnToggleRotate) this.btnToggleRotate.title = dict.autoRotateTitle;
+    if (this.btnExpandWorkspace) this.btnExpandWorkspace.title = dict.expandWorkspaceTitle;
+    if (this.btnToggleWorkspace) this.btnToggleWorkspace.title = dict.collapseWorkspaceTitle;
+    if (this.prevBtn) this.prevBtn.title = dict.prevStepTitle;
+    if (this.nextBtn) this.nextBtn.title = dict.nextStepTitle;
+    if (this.resetStepBtn) this.resetStepBtn.title = dict.resetStepTitle;
+    if (this.btnSaveScript) this.btnSaveScript.title = dict.saveScriptTitle;
+    if (this.btnResetScript) this.btnResetScript.title = dict.resetScriptTitle;
+    if (this.btnRunScript) this.btnRunScript.title = dict.runScriptTitle;
+    if (this.btnNewReaction) this.btnNewReaction.title = dict.btnNew;
+    if (this.btnDeleteReaction) this.btnDeleteReaction.title = dict.btnDelete;
+
+    if (this.headerLangBtn) {
+      this.headerLangBtn.textContent = this.lang === 'zh' ? '中文' : 'English';
+      this.headerLangBtn.title = this.lang === 'zh' ? '当前语言: 中文 (点击切换为 English)' : 'Current Language: English (Click to switch to 中文)';
+    }
+
+    const docsBtn = document.getElementById('header-docs-btn');
+    if (docsBtn) {
+      docsBtn.href = this.lang === 'en' ? 'docs_en.html' : 'docs.html';
+      docsBtn.title = this.lang === 'en' ? 'View CCPL Syntax Manual' : '查看 CCPL 语法手册与编写规范';
+      docsBtn.textContent = dict.docsBtn || (this.lang === 'en' ? 'Docs' : '语法手册');
+    }
+    const repoBtn = document.getElementById('header-repo-btn');
+    if (repoBtn) {
+      repoBtn.title = this.lang === 'zh' ? '前往 GitHub 源代码仓库' : 'Visit GitHub Repository';
+      repoBtn.textContent = dict.repoBtn || (this.lang === 'en' ? 'Repository' : 'GitHub 仓库');
+    }
+
+    this.updatePlayButtonUI();
+  }
+
   loadInitialPresets() {
+    let presets = [];
     try {
       const saved = localStorage.getItem(this.storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          presets = parsed;
         }
       }
     } catch (e) {
       console.warn('[Chemiation] 读取本地存储反应失败，使用内置预设', e);
     }
-    return typeof REACTION_PRESETS !== 'undefined' ? JSON.parse(JSON.stringify(REACTION_PRESETS)) : [];
+    if (!presets || presets.length === 0) {
+      presets = typeof REACTION_PRESETS !== 'undefined' ? JSON.parse(JSON.stringify(REACTION_PRESETS)) : [];
+    }
+
+    // 确保所有反应步骤中的未定坐标原子均经过 3D 拓扑几何解算
+    if (typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.autoLayoutStep) {
+      presets.forEach(reaction => {
+        if (reaction && Array.isArray(reaction.steps)) {
+          reaction.steps.forEach(step => {
+            ReactionScriptEngine.autoLayoutStep(step);
+          });
+        }
+      });
+    }
+
+    return presets;
   }
 
   savePresetsToStorage() {
@@ -51,6 +253,7 @@ class ReactionApp {
   initDOM() {
     this.canvas = document.getElementById('reaction-canvas');
     this.presetSelect = document.getElementById('preset-select');
+    this.headerLangBtn = document.getElementById('header-lang-btn');
 
     // 反应机理库操作 DOM
     this.projectBar = document.getElementById('project-bar');
@@ -67,6 +270,7 @@ class ReactionApp {
 
     // 右侧推演工作区整体与容器
     this.workspaceSidebar = document.getElementById('workspace-sidebar');
+    this.workspaceContent = document.querySelector('.workspace-content');
     this.btnToggleWorkspace = document.getElementById('btn-toggle-workspace');
     this.btnExpandWorkspace = document.getElementById('btn-expand-workspace');
     this.resizeHandle = document.getElementById('resize-handle');
@@ -84,6 +288,7 @@ class ReactionApp {
     // 脚本编辑器相关 (IDE 风格高亮与行号)
     this.scriptEditor = document.getElementById('script-editor');
     this.ideGutter = document.getElementById('ide-gutter');
+    this.ideGutterInner = document.getElementById('ide-gutter-inner');
     this.ideHighlight = document.getElementById('ide-highlight');
     this.ideCode = document.getElementById('ide-code');
     this.btnSaveScript = document.getElementById('btn-save-script');
@@ -121,7 +326,8 @@ class ReactionApp {
     this.presets.forEach((preset, idx) => {
       const option = document.createElement('option');
       option.value = idx;
-      option.textContent = `${idx + 1}. ${preset.name}`;
+      const formattedName = typeof ReactionScriptEngine !== 'undefined' ? ReactionScriptEngine.formatChemText(preset.name) : preset.name;
+      option.textContent = `${idx + 1}. ${formattedName}`;
       this.presetSelect.appendChild(option);
     });
     this.presetSelect.value = this.currentReactionIndex;
@@ -147,6 +353,16 @@ class ReactionApp {
       });
       this.resizeObserver.observe(this.canvas.parentElement);
     }
+
+    // 连续推演模式：每步动画完成立即步进到下一步，消除多余等待间隔
+    this.renderer.onTransitionEnd = () => {
+      if (this.isPlaying) {
+        const hasNext = this.nextStep();
+        if (!hasNext) {
+          this.pause();
+        }
+      }
+    };
   }
 
   /**
@@ -196,6 +412,13 @@ class ReactionApp {
   }
 
   bindEvents() {
+    // 语言切换
+    if (this.headerLangBtn) {
+      this.headerLangBtn.addEventListener('click', () => {
+        this.toggleLanguage();
+      });
+    }
+
     // 反应预设切换
     if (this.presetSelect) {
       this.presetSelect.addEventListener('change', (e) => {
@@ -263,7 +486,9 @@ class ReactionApp {
           this.ideHighlight.scrollTop = this.scriptEditor.scrollTop;
           this.ideHighlight.scrollLeft = this.scriptEditor.scrollLeft;
         }
-        if (this.ideGutter) {
+        if (this.ideGutterInner) {
+          this.ideGutterInner.style.transform = `translateY(-${this.scriptEditor.scrollTop}px)`;
+        } else if (this.ideGutter) {
           this.ideGutter.scrollTop = this.scriptEditor.scrollTop;
         }
       });
@@ -415,6 +640,13 @@ class ReactionApp {
     if (this.tabPaneSteps) this.tabPaneSteps.style.display = tabName === 'steps' ? 'flex' : 'none';
     if (this.tabPaneScript) this.tabPaneScript.style.display = tabName === 'script' ? 'flex' : 'none';
 
+    if (this.workspaceContent) {
+      this.workspaceContent.style.overflowY = tabName === 'script' ? 'hidden' : 'auto';
+      if (tabName === 'script') {
+        this.workspaceContent.scrollTop = 0;
+      }
+    }
+
     if (tabName === 'script') {
       if (this.scriptEditor && !this.scriptEditor.value.trim()) {
         this.resetScriptToCurrent();
@@ -481,9 +713,21 @@ class ReactionApp {
     this.currentReactionIndex = reactionIndex;
     const reaction = this.presets[reactionIndex];
 
-    if (this.reactionTitle) this.reactionTitle.textContent = reaction.name;
-    if (this.reactionEquation) this.reactionEquation.textContent = reaction.equation || '';
-    if (this.reactionDesc) this.reactionDesc.textContent = reaction.summary || '';
+    if (typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.autoLayoutStep) {
+      if (reaction && Array.isArray(reaction.steps)) {
+        reaction.steps.forEach(step => {
+          ReactionScriptEngine.autoLayoutStep(step);
+        });
+      }
+    }
+
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+
+    if (this.reactionTitle) this.reactionTitle.textContent = format(reaction.name);
+    if (this.reactionEquation) this.reactionEquation.textContent = format(reaction.equation || '');
+    if (this.reactionDesc) this.reactionDesc.textContent = format(reaction.summary || '');
 
     if (this.presetSelect) {
       this.presetSelect.value = reactionIndex;
@@ -510,18 +754,23 @@ class ReactionApp {
     if (!this.stepsListContainer) return;
     this.stepsListContainer.innerHTML = '';
 
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+
     steps.forEach((step, idx) => {
       const card = document.createElement('div');
       card.className = `step-item-card ${idx === 0 ? 'active' : ''}`;
       card.dataset.stepIndex = idx;
 
-      const cleanTitle = step.name.replace(/^\d+\.\s*/, '');
+      const cleanTitle = format(step.name.replace(/^\d+\.\s*/, ''));
+      const cleanNote = format(step.note || '');
       card.innerHTML = `
         <div class="step-card-top">
           <div class="step-card-num">${idx + 1}</div>
           <div class="step-card-title">${cleanTitle}</div>
         </div>
-        <div class="step-card-note">${step.note || ''}</div>
+        <div class="step-card-note">${cleanNote}</div>
       `;
 
       card.addEventListener('click', () => {
@@ -537,10 +786,14 @@ class ReactionApp {
     if (!this.timelineTrack) return;
     this.timelineTrack.innerHTML = '';
 
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+
     steps.forEach((step, idx) => {
       const pill = document.createElement('div');
       pill.className = `step-pill ${idx === 0 ? 'active' : ''}`;
-      pill.title = `第 ${idx + 1} 步: ${step.name}`;
+      pill.title = `第 ${idx + 1} 步: ${format(step.name)}`;
       pill.addEventListener('click', () => {
         this.pause();
         this.goToStep(idx, true);
@@ -567,7 +820,10 @@ class ReactionApp {
 
     // 画布浮动状态吐司
     if (this.canvasStepToast) {
-      const cleanTitle = step.name.replace(/^\d+\.\s*/, '');
+      const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+        ? ReactionScriptEngine.formatChemText
+        : (s => s);
+      const cleanTitle = format(step.name.replace(/^\d+\.\s*/, ''));
       this.canvasStepToast.innerHTML = `
         <span class="toast-num">${stepIndex + 1}/${totalSteps}</span>
         <span class="toast-title">${cleanTitle}</span>
@@ -636,14 +892,21 @@ class ReactionApp {
   }
 
   play() {
+    const reaction = this.presets[this.currentReactionIndex];
+    if (!reaction || !reaction.steps || reaction.steps.length <= 1) return;
+
     this.isPlaying = true;
     this.updatePlayButtonUI();
 
-    const reaction = this.presets[this.currentReactionIndex];
+    // 若当前已在最后一步，则先跳到起点第 0 步
     if (this.currentStepIndex >= reaction.steps.length - 1) {
-      this.goToStep(0, true);
+      this.goToStep(0, false);
     }
-    this.scheduleNextTick();
+    // 连续推演模式：立即步进到下一步并执行动画，动画结束时通过 onTransitionEnd 自动无缝触发下一步
+    const hasNext = this.nextStep();
+    if (!hasNext) {
+      this.pause();
+    }
   }
 
   pause() {
@@ -655,35 +918,16 @@ class ReactionApp {
     this.updatePlayButtonUI();
   }
 
-  scheduleNextTick() {
-    if (!this.isPlaying) return;
-
-    const interval = Math.round(this.stepBaseDuration / this.playbackSpeed);
-    this.playTimer = setTimeout(() => {
-      if (!this.isPlaying) return;
-
-      const hasNext = this.nextStep();
-      if (hasNext) {
-        this.scheduleNextTick();
-      } else {
-        // 推演到最后一步时自动暂停，不进行循环播放
-        this.pause();
-      }
-    }, interval);
-  }
-
   setPlaybackSpeed(speed) {
     this.playbackSpeed = speed;
+    if (this.renderer) {
+      this.renderer.transitionDuration = Math.round(920 / speed);
+    }
     if (this.speedPills) {
       this.speedPills.forEach(pill => {
         const pSpeed = parseFloat(pill.dataset.speed || '1');
         pill.classList.toggle('active', pSpeed === speed);
       });
-    }
-
-    if (this.isPlaying) {
-      if (this.playTimer) clearTimeout(this.playTimer);
-      this.scheduleNextTick();
     }
   }
 
@@ -718,6 +962,19 @@ class ReactionApp {
 
     try {
       const parsedReaction = ReactionScriptEngine.parse(text);
+
+      // 检查机理名称是否与库中其他反应重名
+      const isDuplicate = this.presets.some((p, idx) => idx !== this.currentReactionIndex && p.name.trim() === parsedReaction.name.trim());
+      if (isDuplicate) {
+        this.showAlertDialog({
+          title: this.t('duplicateNameTitle'),
+          message: this.t('duplicateNameMsg', { name: parsedReaction.name })
+        });
+        this.showScriptError(this.t('duplicateNameMsg', { name: parsedReaction.name }));
+        this.markScriptDirty(true, this.t('statusError'));
+        return;
+      }
+
       this.hideScriptError();
 
       this.presets[this.currentReactionIndex] = parsedReaction;
@@ -735,13 +992,13 @@ class ReactionApp {
       this.buildTimelineTrack(parsedReaction.steps);
       this.renderer.resetCamera();
       this.goToStep(0, false);
-      this.markScriptDirty(false, '已同步');
+      this.markScriptDirty(false, this.t('statusSynced'));
 
       // 切回步骤机理页面查看推演效果
       this.switchTab('steps');
     } catch (err) {
       this.showScriptError(err.message);
-      this.markScriptDirty(true, '语法错误');
+      this.markScriptDirty(true, this.t('statusError'));
     }
   }
 
@@ -754,6 +1011,19 @@ class ReactionApp {
 
     try {
       const parsedReaction = ReactionScriptEngine.parse(text);
+
+      // 检查机理名称是否与库中其他反应重名
+      const isDuplicate = this.presets.some((p, idx) => idx !== this.currentReactionIndex && p.name.trim() === parsedReaction.name.trim());
+      if (isDuplicate) {
+        this.showAlertDialog({
+          title: this.t('duplicateNameTitle'),
+          message: this.t('duplicateNameMsg', { name: parsedReaction.name })
+        });
+        this.showScriptError(this.t('duplicateNameMsg', { name: parsedReaction.name }));
+        this.markScriptDirty(true, this.t('statusError'));
+        return;
+      }
+
       this.presets[this.currentReactionIndex] = parsedReaction;
       this.savePresetsToStorage();
 
@@ -769,10 +1039,10 @@ class ReactionApp {
       this.buildTimelineTrack(parsedReaction.steps);
       this.goToStep(this.currentStepIndex || 0, false);
       this.hideScriptError();
-      this.markScriptDirty(false, '已保存');
+      this.markScriptDirty(false, this.t('statusSaving'));
     } catch (err) {
       this.showScriptError(err.message);
-      this.markScriptDirty(true, '语法错误');
+      this.markScriptDirty(true, this.t('statusError'));
     }
   }
 
@@ -902,22 +1172,35 @@ class ReactionApp {
    */
   async handleNewReaction() {
     const name = await this.showPromptDialog({
-      title: '新建化学反应机理',
-      message: '请输入新反应机理的名称：',
-      defaultValue: '新建化学反应',
-      placeholder: '例如: 乙醇催化氧化机理',
-      confirmText: '创建机理'
+      title: this.t('newReactionTitle'),
+      message: this.t('newReactionMsg'),
+      defaultValue: this.t('newReactionDefault'),
+      placeholder: this.t('newReactionPlaceholder'),
+      confirmText: this.t('createReactionBtn'),
+      cancelText: this.t('cancelBtn')
     });
     if (!name || !name.trim()) return;
 
-    const templateText = ReactionScriptEngine.getQuickTemplate('reaction_blank').replace('reaction "新建化学反应"', `reaction "${name.trim()}"`);
+    const trimmedName = name.trim();
+    // 查重：避免与库中已有反应重名
+    const isDuplicate = this.presets.some(p => p.name.trim() === trimmedName);
+    if (isDuplicate) {
+      await this.showAlertDialog({
+        title: this.t('duplicateNameTitle'),
+        message: this.t('duplicateNameMsg', { name: trimmedName }),
+        confirmText: this.t('confirmBtn')
+      });
+      return;
+    }
+
+    const templateText = ReactionScriptEngine.getQuickTemplate('reaction_blank').replace('reaction "新建化学反应"', `reaction "${trimmedName}"`);
     let newReaction;
     try {
       newReaction = ReactionScriptEngine.parse(templateText);
     } catch (e) {
       newReaction = {
         id: 'reaction-' + Date.now(),
-        name: name.trim(),
+        name: trimmedName,
         equation: 'A + B ⇌ C + D',
         summary: '新建化学反应机理推演',
         steps: [
@@ -948,17 +1231,19 @@ class ReactionApp {
   async handleDeleteReaction() {
     if (this.presets.length <= 1) {
       await this.showAlertDialog({
-        title: '无法删除机理',
-        message: '反应机理库中至少需要保留 1 个机理，无法删除唯一机理。'
+        title: this.t('deleteAlertTitle'),
+        message: this.t('deleteAlertMsg'),
+        confirmText: this.t('confirmBtn')
       });
       return;
     }
 
     const currentReaction = this.presets[this.currentReactionIndex];
     const ok = await this.showConfirmDialog({
-      title: '删除反应机理',
-      message: `确定要删除反应【${currentReaction.name}】吗？删除后将从本地机理库移除。`,
-      confirmText: '确认删除',
+      title: this.t('deleteReactionTitle'),
+      message: this.t('deleteReactionMsg', { name: currentReaction.name }),
+      confirmText: this.t('deleteConfirmBtn'),
+      cancelText: this.t('cancelBtn'),
       danger: true
     });
     if (!ok) return;
@@ -1000,7 +1285,8 @@ class ReactionApp {
       this.ideCode.innerHTML = this.highlightCCPL(code);
     }
 
-    if (this.ideGutter) {
+    const gutterTarget = this.ideGutterInner || this.ideGutter;
+    if (gutterTarget) {
       const lineCount = (code.split('\n').length) || 1;
       let errLine = null;
       if (this.scriptErrorToast && this.scriptErrorToast.style.display === 'block') {
@@ -1012,14 +1298,16 @@ class ReactionApp {
         const isErr = i === errLine ? ' class="gutter-error"' : '';
         gutterHtml += `<div${isErr}>${i}</div>`;
       }
-      this.ideGutter.innerHTML = gutterHtml;
+      gutterTarget.innerHTML = gutterHtml;
     }
 
     if (this.ideHighlight) {
       this.ideHighlight.scrollTop = this.scriptEditor.scrollTop;
       this.ideHighlight.scrollLeft = this.scriptEditor.scrollLeft;
     }
-    if (this.ideGutter) {
+    if (this.ideGutterInner) {
+      this.ideGutterInner.style.transform = `translateY(-${this.scriptEditor.scrollTop}px)`;
+    } else if (this.ideGutter) {
       this.ideGutter.scrollTop = this.scriptEditor.scrollTop;
     }
   }
@@ -1030,7 +1318,7 @@ class ReactionApp {
   highlightCCPL(text) {
     if (!text) return '';
 
-    const tokenRegex = /(#.*$)|("(?:[^"\\]|\\.)*")|\b(reaction|step|atom|bond|polymer|order|tag|leftBond|rightBond|exclude|excludeIds|vector|note|equation|summary|radical|charge)\b|\b(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Fe|Cu|Zn|Br|I|Pt|Pd|Au)\b|(?<!\w)(-?\d+(?:\.\d+)?)(?!\w)|([{}[\]])/gm;
+    const tokenRegex = /(#.*$)|("(?:[^"\\]|\\.)*")|\b(reaction|step|atom|bond|polymer|aromatic|pi|order|tag|leftBond|rightBond|include|includeIds|exclude|excludeIds|vector|note|equation|summary|radical|charge)\b|\b(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Fe|Cu|Zn|Br|I|Pt|Pd|Au)\b|(?<!\w)(-?\d+(?:\.\d+)?)(?!\w)|([{}[\]])/gm;
 
     let result = '';
     let lastIndex = 0;
@@ -1064,7 +1352,7 @@ class ReactionApp {
     }
 
     if (text.endsWith('\n')) {
-      result += ' ';
+      result += '<br> ';
     }
 
     return result;
@@ -1085,9 +1373,10 @@ class ReactionApp {
     this.scriptErrorToast.style.display = 'block';
 
     const lineMatch = msg.match(/第\s*(\d+)\s*行/);
-    if (lineMatch && this.ideGutter) {
+    const gutterTarget = this.ideGutterInner || this.ideGutter;
+    if (lineMatch && gutterTarget) {
       const errLine = parseInt(lineMatch[1], 10);
-      const gutterLines = this.ideGutter.querySelectorAll('div');
+      const gutterLines = gutterTarget.querySelectorAll('div');
       gutterLines.forEach((div, idx) => {
         if (idx + 1 === errLine) {
           div.classList.add('gutter-error');

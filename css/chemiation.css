@@ -95,7 +95,33 @@ html, body {
   gap: 8px;
 }
 
-.header-docs-btn {
+.header-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(94, 65, 47, 0.05);
+  color: var(--color-deep-brown);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.header-lang-btn:hover {
+  background: rgba(184, 74, 40, 0.1);
+  color: var(--color-accent);
+  border-color: rgba(184, 74, 40, 0.35);
+  transform: translateY(-1px);
+}
+
+.header-docs-btn,
+.header-repo-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -109,16 +135,19 @@ html, body {
   text-decoration: none;
   cursor: pointer;
   transition: all 0.16s ease;
+  white-space: nowrap;
 }
 
-.header-docs-btn:hover {
+.header-docs-btn:hover,
+.header-repo-btn:hover {
   background: rgba(184, 74, 40, 0.1);
   color: var(--color-accent);
   border-color: rgba(184, 74, 40, 0.35);
   transform: translateY(-1px);
 }
 
-.header-docs-btn svg {
+.header-docs-btn svg,
+.header-repo-btn svg {
   color: var(--color-accent);
   flex-shrink: 0;
 }
@@ -143,6 +172,9 @@ html, body {
   padding: 4px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 
@@ -808,6 +840,8 @@ html, body {
   flex-direction: column;
   gap: 12px;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* 全屏编写模式：主容器铺满视口下方（位于页眉下方，不遮挡页眉亦不被页眉覆盖） */
@@ -1022,7 +1056,8 @@ html, body {
    ========================================================================== */
 .ide-container {
   flex: 1;
-  min-height: 340px;
+  min-height: 280px;
+  height: 100%;
   display: flex;
   background: #18110B;
   border: 1px solid rgba(62, 38, 22, 0.45);
@@ -1041,19 +1076,28 @@ html, body {
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 22px;
-  padding: 12px 8px 32px 0;
+  padding: 0;
   text-align: right;
   user-select: none;
   overflow: hidden;
+  position: relative;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 
+.ide-gutter-inner {
+  padding: 12px 8px 32px 0;
+  box-sizing: border-box;
+  will-change: transform;
+}
+
+.ide-gutter-inner div,
 .ide-gutter div {
   height: 22px;
   line-height: 22px;
 }
 
+.ide-gutter-inner div.gutter-error,
 .ide-gutter div.gutter-error {
   background: rgba(184, 74, 40, 0.55);
   color: #FFF;
@@ -1096,16 +1140,28 @@ html, body {
   color: #E8DEC8;
   background: transparent;
   pointer-events: none;
-  overflow: hidden;
+  overflow: scroll;
+  scrollbar-width: none;
   z-index: 1;
 }
 
+.ide-highlight::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .ide-highlight code {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
   font-weight: 400 !important;
   font-variant-ligatures: none !important;
+  font-feature-settings: "liga" 0, "calt" 0 !important;
 }
 
 .ide-highlight code span {
@@ -1236,22 +1292,22 @@ html, body {
 .playback-controls-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
+  width: 100%;
 }
 
 .ctrl-btn-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  width: 100%;
+  gap: 8px;
 }
 
 .ctrl-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 32px;
+  flex: 1;
+  height: 34px;
   padding: 0;
   border-radius: 6px;
   border: 1px solid var(--border-color);
@@ -1447,4 +1503,93 @@ html, body {
 
 .chem-dialog-btn.danger:hover {
   background: #A03D1E;
+}
+
+/* ============================================================
+   响应式屏幕与多比例视口适配 (Responsive Layout & Viewport Robustness)
+   ============================================================ */
+@media (max-width: 960px) {
+  .header-bar {
+    padding: 8px 14px;
+    gap: 10px;
+    height: auto;
+    min-height: 50px;
+    flex-wrap: wrap;
+  }
+
+  .brand-section {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .header-status-equation {
+    font-size: 11.5px;
+    padding: 3px 8px;
+    max-width: 100%;
+  }
+
+  .main-workspace {
+    height: calc(100% - 50px);
+  }
+
+  .workspace-sidebar {
+    width: min(380px, 85vw);
+  }
+}
+
+@media (max-width: 680px) {
+  .header-bar {
+    padding: 6px 10px;
+    justify-content: space-between;
+  }
+
+  .brand-logo {
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+
+  .header-docs-btn span,
+  .header-repo-btn span {
+    display: none;
+  }
+
+  .header-docs-btn,
+  .header-repo-btn {
+    padding: 5px 8px;
+  }
+
+  .header-status-equation {
+    display: none;
+  }
+
+  .main-workspace {
+    flex-direction: column;
+  }
+
+  .viewport-wrapper {
+    width: 100%;
+    height: 52%;
+    flex: none;
+  }
+
+  .workspace-sidebar {
+    width: 100% !important;
+    height: 48%;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .resize-handle {
+    display: none;
+  }
+
+  .viewport-floating-toolbar {
+    top: 10px;
+    right: 10px;
+  }
+
+  .canvas-step-toast {
+    bottom: 10px;
+    left: 10px;
+  }
 }

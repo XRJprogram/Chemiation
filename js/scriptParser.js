@@ -47,7 +47,60 @@ function stripCCPLInlineComment(line) {
   return line.trim();
 }
 
+const CCPL_SUB_MAP = {
+  '0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉',
+  '+':'₊','-':'₋','=':'₌','(':'₍',')':'₎',
+  'a':'ₐ','e':'ₑ','h':'ₕ','i':'ᵢ','j':'ⱼ','k':'ₖ','l':'ₗ','m':'ₘ','n':'ₙ','o':'ₒ','p':'ₚ','r':'ᵣ','s':'ₛ','t':'ₜ','u':'ᵤ','v':'ᵥ','x':'ₓ'
+};
+
+const CCPL_SUP_MAP = {
+  '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹',
+  '+':'⁺','-':'⁻','=':'⁼','(':'⁽',')':'⁾','n':'ⁿ'
+};
+
 const ReactionScriptEngine = {
+  /**
+   * 化学式与机理文本智能上下标与符号排印解析 (无需用户手打复杂 Unicode 字符)
+   * 1. 显式大括号上下标: _{...} 与 ^{...}，如 C_6H_{12}O_6, Fe^{3+}
+   * 2. 显式单字符上下标: _2, _n, ^2, ^+, ^-，如 H_2O, [C_6H_10O_5]_n
+   * 3. 常见反应符号简写: -> 或 --> 转为 →，<=> 或 <-> 或 <==> 转为 ⇌
+   * 4. 智能化学式下标: 化学元素符号或闭括号后紧跟的数字 (如 CO2, H2O, CH3COOH, C7H10, (NH4)2SO4) 自动转为化学下标
+   */
+  formatChemText(str) {
+    if (!str || typeof str !== 'string') return str || '';
+
+    // 1. 显式大括号上下标: _{...} 与 ^{...}
+    let res = str.replace(/_\{([^}]+)\}/g, (_, inner) => {
+      return inner.split('').map(ch => CCPL_SUB_MAP[ch] || ch).join('');
+    });
+    res = res.replace(/\^\{([^}]+)\}/g, (_, inner) => {
+      return inner.split('').map(ch => CCPL_SUP_MAP[ch] || ch).join('');
+    });
+
+    // 2. 显式单字符上下标: _[0-9a-z+-] 与 ^[0-9+-]
+    res = res.replace(/_([0-9a-z+-])/gi, (_, ch) => CCPL_SUB_MAP[ch.toLowerCase()] || ('_' + ch));
+    res = res.replace(/\^([0-9+-])/g, (_, ch) => CCPL_SUP_MAP[ch] || ('^' + ch));
+
+    // 3. 常见反应平衡、共振与反应方向箭头简写
+    res = res
+      .replace(/<==>|<=>/g, '⇌')
+      .replace(/==/g, '⇌')
+      .replace(/<-->|<->/g, '↔')
+      .replace(/-->|->/g, '→')
+      .replace(/<--|<-/g, '←');
+
+    // 4. 聚合物末尾 ]n 自动转换为下标 ]ₙ
+    res = res.replace(/\]n\b/g, ']ₙ');
+
+    // 5. 智能化学式下标：化学元素符号或闭括号/闭中括号后直接跟随的数字 (如 CO2, H2O, CH3COOH, C6H12O6, (NH4)2SO4)
+    res = res.replace(/([A-Z][a-z]?|\)|\])(\d+)/g, (match, prefix, digits) => {
+      const subDigits = digits.split('').map(d => CCPL_SUB_MAP[d] || d).join('');
+      return prefix + subDigits;
+    });
+
+    return res;
+  },
+
   /**
    * 将反应对象序列化为简洁易读的 CCPL 脚本文本
    */
@@ -74,7 +127,12 @@ const ReactionScriptEngine = {
         const p = typeof step.polymer === 'object' ? step.polymer : { label: String(step.polymer) };
         const labelStr = p.label || 'n';
         const tagStr = p.tag ? ` tag "${p.tag.replace(/"/g, '\\"')}"` : '';
-        const exclStr = Array.isArray(p.excludeIds) && p.excludeIds.length ? ` exclude "${p.excludeIds.join(' ')}"` : '';
+        let filterStr = '';
+        if (Array.isArray(p.includeIds) && p.includeIds.length) {
+          filterStr = ` include "${p.includeIds.join(' ')}"`;
+        } else if (Array.isArray(p.excludeIds) && p.excludeIds.length) {
+          filterStr = ` exclude "${p.excludeIds.join(' ')}"`;
+        }
         let leftStr = '';
         if (p.leftBond && p.leftBond.atomId) {
           const vecStr = Array.isArray(p.leftBond.vector) ? p.leftBond.vector.join(', ') : '-1.3, 0, 0';
@@ -85,7 +143,15 @@ const ReactionScriptEngine = {
           const vecStr = Array.isArray(p.rightBond.vector) ? p.rightBond.vector.join(', ') : '1.3, 0, 0';
           rightStr = ` rightBond ${p.rightBond.atomId} [${vecStr}]`;
         }
-        lines.push(`  polymer "${labelStr}"${tagStr}${exclStr}${leftStr}${rightStr}`);
+        lines.push(`  polymer "${labelStr}"${tagStr}${filterStr}${leftStr}${rightStr}`);
+      }
+      if (step.aromatic) {
+        const aromatics = Array.isArray(step.aromatic) ? step.aromatic : [step.aromatic];
+        aromatics.forEach(ar => {
+          const atomList = Array.isArray(ar) ? ar.join(' ') : (Array.isArray(ar.atomIds) ? ar.atomIds.join(' ') : (ar.atomIds || ''));
+          const tagStr = ar.tag ? ` tag "${ar.tag.replace(/"/g, '\\"')}"` : '';
+          lines.push(`  aromatic "${atomList}"${tagStr}`);
+        });
       }
       lines.push('');
       lines.push('  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]');
@@ -93,7 +159,11 @@ const ReactionScriptEngine = {
         let extra = '';
         if (a.radical) extra += ' radical';
         if (a.charge) extra += ` charge=${a.charge > 0 ? '+' + a.charge : a.charge}`;
-        lines.push(`  atom ${a.id} ${a.element} ${a.x.toFixed(2)} ${a.y.toFixed(2)} ${a.z.toFixed(2)}${extra}`);
+        if (!a.autoLayout && typeof a.x === 'number' && typeof a.y === 'number' && typeof a.z === 'number') {
+          lines.push(`  atom ${a.id} ${a.element} ${a.x.toFixed(2)} ${a.y.toFixed(2)} ${a.z.toFixed(2)}${extra}`);
+        } else {
+          lines.push(`  atom ${a.id} ${a.element}${extra}`);
+        }
       });
       lines.push('');
       lines.push('  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]');
@@ -157,6 +227,16 @@ const ReactionScriptEngine = {
       return parsedJson;
     }
 
+    function normalizeEquation(eqStr) {
+      if (!eqStr) return '';
+      return eqStr
+        .replace(/<==>|<=>/g, '⇌')
+        .replace(/==/g, '⇌')
+        .replace(/<-->|<->/g, '↔')
+        .replace(/-->|->/g, '→')
+        .replace(/<--|<-/g, '←');
+    }
+
     const lines = scriptText.split(/\r?\n/);
     const reaction = {
       id: 'custom-' + Date.now(),
@@ -183,7 +263,7 @@ const ReactionScriptEngine = {
       if (currentStep === null) {
         const rxMatch = line.match(/^reaction\s+"((?:[^"\\]|\\.)*)"\s*$/i);
         if (rxMatch) {
-          reaction.name = rxMatch[1].replace(/\\"/g, '"');
+          reaction.name = this.formatChemText(rxMatch[1].replace(/\\"/g, '"'));
           continue;
         }
         if (/^reaction\b/i.test(line)) {
@@ -192,11 +272,11 @@ const ReactionScriptEngine = {
 
         const eqMatch = line.match(/^equation\s+"((?:[^"\\]|\\.)*)"\s*$/i);
         if (eqMatch) {
-          reaction.equation = eqMatch[1].replace(/\\"/g, '"');
+          reaction.equation = this.formatChemText(eqMatch[1].replace(/\\"/g, '"'));
           continue;
         }
         if (/^equation\b/i.test(line)) {
-          throw new Error(`第 ${lineNum} 行语法错误: equation 指令格式错误，必须使用双引号包裹化学方程式，例如: equation "A + B ⇌ C"`);
+          throw new Error(`第 ${lineNum} 行语法错误: equation 指令格式错误，必须使用双引号包裹化学方程式，例如: equation "A + B -> C"`);
         }
 
         // 兼容旧脚本中的 category 声明，静默跳过
@@ -206,7 +286,7 @@ const ReactionScriptEngine = {
 
         const sumMatch = line.match(/^summary\s+"((?:[^"\\]|\\.)*)"\s*$/i);
         if (sumMatch) {
-          reaction.summary = sumMatch[1].replace(/\\"/g, '"');
+          reaction.summary = this.formatChemText(sumMatch[1].replace(/\\"/g, '"'));
           continue;
         }
         if (/^summary\b/i.test(line)) {
@@ -224,7 +304,7 @@ const ReactionScriptEngine = {
           // 步骤序号无需用户手写，自动智能去除前缀标号（如 "1. "、"步骤1: "、"一、"）
           const cleanName = rawName.replace(/^\s*(?:(?:第\s*)?\d+\s*(?:步|节)?|[一二三四五六七八九十]+)[\.、:\s-]\s*/i, '').trim() || rawName;
           currentStep = {
-            name: cleanName,
+            name: this.formatChemText(cleanName),
             note: '',
             atoms: [],
             bonds: []
@@ -279,6 +359,13 @@ const ReactionScriptEngine = {
             }
           }
         }
+        if (currentStep.polymer && Array.isArray(currentStep.polymer.includeIds)) {
+          for (const inId of currentStep.polymer.includeIds) {
+            if (!currentStepAtomIds.has(inId)) {
+              throw new Error(`第 ${currentStep.polymerLineNum} 行语法错误: polymer include 包含的原子 "${inId}" 在步骤 "${currentStep.name}" 中未定义`);
+            }
+          }
+        }
 
         this.autoLayoutStep(currentStep);
         reaction.steps.push(currentStep);
@@ -290,7 +377,7 @@ const ReactionScriptEngine = {
 
       const noteMatch = line.match(/^note\s+"((?:[^"\\]|\\.)*)"\s*$/i);
       if (noteMatch) {
-        currentStep.note = noteMatch[1].replace(/\\"/g, '"');
+        currentStep.note = this.formatChemText(noteMatch[1].replace(/\\"/g, '"'));
         continue;
       }
       if (/^note\b/i.test(line)) {
@@ -313,15 +400,23 @@ const ReactionScriptEngine = {
           tag = tagMatch[1].replace(/\\"/g, '"');
         } else if (quotes.length > 1) {
           const exclMatch = line.match(/exclude\s+"((?:[^"\\]|\\.)*)"/i);
-          if (!exclMatch || quotes[1] !== exclMatch[1]) {
+          const inclMatch = line.match(/include\s+"((?:[^"\\]|\\.)*)"/i);
+          if ((!exclMatch || quotes[1] !== exclMatch[1]) && (!inclMatch || quotes[1] !== inclMatch[1])) {
             tag = quotes[1].replace(/\\"/g, '"');
           }
         }
 
+        const inclMatch = line.match(/include\s+"((?:[^"\\]|\\.)*)"/i);
         const exclMatch = line.match(/exclude\s+"((?:[^"\\]|\\.)*)"/i);
+
+        if (inclMatch && exclMatch) {
+          throw new Error(`第 ${lineNum} 行语法错误: polymer 指令中 include 与 exclude 为互斥选项，每次只能使用其中一个（二选一：使用 include 正向包含重复单元原子，或使用 exclude 排除副产物原子）`);
+        }
+
+        const includeIds = inclMatch ? inclMatch[1].replace(/\\"/g, '"').split(/\s+/).filter(Boolean) : [];
         const excludeIds = exclMatch ? exclMatch[1].replace(/\\"/g, '"').split(/\s+/).filter(Boolean) : [];
 
-        const polymerObj = { label, tag, excludeIds };
+        const polymerObj = { label: this.formatChemText(label), tag: this.formatChemText(tag), includeIds, excludeIds };
 
         const leftMatch = line.match(/leftBond\s+([A-Za-z0-9_]+)(?:\s+\[([-\d.,\s]+)\])?/i);
         if (leftMatch) {
@@ -391,6 +486,9 @@ const ReactionScriptEngine = {
 
         currentStepAtomIds.add(atomId);
         const atomObj = { id: atomId, element: normElem, x, y, z };
+        if (numericTokens.length === 0) {
+          atomObj.autoLayout = true;
+        }
         if (radical) atomObj.radical = true;
         if (charge !== 0) atomObj.charge = charge;
         currentStep.atoms.push(atomObj);
@@ -436,25 +534,41 @@ const ReactionScriptEngine = {
         continue;
       }
 
+      // 芳香体系大 Π 键声明 (可选): aromatic "<原子列表如 C1 C2 C3 C4 C5 C6>" [tag "<说明如 Π_6^6>"]
+      if (/^(?:aromatic|pi)\b/i.test(line)) {
+        const tagMatch = line.match(/tag\s+"((?:[^"\\]|\\.)*)"/i);
+        const tag = tagMatch ? this.formatChemText(tagMatch[1].replace(/\\"/g, '"')) : '';
+        const cleanLine = line.replace(/tag\s+"(?:[^"\\]|\\.)*"/i, '').replace(/^(?:aromatic|pi)\b/i, '').trim();
+        const quoteMatch = cleanLine.match(/"((?:[^"\\]|\\.)*)"/);
+        const atomStr = quoteMatch ? quoteMatch[1] : cleanLine;
+        const atomIds = atomStr.split(/\s+/).filter(Boolean);
+        if (atomIds.length < 3) {
+          throw new Error(`第 ${lineNum} 行语法错误: aromatic 指令声明的环原子数量不足，至少需要 3 个原子构成环，例如: aromatic "C1 C2 C3 C4 C5 C6"`);
+        }
+        currentStep.aromatic = currentStep.aromatic || [];
+        currentStep.aromatic.push({ atomIds, tag });
+        continue;
+      }
+
       if (/^bond\b/i.test(line)) {
-        const bondMatch = line.match(/^bond\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s+([123]))?\s*$/i);
+        const bondMatch = line.match(/^bond\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s+([123]|1\.5))?\s*$/i);
         if (!bondMatch) {
           const parts = line.split(/\s+/);
           if (parts.length < 3) {
-            throw new Error(`第 ${lineNum} 行语法错误: bond 指令参数不足，格式应为: bond <原子1> <原子2> [键级1/2/3]`);
+            throw new Error(`第 ${lineNum} 行语法错误: bond 指令参数不足，格式应为: bond <原子1> <原子2> [键级1/1.5/2/3]`);
           }
           if (parts.length > 4) {
-            throw new Error(`第 ${lineNum} 行语法错误: bond 指令参数过多，格式应为: bond <原子1> <原子2> [键级1/2/3]`);
+            throw new Error(`第 ${lineNum} 行语法错误: bond 指令参数过多，格式应为: bond <原子1> <原子2> [键级1/1.5/2/3]`);
           }
-          if (parts.length === 4 && !['1', '2', '3'].includes(parts[3])) {
-            throw new Error(`第 ${lineNum} 行语法错误: 化学键键级 "${parts[3]}" 无效，键级只能为 1 (单键)、2 (双键) 或 3 (三键)`);
+          if (parts.length === 4 && !['1', '1.5', '2', '3'].includes(parts[3])) {
+            throw new Error(`第 ${lineNum} 行语法错误: 化学键键级 "${parts[3]}" 无效，键级只能为 1 (单键)、1.5 (芳香/共振键)、2 (双键) 或 3 (三键)`);
           }
-          throw new Error(`第 ${lineNum} 行语法错误: bond 指令格式错误，格式应为: bond <原子1> <原子2> [键级1/2/3]`);
+          throw new Error(`第 ${lineNum} 行语法错误: bond 指令格式错误，格式应为: bond <原子1> <原子2> [键级1/1.5/2/3]`);
         }
 
         const atom1Id = bondMatch[1];
         const atom2Id = bondMatch[2];
-        const order = bondMatch[3] ? parseInt(bondMatch[3], 10) : 1;
+        const order = bondMatch[3] ? parseFloat(bondMatch[3]) : 1;
 
         if (atom1Id === atom2Id) {
           throw new Error(`第 ${lineNum} 行语法错误: 原子无法与自身成键 "${atom1Id}"`);
@@ -465,7 +579,7 @@ const ReactionScriptEngine = {
         continue;
       }
 
-      throw new Error(`第 ${lineNum} 行语法错误: 步骤 "${currentStep.name}" 中存在无法识别的指令 "${line}"，有效指令包括 note, polymer, atom, bond`);
+      throw new Error(`第 ${lineNum} 行语法错误: 步骤 "${currentStep.name}" 中存在无法识别的指令 "${line}"，有效指令包括 note, polymer, aromatic, atom, bond`);
     }
 
     if (currentStep !== null) {
@@ -476,33 +590,271 @@ const ReactionScriptEngine = {
       throw new Error('语法错误: 脚本中未包含任何基元反应步骤，请使用 step "步骤名称" { ... } 声明');
     }
 
+    // 对所有步骤中缺少坐标的原子执行自动空间拓扑松弛解算
+    reaction.steps.forEach(st => this.autoLayoutStep(st));
+
     return reaction;
   },
 
   /**
-   * 对未提供三维坐标的原子进行自动空间排布 (基于力导向与空间均匀分布)
+   * 对未提供三维坐标的原子进行自动空间立体排布 (基于分子图论、化学键拓扑与距离几何力场松弛)
    */
   autoLayoutStep(step) {
     if (!step.atoms || step.atoms.length === 0) return;
 
-    // 检查是否有缺失坐标的原子
-    const unpositioned = step.atoms.filter(a => a.x === null || a.y === null || a.z === null);
-    if (unpositioned.length === 0) return;
+    // 检查是否有缺失坐标的原子或无效数值
+    const needLayout = step.atoms.some(a => a.x === null || a.y === null || a.z === null || typeof a.x !== 'number' || typeof a.y !== 'number' || typeof a.z !== 'number' || isNaN(a.x) || isNaN(a.y) || isNaN(a.z));
+    if (!needLayout) return;
 
-    // 环形与球形空间自动分散排布
-    const count = step.atoms.length;
-    const radius = Math.max(2.0, count * 0.45);
+    const atoms = step.atoms;
+    const bonds = step.bonds || [];
 
-    step.atoms.forEach((atom, idx) => {
-      if (atom.x === null || atom.y === null || atom.z === null) {
-        // 斐波那契球面均匀点分布
-        const phi = Math.acos(1 - 2 * (idx + 0.5) / count);
-        const theta = Math.PI * (1 + Math.sqrt(5)) * idx;
-        atom.x = +(radius * Math.sin(phi) * Math.cos(theta)).toFixed(2);
-        atom.y = +(radius * Math.sin(phi) * Math.sin(theta)).toFixed(2);
-        atom.z = +(radius * Math.cos(phi) * 0.6).toFixed(2);
+    const atomMap = new Map();
+    atoms.forEach(a => {
+      atomMap.set(a.id, a);
+      if (a.x === null || a.x === undefined || typeof a.x !== 'number' || isNaN(a.x)) {
+        a.autoLayout = true;
       }
     });
+
+    // 1. 构建化学键邻接表
+    const adj = new Map();
+    atoms.forEach(a => adj.set(a.id, []));
+    bonds.forEach(b => {
+      if (adj.has(b.atom1Id) && adj.has(b.atom2Id)) {
+        adj.get(b.atom1Id).push({ target: b.atom2Id, order: b.order || 1 });
+        adj.get(b.atom2Id).push({ target: b.atom1Id, order: b.order || 1 });
+      }
+    });
+
+    // 2. 识别连通分子组件 (Connected Components)
+    const visited = new Set();
+    const components = [];
+
+    atoms.forEach(a => {
+      if (!visited.has(a.id)) {
+        const compAtoms = [];
+        const queue = [a.id];
+        visited.add(a.id);
+        while (queue.length > 0) {
+          const currId = queue.shift();
+          compAtoms.push(currId);
+          (adj.get(currId) || []).forEach(edge => {
+            if (!visited.has(edge.target)) {
+              visited.add(edge.target);
+              queue.push(edge.target);
+            }
+          });
+        }
+        components.push(compAtoms);
+      }
+    });
+
+    // 3. 对每个连通分子分别进行基于真实键长拓扑的三维弹簧-电荷力场松弛 (Kamada-Kawai + VSEPR)
+    const compLayouts = components.map(compIds => {
+      const compN = compIds.length;
+      const idToIdx = new Map();
+      compIds.forEach((id, i) => idToIdx.set(id, i));
+
+      // Floyd-Warshall 计算图内所有原子对之间的拓扑最短路径
+      const dist = Array.from({ length: compN }, () => Array(compN).fill(Infinity));
+      for (let i = 0; i < compN; i++) dist[i][i] = 0;
+
+      compIds.forEach((uId, i) => {
+        (adj.get(uId) || []).forEach(edge => {
+          if (idToIdx.has(edge.target)) {
+            const j = idToIdx.get(edge.target);
+            dist[i][j] = 1;
+            dist[j][i] = 1;
+          }
+        });
+      });
+
+      for (let k = 0; k < compN; k++) {
+        for (let i = 0; i < compN; i++) {
+          for (let j = 0; j < compN; j++) {
+            if (dist[i][k] + dist[k][j] < dist[i][j]) {
+              dist[i][j] = dist[i][k] + dist[k][j];
+            }
+          }
+        }
+      }
+
+      // 计算真实目标化学键长与键角几何距离
+      const targetD = Array.from({ length: compN }, () => Array(compN).fill(0));
+      for (let i = 0; i < compN; i++) {
+        for (let j = 0; j < compN; j++) {
+          if (i === j) continue;
+          const d = dist[i][j];
+          const a1 = atomMap.get(compIds[i]);
+          const a2 = atomMap.get(compIds[j]);
+          const isH = (a1 && a1.element === 'H') || (a2 && a2.element === 'H');
+
+          if (d === 1) {
+            if (isH) {
+              targetD[i][j] = 1.08;
+            } else {
+              const edge = (adj.get(compIds[i]) || []).find(e => e.target === compIds[j]);
+              const ord = edge ? edge.order : 1;
+              targetD[i][j] = ord === 3 ? 1.20 : (ord === 2 ? 1.34 : (ord === 1.5 ? 1.39 : 1.50));
+            }
+          } else if (d === 2) {
+            targetD[i][j] = isH ? 1.85 : 2.45;
+          } else if (d === 3) {
+            targetD[i][j] = 3.05;
+          } else {
+            targetD[i][j] = 2.8 + (d - 3) * 1.25;
+          }
+        }
+      }
+
+      // 骨架原子与氢原子分层初布局
+      const heavyIds = compIds.filter(id => {
+        const a = atomMap.get(id);
+        return a && a.element !== 'H';
+      });
+      const hIds = compIds.filter(id => {
+        const a = atomMap.get(id);
+        return a && a.element === 'H';
+      });
+      const pos = compIds.map(() => ({ x: 0, y: 0, z: 0 }));
+
+      heavyIds.forEach((hId, idx) => {
+        const i = idToIdx.get(hId);
+        const angle = (2 * Math.PI * idx) / Math.max(1, heavyIds.length);
+        const r = Math.max(0.9, heavyIds.length * 0.28);
+        pos[i].x = r * Math.cos(angle);
+        pos[i].y = r * Math.sin(angle);
+        pos[i].z = Math.sin(idx * 2.1) * 0.35;
+      });
+
+      hIds.forEach((hId, hIdx) => {
+        const i = idToIdx.get(hId);
+        const parentEdge = (adj.get(hId) || [])[0];
+        if (parentEdge && idToIdx.has(parentEdge.target)) {
+          const pIdx = idToIdx.get(parentEdge.target);
+          const parentPos = pos[pIdx];
+          const offsetAngle = (hIdx * 1.6) + Math.PI / 4;
+          pos[i].x = parentPos.x + 1.08 * Math.cos(offsetAngle);
+          pos[i].y = parentPos.y + 1.08 * Math.sin(offsetAngle);
+          pos[i].z = parentPos.z + (hIdx % 2 === 0 ? 0.38 : -0.38);
+        } else {
+          const angle = (2 * Math.PI * hIdx) / Math.max(1, hIds.length);
+          pos[i].x = 1.8 * Math.cos(angle);
+          pos[i].y = 1.8 * Math.sin(angle);
+          pos[i].z = 0;
+        }
+      });
+
+      // 模拟退火力场迭代松弛
+      const iterations = 160;
+      for (let iter = 0; iter < iterations; iter++) {
+        const temp = 0.3 * Math.pow(1 - iter / iterations, 1.2);
+        const forces = compIds.map(() => ({ x: 0, y: 0, z: 0 }));
+
+        for (let i = 0; i < compN; i++) {
+          for (let j = i + 1; j < compN; j++) {
+            let dx = pos[i].x - pos[j].x;
+            let dy = pos[i].y - pos[j].y;
+            let dz = pos[i].z - pos[j].z;
+            let curDist = Math.hypot(dx, dy, dz);
+            if (curDist < 0.001) {
+              dx = (Math.random() - 0.5) * 0.05;
+              dy = (Math.random() - 0.5) * 0.05;
+              dz = (Math.random() - 0.5) * 0.05;
+              curDist = Math.hypot(dx, dy, dz);
+            }
+
+            const target = targetD[i][j];
+            const weight = 1.0 / (target * target);
+            const delta = curDist - target;
+            const fMag = weight * delta;
+
+            const fx = (dx / curDist) * fMag;
+            const fy = (dy / curDist) * fMag;
+            const fz = (dz / curDist) * fMag;
+
+            forces[i].x -= fx;
+            forces[i].y -= fy;
+            forces[i].z -= fz;
+
+            forces[j].x += fx;
+            forces[j].y += fy;
+            forces[j].z += fz;
+
+            // 非键合原子之间的立体位阻排斥势能，防止原子重叠穿模
+            if (dist[i][j] > 1 && curDist < 1.7) {
+              const rep = 1.5 / (curDist * curDist + 0.05);
+              forces[i].x += (dx / curDist) * rep;
+              forces[i].y += (dy / curDist) * rep;
+              forces[i].z += (dz / curDist) * rep;
+              forces[j].x -= (dx / curDist) * rep;
+              forces[j].y -= (dy / curDist) * rep;
+              forces[j].z -= (dz / curDist) * rep;
+            }
+          }
+        }
+
+        for (let i = 0; i < compN; i++) {
+          const fLen = Math.hypot(forces[i].x, forces[i].y, forces[i].z);
+          if (fLen > 0) {
+            const move = Math.min(fLen, temp);
+            pos[i].x += (forces[i].x / fLen) * move;
+            pos[i].y += (forces[i].y / fLen) * move;
+            pos[i].z += (forces[i].z / fLen) * move;
+          }
+        }
+      }
+
+      // 将连通分子居中于局部原点
+      let cx = 0, cy = 0, cz = 0;
+      pos.forEach(p => { cx += p.x; cy += p.y; cz += p.z; });
+      cx /= compN; cy /= compN; cz /= compN;
+      pos.forEach(p => { p.x -= cx; p.y -= cy; p.z -= cz; });
+
+      return { compIds, pos };
+    });
+
+    // 4. 将各独立分子按反应空间相对位置错开排布
+    if (compLayouts.length === 1) {
+      const { compIds, pos } = compLayouts[0];
+      compIds.forEach((id, i) => {
+        const a = atomMap.get(id);
+        if (a) {
+          a.x = +pos[i].x.toFixed(2);
+          a.y = +pos[i].y.toFixed(2);
+          a.z = +pos[i].z.toFixed(2);
+        }
+      });
+    } else if (compLayouts.length === 2) {
+      // 两个反应物分子（如双烯体与亲双烯体）：分列左右 X 轴对称朝向碰撞
+      const offsets = [-2.4, 2.4];
+      compLayouts.forEach((comp, cIdx) => {
+        const offX = offsets[cIdx];
+        comp.compIds.forEach((id, i) => {
+          const a = atomMap.get(id);
+          if (a) {
+            a.x = +(comp.pos[i].x + offX).toFixed(2);
+            a.y = +comp.pos[i].y.toFixed(2);
+            a.z = +comp.pos[i].z.toFixed(2);
+          }
+        });
+      });
+    } else {
+      const span = 2.6;
+      const startX = -((compLayouts.length - 1) * span) / 2;
+      compLayouts.forEach((comp, cIdx) => {
+        const offX = startX + cIdx * span;
+        comp.compIds.forEach((id, i) => {
+          const a = atomMap.get(id);
+          if (a) {
+            a.x = +(comp.pos[i].x + offX).toFixed(2);
+            a.y = +comp.pos[i].y.toFixed(2);
+            a.z = +comp.pos[i].z.toFixed(2);
+          }
+        });
+      });
+    }
   },
 
   /**
@@ -580,8 +932,8 @@ const ReactionScriptEngine = {
       return `\nstep "单体聚合生成高分子" {
   note "单体首尾脱水/脱除小分子后缩合，主链化学键就近穿出大括号截断形成重复单元。"
 
-  # 聚合物括号语法: polymer "<聚合度下标如 n>" ["说明标签"] [exclude "<副产物原子ID列表>"]
-  polymer "n" "[单体最简重复单元]ₙ" exclude "Ow Hw1 Hw2"
+  # 聚合物括号语法: polymer "<聚合度下标如 n>" ["说明标签"] [include "<聚合单元原子ID列表>" | exclude "<副产物原子ID列表>"] (二选一)
+  polymer "n" "[单体最简重复单元]_n" include "C1 C2 O1"
 
   atom C1 C -1.2 0 0
   atom C2 C 1.2 0 0
@@ -594,13 +946,38 @@ const ReactionScriptEngine = {
   bond C1 O1 1
   bond Ow Hw1 1
   bond Ow Hw2 1
-}\n`;
+}
+`;
+    }
+
+    if (type === 'aromatic_step') {
+      return `\nstep "芳香体系与大 Π 键" {
+  note "六元芳香环具备高度对称与能量极低的闭合大 Π 键电子云。"
+
+  # 可选声明闭合共轭大 Π 键 (参数: 构成芳香环的原子ID列表，可选 tag 标注)
+  aromatic "C1 C2 C3 C4 C5 C6" tag "Π_6^6"
+
+  atom C1 C 0 1.4 0
+  atom C2 C 1.21 0.7 0
+  atom C3 C 1.21 -0.7 0
+  atom C4 C 0 -1.4 0
+  atom C5 C -1.21 -0.7 0
+  atom C6 C -1.21 0.7 0
+
+  bond C1 C2 1.5
+  bond C2 C3 1.5
+  bond C3 C4 1.5
+  bond C4 C5 1.5
+  bond C5 C6 1.5
+  bond C6 C1 1.5
+}
+`;
     }
 
     if (type === 'reaction_blank') {
       return `# Chemiation 反应机理推演脚本 (CCPL)
 reaction "新建化学反应"
-equation "A + B ⇌ C + D"
+equation "A + B <=> C + D"
 summary "在此输入关于该反应原理、过渡态与机理路径的详细说明。"
 
 step "反应物底物吸附与碰撞" {

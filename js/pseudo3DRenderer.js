@@ -55,8 +55,9 @@ class Pseudo3DRenderer {
     this.currentStepData = null;
     this.nextStepData = null;
     this.transitionProgress = 1;
-    this.transitionDuration = 920; // 动画更从容优雅展现断键与迁移 (ms)
+    this.transitionDuration = 920; // 动画基准持续时间 (ms)
     this.transitionStartTime = 0;
+    this.onTransitionEnd = null;
 
     this.animationFrameId = null;
     this.lastFrameTime = performance.now();
@@ -132,15 +133,26 @@ class Pseudo3DRenderer {
     this.targetZoom = Math.max(30, this.targetZoom * 0.8);
   }
 
+  getBaseZoom() {
+    if (!this.width || !this.height) return 78;
+    const minDim = Math.min(this.width, this.height);
+    // 宽屏基准 ~600px 对应 78 缩放，小屏幕或手机窄屏等比缩放
+    return Math.max(38, Math.min(88, Math.round(minDim * 0.125)));
+  }
+
   resetCamera() {
     this.targetRotX = 0.35;
     this.targetRotY = -0.55;
-    this.targetZoom = 78;
+    this.targetZoom = this.getBaseZoom();
     this.targetPanX = 0;
     this.targetPanY = 0;
   }
 
   setStep(stepData, animate = true) {
+    if (stepData && typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.autoLayoutStep) {
+      ReactionScriptEngine.autoLayoutStep(stepData);
+    }
+
     if (!this.currentStepData || !animate) {
       this.currentStepData = stepData;
       this.nextStepData = null;
@@ -198,16 +210,22 @@ class Pseudo3DRenderer {
         this.currentStepData = this.nextStepData;
         this.nextStepData = null;
         this.transitionProgress = 1;
+        if (typeof this.onTransitionEnd === 'function') {
+          this.onTransitionEnd();
+        }
       }
     }
   }
 
   rotatePoint(p) {
+    const px = (p && typeof p.x === 'number' && !isNaN(p.x)) ? p.x : 0;
+    const py = (p && typeof p.y === 'number' && !isNaN(p.y)) ? p.y : 0;
+    const pz = (p && typeof p.z === 'number' && !isNaN(p.z)) ? p.z : 0;
     const cosY = Math.cos(this.rotY);
     const sinY = Math.sin(this.rotY);
-    const x1 = p.x * cosY + p.z * sinY;
-    const y1 = p.y;
-    const z1 = -p.x * sinY + p.z * cosY;
+    const x1 = px * cosY + pz * sinY;
+    const y1 = py;
+    const z1 = -px * sinY + pz * cosY;
 
     const cosX = Math.cos(this.rotX);
     const sinX = Math.sin(this.rotX);
@@ -287,12 +305,18 @@ class Pseudo3DRenderer {
       const nxt = nxtMap.get(id);
 
       if (cur && nxt) {
+        const cx = (typeof cur.x === 'number' && !isNaN(cur.x)) ? cur.x : 0;
+        const cy = (typeof cur.y === 'number' && !isNaN(cur.y)) ? cur.y : 0;
+        const cz = (typeof cur.z === 'number' && !isNaN(cur.z)) ? cur.z : 0;
+        const nx = (typeof nxt.x === 'number' && !isNaN(nxt.x)) ? nxt.x : 0;
+        const ny = (typeof nxt.y === 'number' && !isNaN(nxt.y)) ? nxt.y : 0;
+        const nz = (typeof nxt.z === 'number' && !isNaN(nxt.z)) ? nxt.z : 0;
         interpolatedAtoms.push({
           id,
           element: nxt.element || cur.element,
-          x: cur.x + (nxt.x - cur.x) * t,
-          y: cur.y + (nxt.y - cur.y) * t,
-          z: cur.z + (nxt.z - cur.z) * t,
+          x: cx + (nx - cx) * t,
+          y: cy + (ny - cy) * t,
+          z: cz + (nz - cz) * t,
           radical: t < 0.5 ? cur.radical : nxt.radical,
           charge: t < 0.5 ? cur.charge : nxt.charge,
           opacity: 1,
@@ -302,12 +326,15 @@ class Pseudo3DRenderer {
         // 平滑渐隐消退：自 1 平滑下降至 0，二次平滑缓动，杜绝提前截断与突变
         const fadeOut = Math.max(0, 1 - t);
         const smoothFade = fadeOut * fadeOut;
+        const cx = (typeof cur.x === 'number' && !isNaN(cur.x)) ? cur.x : 0;
+        const cy = (typeof cur.y === 'number' && !isNaN(cur.y)) ? cur.y : 0;
+        const cz = (typeof cur.z === 'number' && !isNaN(cur.z)) ? cur.z : 0;
         interpolatedAtoms.push({
           id,
           element: cur.element,
-          x: cur.x + (cur.x * 0.15) * t,
-          y: cur.y + (cur.y * 0.15) * t,
-          z: cur.z + (cur.z * 0.15) * t,
+          x: cx + (cx * 0.15) * t,
+          y: cy + (cy * 0.15) * t,
+          z: cz + (cz * 0.15) * t,
           radical: cur.radical,
           charge: cur.charge,
           opacity: smoothFade,
@@ -317,12 +344,15 @@ class Pseudo3DRenderer {
         // 平滑渐现进入：自 0 平滑上升至 1
         const fadeIn = Math.min(1, Math.max(0, t));
         const smoothIn = fadeIn * (2 - fadeIn);
+        const nx = (typeof nxt.x === 'number' && !isNaN(nxt.x)) ? nxt.x : 0;
+        const ny = (typeof nxt.y === 'number' && !isNaN(nxt.y)) ? nxt.y : 0;
+        const nz = (typeof nxt.z === 'number' && !isNaN(nxt.z)) ? nxt.z : 0;
         interpolatedAtoms.push({
           id,
           element: nxt.element,
-          x: nxt.x * (0.88 + 0.12 * t),
-          y: nxt.y * (0.88 + 0.12 * t),
-          z: nxt.z * (0.88 + 0.12 * t),
+          x: nx * (0.88 + 0.12 * t),
+          y: ny * (0.88 + 0.12 * t),
+          z: nz * (0.88 + 0.12 * t),
           radical: nxt.radical,
           charge: nxt.charge,
           opacity: smoothIn,
@@ -543,6 +573,44 @@ class Pseudo3DRenderer {
     });
 
     renderQueue.sort((a, b) => a.z - b.z);
+
+    // 绘制高分子聚合物 []n 大括号组件与状态标记
+    const getStepPolymer = step => {
+      if (!step) return null;
+      if (step.polymer) return step.polymer;
+      if (step.isPolymer) return { label: 'n', tag: '高分子聚合物单元 · []ₙ' };
+      if (step.name && (step.name.includes('淀粉') || step.name.includes('聚合') || step.name.includes('聚合物'))) {
+        return {
+          label: 'n',
+          tag: '直链淀粉聚合单元 · [C₆H₁₀O₅]ₙ',
+          excludeIds: ['Ow', 'Hw1', 'Hw2']
+        };
+      }
+      return null;
+    };
+
+    const curPolymer = getStepPolymer(this.currentStepData);
+    const nxtPolymer = getStepPolymer(this.nextStepData);
+    const activePolymerConfig = (this.transitionProgress >= 1 || !this.nextStepData) ? curPolymer : (nxtPolymer || curPolymer);
+
+    if (activePolymerConfig) {
+      const excludeSet = new Set(activePolymerConfig.excludeIds || []);
+      const includeSet = (activePolymerConfig.includeIds && activePolymerConfig.includeIds.length > 0) ? new Set(activePolymerConfig.includeIds) : null;
+      projectedAtoms.forEach(a => {
+        let inPolymer = false;
+        if (includeSet) {
+          inPolymer = includeSet.has(a.id);
+        } else {
+          inPolymer = !excludeSet.has(a.id);
+        }
+        if (inPolymer) {
+          a.inPolymer = true;
+        }
+      });
+    }
+
+    // 绘制芳香大Π键与离域电子云 (Delocalized Pi Electron Clouds & Inscribed Ring)
+    this.renderAromaticRings(ctx, projectedAtoms, atomMap);
 
     // 绘制全部元素与化学键
     renderQueue.forEach(item => {
@@ -868,7 +936,7 @@ class Pseudo3DRenderer {
 
     const nx = -uy;
     const ny = ux;
-    const order = Math.round(bond.order || 1);
+    const order = bond.order || 1;
 
     ctx.save();
     ctx.lineCap = 'round';
@@ -880,6 +948,21 @@ class Pseudo3DRenderer {
       ctx.moveTo(startX, startY);
       ctx.lineTo(endX, endY);
       ctx.stroke();
+    } else if (order === 1.5) {
+      // 芳香/共振共轭键：主实线 + 平行虚线
+      const offset = Math.max(3.0, 2.4 + avgDepth * 2.6);
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(startX + nx * offset, startY + ny * offset);
+      ctx.lineTo(endX + nx * offset, endY + ny * offset);
+      ctx.stroke();
+      ctx.restore();
     } else if (order === 2) {
       const offset = Math.max(3.2, 2.5 + avgDepth * 2.8);
       ctx.beginPath();
@@ -938,58 +1021,61 @@ class Pseudo3DRenderer {
 
     // ==========================================
     // 自由基实心圆点 (·) 与 形式电荷圈加圈减 (⊕ / ⊖) 规范排印
+    // 当原子处于高分子聚合物单元 ([...]) 内部时，电荷与自由基已稳定结合/中和，自动隐匿抑制
     // ==========================================
-    const textMetrics = ctx.measureText(atom.element);
-    const halfWidth = textMetrics.width * 0.5;
-    let badgeOffsetX = halfWidth + Math.max(2, atom.fontSize * 0.08);
+    if (!atom.inPolymer) {
+      const textMetrics = ctx.measureText(atom.element);
+      const halfWidth = textMetrics.width * 0.5;
+      let badgeOffsetX = halfWidth + Math.max(2, atom.fontSize * 0.08);
 
-    // 1. 自由基单电子实心圆点 (Radical Dot: ·)
-    if (atom.radical) {
-      const dotR = Math.max(2.4, atom.fontSize * 0.11);
-      const dotX = atom.sx + badgeOffsetX + dotR;
-      const dotY = atom.sy - atom.fontSize * 0.35;
+      // 1. 自由基单电子实心圆点 (Radical Dot: ·)
+      if (atom.radical) {
+        const dotR = Math.max(2.4, atom.fontSize * 0.11);
+        const dotX = atom.sx + badgeOffsetX + dotR;
+        const dotY = atom.sy - atom.fontSize * 0.35;
 
-      // 底色遮罩环，防止键线穿透字形
-      ctx.beginPath();
-      ctx.arc(dotX, dotY, dotR + 1.2, 0, Math.PI * 2);
-      ctx.fillStyle = this.palette.maskBg;
-      ctx.fill();
+        // 底色遮罩环，防止键线穿透字形
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotR + 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = this.palette.maskBg;
+        ctx.fill();
 
-      // 实心自由基圆点 (反应活性中心赭红)
-      ctx.beginPath();
-      ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
-      ctx.fillStyle = '#B84A28';
-      ctx.fill();
+        // 实心自由基圆点 (反应活性中心赭红)
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = '#B84A28';
+        ctx.fill();
 
-      badgeOffsetX += dotR * 2 + 4;
-    }
+        badgeOffsetX += dotR * 2 + 4;
+      }
 
-    // 2. 形式电荷圈加/圈减 (Formal Charge: ⊕ / ⊖)
-    if (typeof atom.charge === 'number' && atom.charge !== 0) {
-      const isPos = atom.charge > 0;
-      const chargeR = Math.max(5.5, atom.fontSize * 0.24);
-      const chargeX = atom.sx + badgeOffsetX + chargeR;
-      const chargeY = atom.sy - atom.fontSize * 0.36;
-      const chargeColor = isPos ? '#B84A28' : '#382215';
+      // 2. 形式电荷圈加/圈减 (Formal Charge: ⊕ / ⊖)
+      if (typeof atom.charge === 'number' && atom.charge !== 0) {
+        const isPos = atom.charge > 0;
+        const chargeR = Math.max(5.5, atom.fontSize * 0.24);
+        const chargeX = atom.sx + badgeOffsetX + chargeR;
+        const chargeY = atom.sy - atom.fontSize * 0.36;
+        const chargeColor = isPos ? '#B84A28' : '#382215';
 
-      // 宣纸底色圆盘遮罩
-      ctx.beginPath();
-      ctx.arc(chargeX, chargeY, chargeR, 0, Math.PI * 2);
-      ctx.fillStyle = this.palette.maskBg;
-      ctx.fill();
+        // 宣纸底色圆盘遮罩
+        ctx.beginPath();
+        ctx.arc(chargeX, chargeY, chargeR, 0, Math.PI * 2);
+        ctx.fillStyle = this.palette.maskBg;
+        ctx.fill();
 
-      // 外描边圆圈
-      ctx.lineWidth = Math.max(1.1, atom.fontSize * 0.05);
-      ctx.strokeStyle = chargeColor;
-      ctx.stroke();
+        // 外描边圆圈
+        ctx.lineWidth = Math.max(1.1, atom.fontSize * 0.05);
+        ctx.strokeStyle = chargeColor;
+        ctx.stroke();
 
-      // 正负号符号 (使用加粗，负号用数学减号 '\u2212')
-      const symbol = isPos ? '+' : '\u2212';
-      ctx.font = `700 ${Math.max(8, atom.fontSize * 0.34)}px sans-serif`;
-      ctx.fillStyle = chargeColor;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(symbol, chargeX, chargeY + (isPos ? 0.5 : -0.2));
+        // 正负号符号 (使用加粗，负号用数学减号 '\u2212')
+        const symbol = isPos ? '+' : '\u2212';
+        ctx.font = `700 ${Math.max(8, atom.fontSize * 0.34)}px sans-serif`;
+        ctx.fillStyle = chargeColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(symbol, chargeX, chargeY + (isPos ? 0.5 : 0));
+      }
     }
 
     ctx.restore();
@@ -1103,10 +1189,13 @@ class Pseudo3DRenderer {
     if (bracketOpacity <= 0.01 || !activeConfig) return;
 
     const excludeSet = new Set(activeConfig.excludeIds || []);
+    const includeIdsList = activeConfig.includeIds || activeConfig.atomIds || [];
+    const includeSet = includeIdsList.length > 0 ? new Set(includeIdsList) : null;
     const polymerAtoms = projectedAtoms.filter(a => {
-      if (excludeSet.has(a.id)) return false;
-      if (activeConfig.atomIds && activeConfig.atomIds.length > 0) {
-        return activeConfig.atomIds.includes(a.id);
+      if (includeSet) {
+        if (!includeSet.has(a.id)) return false;
+      } else {
+        if (excludeSet.has(a.id)) return false;
       }
       if (a.opacity !== undefined && a.opacity <= 0.08) return false;
       return true;
@@ -1336,7 +1425,10 @@ class Pseudo3DRenderer {
     }
 
     // 5. 聚合度下标 [ ]n 酷炫排印
-    const indexLabel = activeConfig.label || 'n';
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+    const indexLabel = format(activeConfig.label || 'n');
     const indexFontSize = Math.max(19, Math.round(22 * (0.85 + avgDepth * 0.35)));
     ctx.font = `italic 700 ${indexFontSize}px 'Century Gothic', CenturyGothic, AppleGothic, sans-serif`;
     ctx.fillStyle = `rgba(184, 74, 40, ${bracketOpacity})`;
@@ -1346,8 +1438,9 @@ class Pseudo3DRenderer {
 
     // 6. 顶部微型学术胶囊标签
     if (activeConfig.tag) {
+      const formattedTag = format(activeConfig.tag);
       ctx.font = `700 11.5px 'Century Gothic', CenturyGothic, AppleGothic, sans-serif`;
-      const tw = ctx.measureText(activeConfig.tag).width;
+      const tw = ctx.measureText(formattedTag).width;
       const tagX = (leftX + rightX) * 0.5;
       const tagY = topY - 14;
 
@@ -1362,10 +1455,263 @@ class Pseudo3DRenderer {
       ctx.fillStyle = `rgba(184, 74, 40, ${bracketOpacity})`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(activeConfig.tag, tagX, tagY);
+      ctx.fillText(formattedTag, tagX, tagY);
     }
 
     ctx.restore();
+  }
+
+  /**
+   * 绘制芳香大 Π 键与离域电子云 (Delocalized Pi Electron Clouds & Inscribed Ring)
+   * 采用真实三维环法向量空间投影，在环平面内绘制经典虚线环，并在环平面上下投影呈现离域 π 电子云轨道
+   */
+  renderAromaticRings(ctx, projectedAtoms, atomMap) {
+    if (!projectedAtoms || projectedAtoms.length < 3 || !atomMap) return;
+
+    // 1. 提取当前步骤与下一步骤中的芳香体系声明
+    const getAromatics = (step) => {
+      if (!step || !step.aromatic) return [];
+      const list = Array.isArray(step.aromatic) ? step.aromatic : [step.aromatic];
+      return list.map(ar => {
+        if (Array.isArray(ar)) return { atomIds: ar, tag: '' };
+        return {
+          atomIds: Array.isArray(ar.atomIds)
+            ? ar.atomIds
+            : (typeof ar.atomIds === 'string' ? ar.atomIds.trim().split(/\s+/) : []),
+          tag: ar.tag || ''
+        };
+      }).filter(ar => ar.atomIds && ar.atomIds.length >= 3);
+    };
+
+    const curList = getAromatics(this.currentStepData);
+    const nxtList = getAromatics(this.nextStepData);
+
+    if (curList.length === 0 && nxtList.length === 0) return;
+
+    // 2. 跨步骤平滑过渡插值配对
+    const ringMap = new Map();
+    curList.forEach(ar => {
+      const key = [...ar.atomIds].sort().join(',');
+      ringMap.set(key, {
+        atomIds: ar.atomIds,
+        tag: ar.tag,
+        startOpacity: 1,
+        endOpacity: 0
+      });
+    });
+
+    nxtList.forEach(ar => {
+      const key = [...ar.atomIds].sort().join(',');
+      if (ringMap.has(key)) {
+        const item = ringMap.get(key);
+        item.endOpacity = 1;
+        if (ar.tag) item.tag = ar.tag;
+      } else {
+        ringMap.set(key, {
+          atomIds: ar.atomIds,
+          tag: ar.tag,
+          startOpacity: 0,
+          endOpacity: 1
+        });
+      }
+    });
+
+    const isTransitioning = (this.transitionProgress < 1 && this.nextStepData);
+    const progress = isTransitioning ? this.transitionProgress : 1;
+    const centerX = this.width * 0.5 + this.panX;
+    const centerY = this.height * 0.5 + this.panY;
+
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+
+    ringMap.forEach(ring => {
+      const ringOpacity = isTransitioning
+        ? (ring.startOpacity + (ring.endOpacity - ring.startOpacity) * progress)
+        : (this.nextStepData ? ring.endOpacity : ring.startOpacity);
+
+      if (ringOpacity <= 0.01) return;
+
+      // 提取环原子对象
+      const ringAtoms = ring.atomIds.map(id => atomMap.get(id)).filter(Boolean);
+      if (ringAtoms.length < 3) return;
+
+      // 3. 三维环平面几何学解算：质心、多边形法向量与环内正交基向量
+      const n = ringAtoms.length;
+      let cx = 0, cy = 0, cz = 0;
+      let avgDepth = 0;
+      for (const a of ringAtoms) {
+        cx += a.x; cy += a.y; cz += a.z;
+        avgDepth += (a.depthFactor !== undefined ? a.depthFactor : 0.5);
+      }
+      cx /= n; cy /= n; cz /= n;
+      avgDepth /= n;
+
+      // Newell 多边形法向量算法
+      let nx = 0, ny = 0, nz = 0;
+      for (let i = 0; i < n; i++) {
+        const cur = ringAtoms[i];
+        const next = ringAtoms[(i + 1) % n];
+        nx += (cur.y - next.y) * (cur.z + next.z);
+        ny += (cur.z - next.z) * (cur.x + next.x);
+        nz += (cur.x - next.x) * (cur.y + next.y);
+      }
+      let nLen = Math.hypot(nx, ny, nz);
+      if (nLen < 1e-6) {
+        nx = 0; ny = 0; nz = 1;
+      } else {
+        nx /= nLen; ny /= nLen; nz /= nLen;
+      }
+
+      // 环平面基底向量 U (指向首个碳原子方向在平面的投影)
+      let ux = ringAtoms[0].x - cx;
+      let uy = ringAtoms[0].y - cy;
+      let uz = ringAtoms[0].z - cz;
+      const dot = ux * nx + uy * ny + uz * nz;
+      ux -= dot * nx;
+      uy -= dot * ny;
+      uz -= dot * nz;
+      let uLen = Math.hypot(ux, uy, uz);
+      if (uLen < 1e-6) {
+        ux = 1; uy = 0; uz = 0;
+      } else {
+        ux /= uLen; uy /= uLen; uz /= uLen;
+      }
+
+      // 环平面基底向量 V = N x U
+      const vx = ny * uz - nz * uy;
+      const vy = nz * ux - nx * uz;
+      const vz = nx * uy - ny * ux;
+
+      // 计算环的平均几何半径
+      let avgR = 0;
+      for (const a of ringAtoms) {
+        avgR += Math.hypot(a.x - cx, a.y - cy, a.z - cz);
+      }
+      avgR /= n;
+      if (avgR <= 0.1) avgR = 1.4;
+
+      ctx.save();
+
+      // 辅助函数：将三维点投影为二维屏幕画布坐标
+      const projectPoint = (px, py, pz) => {
+        const rot = this.rotatePoint({ x: px, y: py, z: pz });
+        return {
+          x: centerX + rot.x * this.zoom,
+          y: centerY - rot.y * this.zoom,
+          z: rot.z
+        };
+      };
+
+      const numSegments = 36;
+
+      // 4. 绘制上下离域大 Π 电子云环面 (Upper and lower delocalized pi electron clouds)
+      // 苯环中 π 电子云分布在分子平面上下约 ±0.38 Å 处
+      const hOffset = 0.38;
+      const cloudR = avgR * 0.65;
+
+      const drawCloudLobe = (hSign) => {
+        const h = hSign * hOffset;
+        ctx.beginPath();
+        for (let i = 0; i <= numSegments; i++) {
+          const theta = (i / numSegments) * Math.PI * 2;
+          const cosT = Math.cos(theta);
+          const sinT = Math.sin(theta);
+          const px = cx + h * nx + cloudR * (cosT * ux + sinT * vx);
+          const py = cy + h * ny + cloudR * (cosT * uy + sinT * vy);
+          const pz = cz + h * nz + cloudR * (cosT * uz + sinT * vz);
+          const pt = projectPoint(px, py, pz);
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.closePath();
+
+        // 柔和微光填充
+        ctx.fillStyle = `rgba(184, 74, 40, ${0.06 * ringOpacity})`;
+        ctx.fill();
+
+        // 细微虚线边缘
+        ctx.strokeStyle = `rgba(184, 74, 40, ${0.30 * ringOpacity})`;
+        ctx.lineWidth = Math.max(1, 1.2 * (this.zoom / 42));
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+      };
+
+      drawCloudLobe(-1); // 下方 π 电子云
+      drawCloudLobe(1);  // 上方 π 电子云
+
+      // 绘制上下电子云之间的离域共轭轨道连线 (在各碳原子方向投影连接)
+      ctx.setLineDash([2, 3]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(184, 74, 40, ${0.16 * ringOpacity})`;
+      for (let i = 0; i < n; i++) {
+        const theta = (i / n) * Math.PI * 2;
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
+        const pxUp = cx + hOffset * nx + cloudR * (cosT * ux + sinT * vx);
+        const pyUp = cy + hOffset * ny + cloudR * (cosT * uy + sinT * vy);
+        const pzUp = cz + hOffset * nz + cloudR * (cosT * uz + sinT * vz);
+        const pUp = projectPoint(pxUp, pyUp, pzUp);
+
+        const pxDn = cx - hOffset * nx + cloudR * (cosT * ux + sinT * vx);
+        const pyDn = cy - hOffset * ny + cloudR * (cosT * uy + sinT * vy);
+        const pzDn = cz - hOffset * nz + cloudR * (cosT * uz + sinT * vz);
+        const pDn = projectPoint(pxDn, pyDn, pzDn);
+
+        ctx.beginPath();
+        ctx.moveTo(pUp.x, pUp.y);
+        ctx.lineTo(pDn.x, pDn.y);
+        ctx.stroke();
+      }
+
+      // 5. 绘制环平面内的经典内切虚线芳香环 (Robinson-style Inscribed Aromatic Circle)
+      const inR = avgR * 0.58;
+      ctx.beginPath();
+      for (let i = 0; i <= numSegments; i++) {
+        const theta = (i / numSegments) * Math.PI * 2;
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
+        const px = cx + inR * (cosT * ux + sinT * vx);
+        const py = cy + inR * (cosT * uy + sinT * vy);
+        const pz = cz + inR * (cosT * uz + sinT * vz);
+        const pt = projectPoint(px, py, pz);
+        if (i === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.closePath();
+
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = Math.max(1.4, 1.8 + avgDepth * 0.8);
+      ctx.strokeStyle = `rgba(184, 74, 40, ${0.72 * ringOpacity})`;
+      ctx.stroke();
+
+      // 6. 芳香大 Π 键标识胶囊标签 (如 Π₆⁶ 或自定义文本)
+      if (ring.tag) {
+        const centerPt = projectPoint(cx, cy, cz);
+        const formattedTag = format(ring.tag);
+        const fontSize = Math.max(10, Math.round(11 * (0.85 + avgDepth * 0.3)));
+        ctx.font = `italic 700 ${fontSize}px 'Century Gothic', CenturyGothic, sans-serif`;
+        const tw = ctx.measureText(formattedTag).width;
+        const pillW = tw + 12;
+        const pillH = fontSize + 6;
+
+        ctx.fillStyle = `rgba(250, 246, 233, ${0.94 * ringOpacity})`;
+        ctx.strokeStyle = `rgba(184, 74, 40, ${0.45 * ringOpacity})`;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.roundRect(centerPt.x - pillW * 0.5, centerPt.y - pillH * 0.5, pillW, pillH, pillH * 0.5);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(184, 74, 40, ${0.95 * ringOpacity})`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(formattedTag, centerPt.x, centerPt.y);
+      }
+
+      ctx.restore();
+    });
   }
 }
 

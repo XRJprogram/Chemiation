@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemiation · CCPL Chemical Mechanism Deduction Script Specification</title>
+  <meta name="description" content="Chemiation CCPL (Chemiation Chemical Principle Language) syntax specification and mechanism authoring guide.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #F4EFE6;
+      --bg-card: #FAF6E9;
+      --bg-code: #EFE8DA;
+      --border-color: #DCD3C1;
+      --border-dark: #C4B79F;
+      --color-dark: #24140B;
+      --color-brown: #4A3324;
+      --color-mid: #6E533F;
+      --color-accent: #B84A28;
+      --color-accent-soft: rgba(184, 74, 40, 0.08);
+      --font-serif: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+      --font-sans: 'Century Gothic', CenturyGothic, AppleGothic, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--color-brown);
+      font-family: var(--font-sans);
+      line-height: 1.68;
+      font-size: 15px;
+      padding-bottom: 60px;
+    }
+
+    /* Top Navigation */
+    .docs-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(36, 20, 11, 0.04);
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--color-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: var(--color-accent-soft);
+      color: var(--color-accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(184, 74, 40, 0.25);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: #FAF6E9;
+      border: 1px solid var(--border-color);
+      color: var(--color-dark);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: #FFFDF9;
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    /* Container */
+    .docs-container {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+
+    .docs-hero {
+      margin-bottom: 36px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .docs-hero h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      color: var(--color-dark);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .docs-hero p {
+      font-size: 15px;
+      color: var(--color-mid);
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 8px rgba(36, 20, 11, 0.03);
+    }
+
+    .section-card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-card h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--color-accent);
+      border-radius: 2px;
+    }
+
+    .section-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-brown);
+      margin: 18px 0 8px 0;
+    }
+
+    .section-card p {
+      margin-bottom: 12px;
+      color: var(--color-brown);
+    }
+
+    ul {
+      margin-left: 20px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* Code Blocks */
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 12px 0 16px 0;
+      color: #2F2117;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: rgba(94, 65, 47, 0.08);
+      padding: 2px 5px;
+      border-radius: 3px;
+      color: var(--color-accent);
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* Note Box */
+    .note-box {
+      background: rgba(184, 74, 40, 0.05);
+      border-left: 3px solid var(--color-accent);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 13.5px;
+    }
+
+    .note-box strong {
+      color: var(--color-accent);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 13.5px;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 9px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(94, 65, 47, 0.06);
+      color: var(--color-dark);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .keyword {
+      color: #9C27B0;
+      font-weight: 700;
+    }
+
+    .string {
+      color: #2E7D32;
+    }
+
+    .comment {
+      color: #8D6E63;
+      font-style: italic;
+    }
+
+    .num {
+      color: #D84315;
+    }
+
+    /* Keyboard shortcuts */
+    .kbd-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .kbd-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    kbd {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 2px 6px;
+      color: var(--color-dark);
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Header Navigation -->
+  <header class="docs-header">
+    <div class="brand-title">
+      <span>CHEMIATION</span>
+      <span class="brand-tag">CCPL v1.2 SPEC</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="docs.html" class="back-btn" title="切换为中文文档">
+        <span>中文</span>
+      </a>
+      <a href="https://github.com/XRJprogram/Chemiation" target="_blank" class="back-btn" title="Visit GitHub Repository">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+        </svg>
+        <span>Repository</span>
+      </a>
+      <a href="index.html" class="back-btn">
+        <span>Back</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="docs-container">
+    <div class="docs-hero">
+      <h1>CCPL Script Specification & Authoring Guide</h1>
+      <p>Chemiation Chemical Principle Language · A declarative DSL for chemical mechanism deduction</p>
+    </div>
+
+    <!-- 1. Overview -->
+    <section class="section-card">
+      <h2>1. Design Principles & Overview</h2>
+      <p>CCPL (Chemiation Chemical Principle Language) is a declarative domain-specific language designed specifically for step-by-step chemical reaction mechanism deduction. Core design principles include:</p>
+      <ul>
+        <li><strong>Declarative & Readable</strong>: Natural, clean syntax without verbose JSON structures or boilerplate code.</li>
+        <li><strong>Automatic Spatial Layout</strong>: You do not need to calculate 3D coordinates manually. Defining atoms and bond connectivity is sufficient; the layout algorithm calculates 3D molecular conformations.</li>
+        <li><strong>Strict Mass Conservation</strong>: Fully tracks all atoms across elementary steps, eliminating disconnected or vanishing atoms.</li>
+        <li><strong>Mechanism-Focused</strong>: Centers on bond cleavage, bond formation, and electron-pair migrations.</li>
+      </ul>
+    </section>
+
+    <!-- 2. Global Metadata -->
+    <section class="section-card">
+      <h2>2. Global Reaction Metadata</h2>
+      <p>The top of a CCPL script declares the reaction's overall metadata:</p>
+      <pre><code><span class="comment"># Reaction title (required)</span>
+<span class="keyword">reaction</span> <span class="string">"Fischer Esterification of Acetic Acid and Ethanol"</span>
+
+<span class="comment"># Overall equation (required; supports standard keyboard inputs like -> and <=>)</span>
+<span class="keyword">equation</span> <span class="string">"CH_3COOH + CH_3CH_2OH <=> CH_3COOCH_2CH_3 + H_2O"</span>
+
+<span class="comment"># Mechanism summary and background (optional)</span>
+<span class="keyword">summary</span> <span class="string">"Nucleophilic acyl substitution: reactant approach, tetrahedral intermediate formation, followed by elimination to form ethyl acetate and water."</span></code></pre>
+      <div class="note-box">
+        <strong>💡 Subscript & LaTeX Notation:</strong> When writing equations, summaries, or step notes, <strong>there is no need to manually insert Unicode subscript characters</strong>:
+        <ul style="margin: 6px 0 0 18px; padding: 0;">
+          <li><strong>Automatic Chemical Subscripts</strong>: Digits following element symbols or closing brackets (such as <code>CH3COOH</code>, <code>H2O</code>, <code>CO2</code>, <code>C6H12O6</code>) are automatically parsed into subscripts (<code>CH₃COOH</code>, <code>H₂O</code>, <code>CO₂</code>, <code>C₆H₁₂O₆</code>).</li>
+          <li><strong>Explicit Subscript Syntax</strong>: Supports <code>_2</code>, <code>_{10}</code>, and <code>_n</code> (e.g. <code>H_2O</code> &rarr; <code>H₂O</code>, <code>[C6H10O5]_n</code> &rarr; <code>[C₆H₁₀O₅]ₙ</code>).</li>
+          <li><strong>Explicit Superscript Syntax</strong>: Supports <code>^2</code>, <code>^{2+}</code>, <code>^+</code>, and <code>^-</code> for ionic charges (e.g. <code>Fe^{3+}</code> &rarr; <code>Fe³⁺</code>).</li>
+          <li><strong>Arrow Shorthands</strong>: <code>-&gt;</code> or <code>--&gt;</code> converts to <code>→</code>, <code>&lt;=&gt;</code> or <code>==</code> converts to reversible equilibrium arrow <code>⇌</code>, and <code>&lt;-&gt;</code> converts to resonance arrow <code>↔</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3. Elementary Reaction Steps -->
+    <section class="section-card">
+      <h2>3. Elementary Reaction Steps (Step Block)</h2>
+      <p>Each elementary step is enclosed within a <code>step "Step Name" { ... }</code> block. <strong>Manual step numbers (such as 1. or 2.) are not required</strong>; the engine numbers steps in their written order:</p>
+      <pre><code><span class="keyword">step</span> <span class="string">"Reactant Collision and Approach"</span> {
+  <span class="comment"># Mechanism explanation for this step</span>
+  <span class="keyword">note</span> <span class="string">"Acetic acid and ethanol molecules approach under thermal motion; hydroxyl oxygen prepares to attack the carbonyl carbon."</span>
+
+  <span class="comment"># Atom declarations</span>
+  <span class="keyword">atom</span> C1 C -2.0 0.0 0.0
+  <span class="keyword">atom</span> O1 O -1.5 1.2 0.0
+  
+  <span class="comment"># Bond declarations</span>
+  <span class="keyword">bond</span> C1 O1 2
+}</code></pre>
+      <div class="note-box">
+        <strong>Tip:</strong> You do not need to write numbers in step titles; steps are numbered sequentially.
+      </div>
+    </section>
+
+    <!-- 4. Atom and Bond Topologies -->
+    <section class="section-card">
+      <h2>4. Atom and Bond Topology Definitions</h2>
+      <h3>4.1 Atom Definition (atom)</h3>
+      <p>Two syntax forms are supported:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Syntax Format</th>
+            <th>Description</th>
+            <th>Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>atom &lt;ID&gt; &lt;Element&gt; &lt;X&gt; &lt;Y&gt; &lt;Z&gt;</code></td>
+            <td>Explicit relative 3D coordinates</td>
+            <td>Specific spatial orientations or high-precision symmetries</td>
+          </tr>
+          <tr>
+            <td><code>atom &lt;ID&gt; &lt;Element&gt;</code></td>
+            <td>Omit coordinates; computed automatically</td>
+            <td>Rapid drafting and automatic molecular layout (see Diels-Alder preset)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>4.2 Bond Definition (bond)</h3>
+      <p>Syntax: <code>bond &lt;AtomID1&gt; &lt;AtomID2&gt; [Order]</code></p>
+      <ul>
+        <li><code>bond C1 C2 1</code>: Single bond between C1 and C2 (default).</li>
+        <li><code>bond C1 C2 1.5</code>: Aromatic / resonance bond (order 1.5, rendered with parallel solid and dashed lines).</li>
+        <li><code>bond C1 O1 2</code>: Double bond between C1 and O1 (e.g. carbonyl C=O).</li>
+        <li><code>bond N1 N2 3</code>: Triple bond between N1 and N2 (e.g. dinitrogen N&equiv;N).</li>
+      </ul>
+      <div class="note-box">
+        <strong>💡 Note:</strong> Bonds are rendered with a smooth depth gradient reflecting both connected atoms and spatial depth.
+      </div>
+
+      <h3>4.3 Radicals (radical) and Formal Charges (charge)</h3>
+      <p>Accurate notation of radical centers and ionic intermediates is essential in reaction mechanism deduction:</p>
+      <ul>
+        <li><strong>Radical Centers (radical)</strong>: Denotes an unpaired electron (e.g. chlorine radical Cl<sup>&middot;</sup>, methyl radical <sup>&middot;</sup>CH<sub>3</sub>). Rendered as a distinct dot near the atom symbol.
+          <br>Inline syntax: <code>atom C1 C -1.8 0 0 radical</code>
+          <br>Separate statement: <code>radical C1 Cl2</code>
+        </li>
+        <li><strong>Formal Charges (charge)</strong>: Denotes ionic charges (e.g. oxonium O<sup>+</sup>, alkoxide O<sup>&minus;</sup>, carbocation C<sup>+</sup>). Rendered as badge indicators (&oplus; or &ominus;).
+          <br>Inline syntax: <code>atom O1 O -1.4 1.1 0 charge=-1</code> or <code>atom O2 O -1.0 -1.3 0 charge=+1</code>
+          <br>Separate statement: <code>charge O1 -1</code>, <code>charge O2 +1</code>
+        </li>
+        <li><strong>Charge Suppression in Polymers</strong>: When an atom is included within a <code>polymer</code> bracket, reactive charge badges are automatically suppressed to reflect unit closure.</li>
+      </ul>
+
+      <h3>4.4 Aromatic Hydrocarbons & Delocalized &Pi; Systems (aromatic, Optional)</h3>
+      <p>In aromatic rings or conjugated cyclic systems, delocalized &Pi; bond visualization is <strong>completely optional</strong>. By specifying an <code>aromatic</code> (or short <code>pi</code>) statement inside a step block, the pseudo-3D renderer displays the classic Robinson inscribed circle and upper/lower delocalized &pi; electron cloud lobes in 3D perspective:</p>
+      <pre><code><span class="comment"># Syntax: aromatic "&lt;ring atom IDs...&gt;" [tag "&lt;label&gt;"]</span>
+<span class="keyword">aromatic</span> <span class="string">"C1 C2 C3 C4 C5 C6"</span> <span class="keyword">tag</span> <span class="string">"Π_6^6"</span></code></pre>
+      <ul>
+        <li><strong>Optional Design</strong>: Steps without an <code>aromatic</code> declaration render standard bonds normally (such as alternating double/single bonds or 1.5 order); the delocalized &Pi; system is only projected when declared.</li>
+        <li><strong>Perspective 3D Projection</strong>: The ring plane normal and centroid are computed in 3D world space. The renderer traces the inscribed dashed ring in-plane and projects translucent &pi; electron cloud lobes at &plusmn;0.38 &Aring; along the normal with conjugated orbital couplings.</li>
+        <li><strong>Smooth Dynamic Transitions</strong>: If aromaticity is disrupted during electrophilic attack (forming a non-aromatic Wheland carbocation intermediate) and later restored upon deprotonation, the &Pi; cloud smoothly fades out and fades in across step transitions.</li>
+      </ul>
+    </section>
+
+    <!-- 5. Polymer Specifications -->
+    <section class="section-card">
+      <h2>5. Polymer Repeat Units and Brackets (Polymer)</h2>
+      <p>For polymerization reactions, bracketed repeat units can be declared via the <code>polymer</code> statement:</p>
+      <pre><code><span class="comment"># Syntax: polymer "&lt;subscript&gt;" ["tag"] [include "&lt;atom IDs...&gt;" | exclude "&lt;byproduct IDs...&gt;"]</span>
+<span class="keyword">polymer</span> <span class="string">"n"</span> <span class="string">"Amylose Monomer Unit · [C_6H_{10}O_5]_n"</span> <span class="keyword">include</span> <span class="string">"C1 C2 C3 C4 C5 C6 O2 O3 O5 O6"</span></code></pre>
+
+      <h3>Mechanisms & Conventions:</h3>
+      <ul>
+        <li><strong>Unit Specification (include / exclude)</strong>: Use <code>include</code> to list the atoms within the repeating backbone, or use <code>exclude</code> to omit elimination byproducts (such as water or HCl molecules). Either option may be used.</li>
+        <li><strong>Simplest Repeat Unit Principle</strong>: For example, starch formation is represented by the dehydropyanose unit [C<sub>6</sub>H<sub>10</sub>O<sub>5</sub>]<sub><i>n</i></sub>, keeping the structure clear and clean.</li>
+        <li><strong>Adaptive Nearest-Side Extension</strong>: During 3D rotation, the renderer dynamically computes left and right bracket crossings to ensure extension bonds always extend outward on their nearest side, preventing line crossing artifacts across all angles.</li>
+      </ul>
+    </section>
+
+    <!-- 6. Mechanism Templates -->
+    <section class="section-card">
+      <h2>6. Mechanism Templates</h2>
+      <p>You can quickly insert standard elementary step templates from the script toolbar:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Button</th>
+            <th>Mechanism Type</th>
+            <th>Features</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>+ Step</code></td>
+            <td>General Step</td>
+            <td>Standard atom and bond scaffold with notes</td>
+          </tr>
+          <tr>
+            <td><code>Addition/Elim</code></td>
+            <td>Electrophilic Addition / Elimination</td>
+            <td>C=C cleavage, electrophile attack, carbocation intermediate</td>
+          </tr>
+          <tr>
+            <td><code>Coordination</code></td>
+            <td>Catalytic Coordination</td>
+            <td>Central metal coordination and substrate bond activation</td>
+          </tr>
+          <tr>
+            <td><code>Radical</code></td>
+            <td>Homolytic Cleavage & Chain Transfer</td>
+            <td>Radical generation, hydrogen abstraction, propagation</td>
+          </tr>
+          <tr>
+            <td><code>Polymer</code></td>
+            <td>Polymerization & Condensation</td>
+            <td>Polymer bracket declaration, nearest-side extension, byproduct exclusion</td>
+          </tr>
+          <tr>
+            <td><code>Aromatic</code></td>
+            <td>Aromatic Substitution Mechanism</td>
+            <td>Benzene ring skeleton, 1.5 order bonds, and optional aromatic delocalized &Pi; system</td>
+          </tr>
+          <tr>
+            <td><code>New Reaction</code></td>
+            <td>Full Reaction Skeleton</td>
+            <td>Complete template with metadata and multi-step deduction</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 7. Keyboard Shortcuts -->
+    <section class="section-card">
+      <h2>7. Global Keyboard Shortcuts</h2>
+      <div class="kbd-list">
+        <div class="kbd-item">
+          <span>Save Script</span>
+          <kbd>Ctrl + S</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>Play / Pause</span>
+          <kbd>Space</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>Previous Step</span>
+          <kbd>&larr;</kbd> or <kbd>A</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>Next Step</span>
+          <kbd>&rarr;</kbd> or <kbd>D</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>Reset Camera</span>
+          <kbd>R</kbd>
+        </div>
+        <div class="kbd-item">
+          <span>Rotate Viewport</span>
+          <span>Left-click drag</span>
+        </div>
+        <div class="kbd-item">
+          <span>Pan Viewport</span>
+          <span>Right-click drag</span>
+        </div>
+        <div class="kbd-item">
+          <span>Zoom In / Out</span>
+          <span>Mouse wheel</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

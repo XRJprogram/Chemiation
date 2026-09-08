@@ -24,8 +24,15 @@
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
           </svg>
-          <span>语法手册</span>
+          <span data-i18n="docsBtn">语法手册</span>
         </a>
+        <a id="header-repo-btn" href="https://github.com/XRJprogram/Chemiation" target="_blank" class="header-repo-btn" title="前往 GitHub 源代码仓库">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+          </svg>
+          <span data-i18n="repoBtn">GitHub 仓库</span>
+        </a>
+        <button id="header-lang-btn" class="header-lang-btn" title="切换语言 / Switch Language">中文</button>
       </div>
 
       <div id="header-equation-display" class="header-status-equation">
@@ -92,7 +99,7 @@
         <!-- 工作区头部 -->
         <div class="workspace-header">
           <div class="workspace-title-group">
-            <span class="workspace-title">推演工作区</span>
+            <span class="workspace-title" data-i18n="workspaceTitle">推演工作区</span>
             <span id="step-counter-text" class="step-counter-text">1 / 4</span>
           </div>
           <button id="btn-toggle-workspace" class="btn-toggle-workspace" title="收起推演工作区">
@@ -113,14 +120,14 @@
               <line x1="3" y1="12" x2="3.01" y2="12"></line>
               <line x1="3" y1="18" x2="3.01" y2="18"></line>
             </svg>
-            <span>机理步骤</span>
+            <span data-i18n="tabSteps">机理步骤</span>
           </button>
           <button id="tab-btn-script" class="tab-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 18 22 12 16 6"></polyline>
               <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
-            <span>CCPL 脚本</span>
+            <span data-i18n="tabScript">CCPL 脚本</span>
           </button>
         </div>
 
@@ -131,15 +138,15 @@
             <!-- 反应库管理操作栏 -->
             <div id="project-bar" class="project-bar">
               <div class="project-info">
-                <span id="project-name-label" class="project-name-label">反应机理库</span>
-                <span id="reaction-count-badge" class="reaction-count-badge">5</span>
+                <span id="project-name-label" class="project-name-label" data-i18n="libraryTitle">反应机理库</span>
+                <span id="reaction-count-badge" class="reaction-count-badge">6</span>
               </div>
               <div class="project-actions">
                 <button id="btn-new-reaction" class="project-btn primary" title="新建反应机理脚本">
-                  + 新建
+                  <span data-i18n="btnNew">+ 新建</span>
                 </button>
                 <button id="btn-delete-reaction" class="project-btn danger" title="删除当前选中的反应机理">
-                  🗑 删除
+                  <span data-i18n="btnDelete">🗑 删除</span>
                 </button>
               </div>
             </div>
@@ -159,8 +166,8 @@
 
             <!-- 步骤流列表卡片容器 -->
             <div class="steps-list-header">
-              <span>步骤序列</span>
-              <span style="font-size: 11px; opacity: 0.6;">点击直达任意步</span>
+              <span data-i18n="stepsSequence">步骤序列</span>
+              <span style="font-size: 11px; opacity: 0.6;" data-i18n="stepsHint">点击直达任意步</span>
             </div>
             <div id="steps-list-container" class="steps-list-container">
               <!-- 动态渲染各步骤卡片 -->
@@ -171,8 +178,8 @@
           <div id="tab-pane-script" class="tab-pane-script">
             <div class="script-toolbar">
               <div class="script-toolbar-left">
-                <span class="script-title">CCPL 推演脚本</span>
-                <span id="file-save-status" class="file-save-status">已同步</span>
+                <span class="script-title" data-i18n="scriptTitle">CCPL 推演脚本</span>
+                <span id="file-save-status" class="file-save-status" data-i18n="statusSynced">已同步</span>
               </div>
               <div class="script-btn-group">
                 <button id="btn-save-script" class="script-btn icon-only" title="保存脚本 (快捷键: Ctrl + S)">
@@ -189,17 +196,12 @@
                   <svg class="icon-shrink" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
                   </svg>
-                  <span class="label-shrink">缩小</span>
+                  <span class="label-shrink" data-i18n="labelShrink">缩小</span>
                 </button>
                 <button id="btn-reset-script" class="script-btn icon-only" title="还原当前机理">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="1 4 1 10 7 10"></polyline>
                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                  </svg>
-                </button>
-                <button id="btn-run-script" class="script-btn icon-only primary" title="解析并立即运行推演">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
                   </svg>
                 </button>
               </div>
@@ -208,7 +210,9 @@
             <div id="script-error-toast" class="script-error-toast"></div>
 
             <div class="ide-container">
-              <div id="ide-gutter" class="ide-gutter"><div>1</div></div>
+              <div id="ide-gutter" class="ide-gutter">
+                <div id="ide-gutter-inner" class="ide-gutter-inner"><div>1</div></div>
+              </div>
               <div class="ide-code-wrap">
                 <pre id="ide-highlight" class="ide-highlight" aria-hidden="true"><code id="ide-code"></code></pre>
                 <textarea id="script-editor" class="script-editor ide-input" spellcheck="false" placeholder="在此编写或修改 CCPL 反应推演脚本..."></textarea>
@@ -244,8 +248,6 @@
                   <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
                 </svg>
               </button>
-
-              <button id="reset-step-btn" class="ctrl-btn" title="回到起点">↺</button>
             </div>
           </div>
         </footer>
