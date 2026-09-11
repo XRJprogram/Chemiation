@@ -149,8 +149,9 @@ class Pseudo3DRenderer {
   }
 
   setStep(stepData, animate = true) {
-    if (stepData && typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.autoLayoutStep) {
-      ReactionScriptEngine.autoLayoutStep(stepData);
+    if (stepData && typeof ReactionScriptEngine !== 'undefined') {
+      if (ReactionScriptEngine.autoLayoutStep) ReactionScriptEngine.autoLayoutStep(stepData);
+      if (ReactionScriptEngine.enforceAlkeneCoplanarity) ReactionScriptEngine.enforceAlkeneCoplanarity(stepData);
     }
 
     if (!this.currentStepData || !animate) {

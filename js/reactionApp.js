@@ -5,7 +5,7 @@
 
 class ReactionApp {
   constructor() {
-    this.storageKey = 'chemiation_reactions_v10';
+    this.storageKey = 'chemiation_reactions_v11';
     this.langStorageKey = 'chemiation_lang_preference';
     this.lang = this.loadLanguagePreference();
     this.presets = this.loadInitialPresets();
@@ -89,7 +89,11 @@ class ReactionApp {
         fullscreenTitle: '全屏编写模式 (快捷键: F11 / Esc 退出)',
         exitFullscreenTitle: '缩小窗口 (快捷键: Esc / F11)',
         resetScriptTitle: '还原当前机理',
-        runScriptTitle: '解析并立即运行推演'
+        runScriptTitle: '解析并立即运行推演',
+        btnCompleteH: '补全 H',
+        completeHTitle: '智能补全氢原子 (快捷键: Alt + H)',
+        toastCompleteHSuccess: '已根据元素共价成键方式与电荷自动补全 {count} 个隐式氢原子及共价键！',
+        toastCompleteHNone: '当前所有原子共价价态与电荷均已饱和，无需额外补全氢原子。'
       },
       en: {
         docsBtn: 'Docs',
@@ -141,7 +145,11 @@ class ReactionApp {
         fullscreenTitle: 'Fullscreen Mode (F11 / Esc)',
         exitFullscreenTitle: 'Exit Fullscreen (Esc / F11)',
         resetScriptTitle: 'Revert to Current',
-        runScriptTitle: 'Parse & Run Mechanism'
+        runScriptTitle: 'Parse & Run Mechanism',
+        btnCompleteH: 'Fill H',
+        completeHTitle: 'Auto-complete Hydrogens (Key: Alt + H)',
+        toastCompleteHSuccess: 'Successfully auto-completed {count} implicit hydrogen atoms and covalent bonds based on element valence and formal charge!',
+        toastCompleteHNone: 'All atom covalent valences and formal charges are fully saturated; no additional hydrogens needed.'
       }
     };
   }
@@ -187,6 +195,7 @@ class ReactionApp {
     if (this.resetStepBtn) this.resetStepBtn.title = dict.resetStepTitle;
     if (this.btnSaveScript) this.btnSaveScript.title = dict.saveScriptTitle;
     if (this.btnResetScript) this.btnResetScript.title = dict.resetScriptTitle;
+    if (this.btnCompleteHydrogens) this.btnCompleteHydrogens.title = dict.completeHTitle;
     if (this.btnRunScript) this.btnRunScript.title = dict.runScriptTitle;
     if (this.btnNewReaction) this.btnNewReaction.title = dict.btnNew;
     if (this.btnDeleteReaction) this.btnDeleteReaction.title = dict.btnDelete;
@@ -228,12 +237,13 @@ class ReactionApp {
       presets = typeof REACTION_PRESETS !== 'undefined' ? JSON.parse(JSON.stringify(REACTION_PRESETS)) : [];
     }
 
-    // 确保所有反应步骤中的未定坐标原子均经过 3D 拓扑几何解算
-    if (typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.autoLayoutStep) {
+    // 确保所有反应步骤中的未定坐标原子均经过 3D 拓扑几何解算，并强制烯烃共平面
+    if (typeof ReactionScriptEngine !== 'undefined') {
       presets.forEach(reaction => {
         if (reaction && Array.isArray(reaction.steps)) {
           reaction.steps.forEach(step => {
-            ReactionScriptEngine.autoLayoutStep(step);
+            if (ReactionScriptEngine.autoLayoutStep) ReactionScriptEngine.autoLayoutStep(step);
+            if (ReactionScriptEngine.enforceAlkeneCoplanarity) ReactionScriptEngine.enforceAlkeneCoplanarity(step);
           });
         }
       });
@@ -295,6 +305,7 @@ class ReactionApp {
     this.btnFullscreenScript = document.getElementById('btn-fullscreen-script');
     this.btnRunScript = document.getElementById('btn-run-script');
     this.btnResetScript = document.getElementById('btn-reset-script');
+    this.btnCompleteHydrogens = document.getElementById('btn-complete-hydrogens');
     this.scriptErrorToast = document.getElementById('script-error-toast');
 
     // 底部时间轴与播放控制
@@ -440,7 +451,7 @@ class ReactionApp {
       this.btnFullscreenScript.addEventListener('click', () => this.toggleFullscreenScript());
     }
 
-    // 全局快捷键: Esc 退出脚本全屏，F11 切换脚本全屏
+    // 全局快捷键: Esc 退出脚本全屏，F11 切换脚本全屏，Alt + H 智能补全氢原子
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (this.tabPaneScript && this.tabPaneScript.classList.contains('fullscreen')) {
@@ -449,6 +460,9 @@ class ReactionApp {
       } else if (e.key === 'F11' && this.activeTab === 'script') {
         e.preventDefault();
         this.toggleFullscreenScript();
+      } else if (e.altKey && (e.key === 'h' || e.key === 'H') && this.activeTab === 'script') {
+        e.preventDefault();
+        this.handleCompleteHydrogens();
       }
     });
 
@@ -472,6 +486,9 @@ class ReactionApp {
     }
     if (this.btnResetScript) {
       this.btnResetScript.addEventListener('click', () => this.resetScriptToCurrent());
+    }
+    if (this.btnCompleteHydrogens) {
+      this.btnCompleteHydrogens.addEventListener('click', () => this.handleCompleteHydrogens());
     }
 
     // CCPL 脚本 IDE 编辑器交互（高亮、行号、Tab缩进与滚动同步）
@@ -713,10 +730,11 @@ class ReactionApp {
     this.currentReactionIndex = reactionIndex;
     const reaction = this.presets[reactionIndex];
 
-    if (typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.autoLayoutStep) {
+    if (typeof ReactionScriptEngine !== 'undefined') {
       if (reaction && Array.isArray(reaction.steps)) {
         reaction.steps.forEach(step => {
-          ReactionScriptEngine.autoLayoutStep(step);
+          if (ReactionScriptEngine.autoLayoutStep) ReactionScriptEngine.autoLayoutStep(step);
+          if (ReactionScriptEngine.enforceAlkeneCoplanarity) ReactionScriptEngine.enforceAlkeneCoplanarity(step);
         });
       }
     }
@@ -1056,6 +1074,33 @@ class ReactionApp {
       this.updateIDE();
       this.hideScriptError();
       this.markScriptDirty(false, '已还原');
+    }
+  }
+
+  /**
+   * 自动缩略氢原子补全：依据元素共价成键方式、形式电荷与自由基自动展开补全
+   */
+  handleCompleteHydrogens() {
+    if (!this.scriptEditor) return;
+    const text = this.scriptEditor.value;
+    try {
+      const res = ReactionScriptEngine.expandImplicitHydrogensInScript(text);
+      if (res.count > 0) {
+        this.scriptEditor.value = res.script;
+        this.updateIDE();
+        this.markScriptDirty(true);
+        this.showAlertDialog({
+          title: this.lang === 'en' ? 'Auto-completion' : '智能补全',
+          message: this.t('toastCompleteHSuccess', { count: res.count })
+        });
+      } else {
+        this.showAlertDialog({
+          title: this.lang === 'en' ? 'Auto-completion' : '智能补全',
+          message: this.t('toastCompleteHNone')
+        });
+      }
+    } catch (err) {
+      this.showScriptError(err.message);
     }
   }
 

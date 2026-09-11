@@ -414,8 +414,8 @@ const REACTION_PRESETS = [
         atoms: [
           // 丙烯分子 CH2=CH-CH3 (3C, 6H)
           { id: "C1", element: "C", x: -2.8, y: -0.6, z: 0 },
-          { id: "H11", element: "H", x: -3.6, y: -0.1, z: 0.5 },
-          { id: "H12", element: "H", x: -2.8, y: -1.7, z: -0.2 },
+          { id: "H11", element: "H", x: -3.74, y: -0.06, z: 0 },
+          { id: "H12", element: "H", x: -2.8, y: -1.68, z: 0 },
           { id: "C2", element: "C", x: -1.6, y: 0.1, z: 0 },
           { id: "H2", element: "H", x: -1.6, y: 1.2, z: 0 },
           { id: "C3", element: "C", x: -0.4, y: -0.6, z: 0 },
@@ -442,8 +442,8 @@ const REACTION_PRESETS = [
         atoms: [
           // 对称共振离域烯丙基自由基 [CH2=CH-CH2· ↔ ·CH2-CH=CH2]
           { id: "C1", element: "C", x: -2.6, y: -0.5, z: 0, radical: true },
-          { id: "H11", element: "H", x: -3.5, y: -0.1, z: 0.5 },
-          { id: "H12", element: "H", x: -2.6, y: -1.6, z: -0.2 },
+          { id: "H11", element: "H", x: -3.54, y: 0.04, z: 0 },
+          { id: "H12", element: "H", x: -2.6, y: -1.58, z: 0 },
           { id: "C2", element: "C", x: -1.4, y: 0.2, z: 0 },
           { id: "H2", element: "H", x: -1.4, y: 1.3, z: 0 },
           { id: "C3", element: "C", x: -0.2, y: -0.5, z: 0, radical: true },
@@ -479,8 +479,8 @@ const REACTION_PRESETS = [
         atoms: [
           // 产物 3-溴丙烯 CH2=CH-CH2Br
           { id: "C1", element: "C", x: -3.0, y: -0.5, z: 0 },
-          { id: "H11", element: "H", x: -3.8, y: 0.0, z: 0.5 },
-          { id: "H12", element: "H", x: -3.0, y: -1.6, z: -0.2 },
+          { id: "H11", element: "H", x: -3.94, y: 0.04, z: 0 },
+          { id: "H12", element: "H", x: -3.0, y: -1.58, z: 0 },
           { id: "C2", element: "C", x: -1.8, y: 0.2, z: 0 },
           { id: "H2", element: "H", x: -1.8, y: 1.3, z: 0 },
           { id: "C3", element: "C", x: -0.6, y: -0.5, z: 0 },
@@ -604,25 +604,25 @@ const REACTION_PRESETS = [
         note: "共轭环戊二烯 C_5H_6 与乙烯 C_2H_4 分子在空间彼此配准对齐，准备发生六电子协同转移加成。",
         atoms: [
           // 环戊二烯骨架 (自动空间排布)
-          { id: "C1", element: "C", x: -2.09, y: 1.05, z: -0.38, autoLayout: true },
-          { id: "C2", element: "C", x: -1.67, y: 0.64, z: 0.89, autoLayout: true },
-          { id: "C3", element: "C", x: -2.24, y: -0.67, z: 1.12, autoLayout: true },
-          { id: "C4", element: "C", x: -2.99, y: -0.99, z: -0.01, autoLayout: true },
-          { id: "C5", element: "C", x: -2.77, y: -0.02, z: -1.03, autoLayout: true },
-          { id: "H1", element: "H", x: -1.17, y: 1.4, z: -0.84, autoLayout: true },
-          { id: "H2", element: "H", x: -1.87, y: 1.37, z: 1.62, autoLayout: true },
-          { id: "H3", element: "H", x: -2.76, y: -0.81, z: 2.01, autoLayout: true },
-          { id: "H4", element: "H", x: -2.69, y: -2.01, z: -0.23, autoLayout: true },
-          { id: "H5A", element: "H", x: -3.78, y: 0.39, z: -1.23, autoLayout: true },
-          { id: "H5B", element: "H", x: -2.38, y: -0.35, z: -1.93, autoLayout: true },
+          { id: "C1", element: "C", x: -2.77, y: 1.18, z: 0.0, autoLayout: true },
+          { id: "C2", element: "C", x: -1.50, y: 0.73, z: 0.0, autoLayout: true },
+          { id: "C3", element: "C", x: -1.50, y: -0.73, z: 0.0, autoLayout: true },
+          { id: "C4", element: "C", x: -2.77, y: -1.18, z: 0.0, autoLayout: true },
+          { id: "C5", element: "C", x: -3.70, y: 0.0, z: 0.0, autoLayout: true },
+          { id: "H1", element: "H", x: -3.07, y: 2.22, z: 0.0, autoLayout: true },
+          { id: "H2", element: "H", x: -0.62, y: 1.35, z: 0.0, autoLayout: true },
+          { id: "H3", element: "H", x: -0.62, y: -1.35, z: 0.0, autoLayout: true },
+          { id: "H4", element: "H", x: -3.07, y: -2.22, z: 0.0, autoLayout: true },
+          { id: "H5A", element: "H", x: -4.33, y: 0.0, z: 0.89, autoLayout: true },
+          { id: "H5B", element: "H", x: -4.33, y: 0.0, z: -0.89, autoLayout: true },
 
           // 亲双烯体乙烯 (自动空间排布)
-          { id: "C6", element: "C", x: 2.79, y: 0.45, z: -0.08, autoLayout: true },
-          { id: "C7", element: "C", x: 2.01, y: -0.45, z: 0.08, autoLayout: true },
-          { id: "H61", element: "H", x: 3.69, y: 0.61, z: 0.53, autoLayout: true },
-          { id: "H62", element: "H", x: 2.71, y: 1.21, z: -0.86, autoLayout: true },
-          { id: "H71", element: "H", x: 1.12, y: -0.39, z: 0.73, autoLayout: true },
-          { id: "H72", element: "H", x: 2.08, y: -1.43, z: -0.39, autoLayout: true }
+          { id: "C6", element: "C", x: 2.84, y: 0.51, z: 0.0, autoLayout: true },
+          { id: "C7", element: "C", x: 1.96, y: -0.51, z: 0.0, autoLayout: true },
+          { id: "H61", element: "H", x: 2.48, y: 1.53, z: 0.0, autoLayout: true },
+          { id: "H62", element: "H", x: 3.90, y: 0.31, z: 0.0, autoLayout: true },
+          { id: "H71", element: "H", x: 0.90, y: -0.31, z: 0.0, autoLayout: true },
+          { id: "H72", element: "H", x: 2.32, y: -1.53, z: 0.0, autoLayout: true }
         ],
         bonds: [
           { atom1Id: "C1", atom2Id: "C2", order: 2 },

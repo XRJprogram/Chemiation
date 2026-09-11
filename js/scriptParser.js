@@ -367,6 +367,7 @@ const ReactionScriptEngine = {
           }
         }
 
+        this.completeImplicitHydrogens(currentStep);
         this.autoLayoutStep(currentStep);
         reaction.steps.push(currentStep);
         currentStep = null;
@@ -385,6 +386,18 @@ const ReactionScriptEngine = {
       }
 
       if (/^action\b/i.test(line)) {
+        continue;
+      }
+
+      // 氢原子补全策略控制: hydrogens <auto|none|explicit>
+      if (/^hydrogens?\b/i.test(line)) {
+        const parts = line.split(/\s+/);
+        const mode = (parts[1] || '').toLowerCase();
+        if (mode === 'none' || mode === 'explicit' || mode === 'off' || mode === 'manual') {
+          currentStep.hydrogensMode = 'none';
+        } else if (mode === 'auto' || mode === 'implicit' || mode === 'on') {
+          currentStep.hydrogensMode = 'auto';
+        }
         continue;
       }
 
@@ -459,6 +472,7 @@ const ReactionScriptEngine = {
         let x = null, y = null, z = null;
         let radical = false;
         let charge = 0;
+        let noImplicitH = false;
 
         const extraTokens = parts.slice(3);
         const numericTokens = [];
@@ -471,10 +485,12 @@ const ReactionScriptEngine = {
             if (val === '+' || val === '') charge = 1;
             else if (val === '-') charge = -1;
             else charge = parseInt(val, 10) || 0;
+          } else if (/^(?:explicit|noImplicitH)$/i.test(token)) {
+            noImplicitH = true;
           } else if (!isNaN(parseFloat(token))) {
             numericTokens.push(parseFloat(token));
           } else {
-            throw new Error(`第 ${lineNum} 行语法错误: atom 指令中未知的参数 "${token}"，支持 [X Y Z] 坐标、radical、charge=+1/-1`);
+            throw new Error(`第 ${lineNum} 行语法错误: atom 指令中未知的参数 "${token}"，支持 [X Y Z] 坐标、radical、charge=+1/-1、explicit`);
           }
         }
 
@@ -491,6 +507,7 @@ const ReactionScriptEngine = {
         }
         if (radical) atomObj.radical = true;
         if (charge !== 0) atomObj.charge = charge;
+        if (noImplicitH) atomObj.noImplicitH = true;
         currentStep.atoms.push(atomObj);
         continue;
       }
@@ -579,7 +596,7 @@ const ReactionScriptEngine = {
         continue;
       }
 
-      throw new Error(`第 ${lineNum} 行语法错误: 步骤 "${currentStep.name}" 中存在无法识别的指令 "${line}"，有效指令包括 note, polymer, aromatic, atom, bond`);
+      throw new Error(`第 ${lineNum} 行语法错误: 步骤 "${currentStep.name}" 中存在无法识别的指令 "${line}"，有效指令包括 note, polymer, aromatic, atom, bond, hydrogens`);
     }
 
     if (currentStep !== null) {
@@ -591,20 +608,167 @@ const ReactionScriptEngine = {
     }
 
     // 对所有步骤中缺少坐标的原子执行自动空间拓扑松弛解算
-    reaction.steps.forEach(st => this.autoLayoutStep(st));
+    reaction.steps.forEach(st => {
+      this.completeImplicitHydrogens(st);
+      this.autoLayoutStep(st);
+    });
 
     return reaction;
   },
 
   /**
-   * 对未提供三维坐标的原子进行自动空间立体排布 (基于分子图论、化学键拓扑与距离几何力场松弛)
+   * 计算指定原子依据共价成键规律、形式电荷与自由基状态所需补全的隐式氢原子数量
+   */
+  getImplicitHydrogenCount(atom, currentBondSum) {
+    const elem = atom.element;
+    const charge = atom.charge || 0;
+    const radical = !!atom.radical;
+
+    let targetValence = 0;
+
+    // 1. 碳族元素: C, Si, Ge (基态 4 价)
+    // 中性 C: 4 价 (如 CH4, 乙烯)
+    // 碳正离子 C+: charge = +1, 3 价 (如 CH3+, 空 p 轨道)
+    // 碳负离子 C-: charge = -1, 3 价 (如 CH3-, 1 孤对电子)
+    // 碳自由基 C•: radical = true, 3 价 (如 •CH3, 1 单电子)
+    if (elem === 'C' || elem === 'Si' || elem === 'Ge') {
+      targetValence = Math.max(0, 4 - Math.abs(charge) - (radical ? 1 : 0));
+    }
+    // 2. 氮族元素: N, P, As (基态 3 价)
+    // 中性 N: 3 价 (如 NH3, R3N)
+    // 铵正离子 N+: charge = +1, 4 价 (如 NH4+, R4N+)
+    // 酰胺负离子 N-: charge = -1, 2 价 (如 NH2-)
+    // 氮自由基 N•: 2 价 (如 •NH2)
+    else if (elem === 'N' || elem === 'P' || elem === 'As') {
+      const base = 3 + charge - (radical ? 1 : 0);
+      if (elem === 'P' && currentBondSum > 3) {
+        targetValence = Math.max(3, Math.min(5, Math.max(currentBondSum, base)));
+      } else {
+        targetValence = Math.max(0, base);
+      }
+    }
+    // 3. 氧族元素: O, S, Se, Te (基态 2 价)
+    // 中性 O: 2 价 (如 H2O, ROH)
+    // 𨦡正离子 O+: charge = +1, 3 价 (如 H3O+, R3O+)
+    // 氧负离子 O-: charge = -1, 1 价 (如 OH-, RO-)
+    // 氧离子 O2-: charge = -2, 0 价 (如 O2-)
+    // 氧自由基 O•: 1 价 (如 •OH)
+    else if (elem === 'O' || elem === 'S' || elem === 'Se' || elem === 'Te') {
+      const base = 2 + charge - (radical ? 1 : 0);
+      if (elem === 'S' && currentBondSum > 2) {
+        targetValence = Math.max(2, Math.min(6, Math.max(currentBondSum, base)));
+      } else {
+        targetValence = Math.max(0, base);
+      }
+    }
+    // 4. 卤素族: F, Cl, Br, I (基态 1 价)
+    // 中性单质/共价卤素: 1 价 (如 HCl, R-Cl)
+    // 卤素阴离子 X-: charge = -1, 0 价 (如 Cl-, Br-, 无需 H)
+    // 卤素自由基 X•: radical = true, 0 价 (如 •Cl, 无需 H)
+    // 卤素𬭩正离子 X+: charge = +1, 2 价 (如环状溴鎓离子)
+    else if (elem === 'F' || elem === 'Cl' || elem === 'Br' || elem === 'I') {
+      targetValence = Math.max(0, 1 + charge - (radical ? 1 : 0));
+    }
+    // 5. 硼族元素: B (基态 3 价)
+    // 中性 B: 3 价 (如 BH3)
+    // 硼氢负离子 B-: charge = -1, 4 价 (如 BH4-)
+    else if (elem === 'B') {
+      targetValence = Math.max(0, 3 - charge);
+    }
+    else {
+      // 金属元素 (Li, Na, K, Mg, Ca, Fe, Cu, Zn, Pt, Pd, M...) 与惰性气体不自动补全共价氢
+      targetValence = 0;
+    }
+
+    const missing = targetValence - currentBondSum;
+    return Math.max(0, Math.round(missing));
+  },
+
+  /**
+   * 自动缩略氢原子补全算法：依据元素共价成键方式、形式电荷与自由基自动补全氢原子及单键
+   */
+  completeImplicitHydrogens(step) {
+    if (!step || !step.atoms || step.atoms.length === 0) return 0;
+    if (step.hydrogensMode === 'none' || step.hydrogensMode === 'explicit') return 0;
+
+    const bondSumMap = new Map();
+    step.atoms.forEach(a => bondSumMap.set(a.id, 0));
+    (step.bonds || []).forEach(b => {
+      const ord = b.order || 1;
+      if (bondSumMap.has(b.atom1Id)) bondSumMap.set(b.atom1Id, bondSumMap.get(b.atom1Id) + ord);
+      if (bondSumMap.has(b.atom2Id)) bondSumMap.set(b.atom2Id, bondSumMap.get(b.atom2Id) + ord);
+    });
+
+    const existingIds = new Set(step.atoms.map(a => a.id));
+    const newAtoms = [];
+    const newBonds = [];
+
+    step.atoms.forEach(a => {
+      if (a.element === 'H' || a.noImplicitH || a.explicit) return;
+      const currentSum = bondSumMap.get(a.id) || 0;
+      const missingH = this.getImplicitHydrogenCount(a, currentSum);
+      if (missingH <= 0) return;
+
+      for (let h = 1; h <= missingH; h++) {
+        let hid = `H_${a.id}_${h}`;
+        let c = h;
+        while (existingIds.has(hid)) {
+          c++;
+          hid = `H_${a.id}_${c}`;
+        }
+        existingIds.add(hid);
+        const hAtom = {
+          id: hid,
+          element: 'H',
+          autoLayout: true
+        };
+        newAtoms.push(hAtom);
+        newBonds.push({
+          atom1Id: a.id,
+          atom2Id: hid,
+          order: 1
+        });
+      }
+    });
+
+    if (newAtoms.length > 0) {
+      step.atoms.push(...newAtoms);
+      step.bonds = (step.bonds || []).concat(newBonds);
+    }
+    return newAtoms.length;
+  },
+
+  /**
+   * 将当前脚本中的隐式氢展开为显式 atom / bond 脚本声明
+   */
+  expandImplicitHydrogensInScript(scriptText) {
+    if (!scriptText || typeof scriptText !== 'string') return { script: scriptText, count: 0 };
+    let rx;
+    try {
+      rx = this.parse(scriptText);
+    } catch (e) {
+      throw e;
+    }
+    const origHCount = (scriptText.match(/\batom\s+[A-Za-z0-9_]+\s+H\b/g) || []).length;
+    const expandedScript = this.serialize(rx);
+    const newHCount = (expandedScript.match(/\batom\s+[A-Za-z0-9_]+\s+H\b/g) || []).length;
+    const count = Math.max(0, newHCount - origHCount);
+    return { script: expandedScript, count };
+  },
+
+  /**
+   * 对未提供三维坐标的原子进行自动空间立体排布 (基于分子图论、化学键拓扑与距离几何力场松弛，深度优化碳碳双键共平面性)
    */
   autoLayoutStep(step) {
-    if (!step.atoms || step.atoms.length === 0) return;
+    if (!step || !step.atoms || step.atoms.length === 0) return;
+    this.completeImplicitHydrogens(step);
 
     // 检查是否有缺失坐标的原子或无效数值
     const needLayout = step.atoms.some(a => a.x === null || a.y === null || a.z === null || typeof a.x !== 'number' || typeof a.y !== 'number' || typeof a.z !== 'number' || isNaN(a.x) || isNaN(a.y) || isNaN(a.z));
-    if (!needLayout) return;
+    if (!needLayout) {
+      this.enforceAlkeneCoplanarity(step);
+      return;
+    }
 
     const atoms = step.atoms;
     const bonds = step.bonds || [];
@@ -650,7 +814,7 @@ const ReactionScriptEngine = {
       }
     });
 
-    // 3. 对每个连通分子分别进行基于真实键长拓扑的三维弹簧-电荷力场松弛 (Kamada-Kawai + VSEPR)
+    // 3. 对每个连通分子分别进行基于真实键长拓扑的三维弹簧-电荷力场松弛 (Kamada-Kawai + VSEPR + 烯烃双键共平面几何约束)
     const compLayouts = components.map(compIds => {
       const compN = compIds.length;
       const idToIdx = new Map();
@@ -680,6 +844,19 @@ const ReactionScriptEngine = {
         }
       }
 
+      // 识别分子中的双键 (如 C=C, C=O, C=N 等，尤其是烯烃碳碳双键)
+      const dblBonds = [];
+      compIds.forEach((uId, i) => {
+        (adj.get(uId) || []).forEach(edge => {
+          if (edge.order === 2 && idToIdx.has(edge.target)) {
+            const j = idToIdx.get(edge.target);
+            if (i < j) {
+              dblBonds.push({ uId, vId: edge.target, uIdx: i, vIdx: j });
+            }
+          }
+        });
+      });
+
       // 计算真实目标化学键长与键角几何距离
       const targetD = Array.from({ length: compN }, () => Array(compN).fill(0));
       for (let i = 0; i < compN; i++) {
@@ -708,46 +885,138 @@ const ReactionScriptEngine = {
         }
       }
 
-      // 骨架原子与氢原子分层初布局
-      const heavyIds = compIds.filter(id => {
-        const a = atomMap.get(id);
-        return a && a.element !== 'H';
-      });
-      const hIds = compIds.filter(id => {
-        const a = atomMap.get(id);
-        return a && a.element === 'H';
-      });
-      const pos = compIds.map(() => ({ x: 0, y: 0, z: 0 }));
+      // 针对碳碳双键两侧原子精准设定顺式 (Cis) 与反式 (Trans) 目标距离矩阵
+      dblBonds.forEach(({ uId, vId, uIdx, vIdx }) => {
+        const uNeighbors = (adj.get(uId) || []).filter(e => e.target !== vId && idToIdx.has(e.target));
+        const vNeighbors = (adj.get(vId) || []).filter(e => e.target !== uId && idToIdx.has(e.target));
 
-      heavyIds.forEach((hId, idx) => {
-        const i = idToIdx.get(hId);
-        const angle = (2 * Math.PI * idx) / Math.max(1, heavyIds.length);
-        const r = Math.max(0.9, heavyIds.length * 0.28);
-        pos[i].x = r * Math.cos(angle);
-        pos[i].y = r * Math.sin(angle);
-        pos[i].z = Math.sin(idx * 2.1) * 0.35;
-      });
+        // 设定同碳两取代基 (Geminal) 夹角 120° 理想距离
+        if (uNeighbors.length === 2) {
+          const idx1 = idToIdx.get(uNeighbors[0].target);
+          const idx2 = idToIdx.get(uNeighbors[1].target);
+          const isH1 = atomMap.get(uNeighbors[0].target).element === 'H';
+          const isH2 = atomMap.get(uNeighbors[1].target).element === 'H';
+          const gemD = (isH1 && isH2) ? 1.87 : (isH1 || isH2 ? 2.24 : 2.60);
+          targetD[idx1][idx2] = gemD;
+          targetD[idx2][idx1] = gemD;
+        }
+        if (vNeighbors.length === 2) {
+          const idx1 = idToIdx.get(vNeighbors[0].target);
+          const idx2 = idToIdx.get(vNeighbors[1].target);
+          const isH1 = atomMap.get(vNeighbors[0].target).element === 'H';
+          const isH2 = atomMap.get(vNeighbors[1].target).element === 'H';
+          const gemD = (isH1 && isH2) ? 1.87 : (isH1 || isH2 ? 2.24 : 2.60);
+          targetD[idx1][idx2] = gemD;
+          targetD[idx2][idx1] = gemD;
+        }
 
-      hIds.forEach((hId, hIdx) => {
-        const i = idToIdx.get(hId);
-        const parentEdge = (adj.get(hId) || [])[0];
-        if (parentEdge && idToIdx.has(parentEdge.target)) {
-          const pIdx = idToIdx.get(parentEdge.target);
-          const parentPos = pos[pIdx];
-          const offsetAngle = (hIdx * 1.6) + Math.PI / 4;
-          pos[i].x = parentPos.x + 1.08 * Math.cos(offsetAngle);
-          pos[i].y = parentPos.y + 1.08 * Math.sin(offsetAngle);
-          pos[i].z = parentPos.z + (hIdx % 2 === 0 ? 0.38 : -0.38);
-        } else {
-          const angle = (2 * Math.PI * hIdx) / Math.max(1, hIds.length);
-          pos[i].x = 1.8 * Math.cos(angle);
-          pos[i].y = 1.8 * Math.sin(angle);
-          pos[i].z = 0;
+        // 设定跨双键两侧对应顺式与反式空间距离 (彻底消除由于 generic d=3 导致的扭转破缺)
+        if (uNeighbors.length > 0 && vNeighbors.length > 0) {
+          uNeighbors.forEach((un, unIdx) => {
+            vNeighbors.forEach((vn, vnIdx) => {
+              const idxU = idToIdx.get(un.target);
+              const idxV = idToIdx.get(vn.target);
+              const isHU = atomMap.get(un.target).element === 'H';
+              const isHV = atomMap.get(vn.target).element === 'H';
+              const Lu = isHU ? 1.08 : 1.50;
+              const Lv = isHV ? 1.08 : 1.50;
+              const dx = 1.34 + (Lu + Lv) * 0.5;
+
+              const isCis = (unIdx === vnIdx);
+              let targetDist;
+              if (isCis) {
+                const dy = Math.abs(Lu - Lv) * (Math.sqrt(3) / 2);
+                targetDist = Math.hypot(dx, dy);
+              } else {
+                const dy = (Lu + Lv) * (Math.sqrt(3) / 2);
+                targetDist = Math.hypot(dx, dy);
+              }
+              targetD[idxU][idxV] = targetDist;
+              targetD[idxV][idxU] = targetDist;
+            });
+          });
         }
       });
 
+      // 骨架原子与氢原子分层初布局
+      const pos = compIds.map(() => ({ x: 0, y: 0, z: 0 }));
+
+      if (dblBonds.length === 1 && compN <= 8) {
+        // 单个烯烃单元（如乙烯、丙烯等）：在基准平面直接初始化 120° 严格共平面立体拓扑初构型
+        const { uId, vId, uIdx, vIdx } = dblBonds[0];
+        pos[uIdx].x = -0.67; pos[uIdx].y = 0; pos[uIdx].z = 0;
+        pos[vIdx].x = 0.67;  pos[vIdx].y = 0; pos[vIdx].z = 0;
+
+        const uNeighbors = (adj.get(uId) || []).filter(e => e.target !== vId && idToIdx.has(e.target));
+        const vNeighbors = (adj.get(vId) || []).filter(e => e.target !== uId && idToIdx.has(e.target));
+
+        uNeighbors.forEach((un, unIdx) => {
+          const idx = idToIdx.get(un.target);
+          const isH = atomMap.get(un.target).element === 'H';
+          const L = isH ? 1.08 : 1.50;
+          const sign = (uNeighbors.length === 1) ? 1 : (unIdx === 0 ? 1 : -1);
+          pos[idx].x = -0.67 - L * 0.5;
+          pos[idx].y = sign * L * (Math.sqrt(3) / 2);
+          pos[idx].z = 0;
+        });
+
+        vNeighbors.forEach((vn, vnIdx) => {
+          const idx = idToIdx.get(vn.target);
+          const isH = atomMap.get(vn.target).element === 'H';
+          const L = isH ? 1.08 : 1.50;
+          const sign = (vNeighbors.length === 1) ? (uNeighbors.length === 1 ? -1 : 1) : (vnIdx === 0 ? 1 : -1);
+          pos[idx].x = 0.67 + L * 0.5;
+          pos[idx].y = sign * L * (Math.sqrt(3) / 2);
+          pos[idx].z = 0;
+        });
+      } else {
+        const heavyIds = compIds.filter(id => {
+          const a = atomMap.get(id);
+          return a && a.element !== 'H';
+        });
+        const hIds = compIds.filter(id => {
+          const a = atomMap.get(id);
+          return a && a.element === 'H';
+        });
+
+        heavyIds.forEach((hId, idx) => {
+          const i = idToIdx.get(hId);
+          const angle = (2 * Math.PI * idx) / Math.max(1, heavyIds.length);
+          const r = Math.max(0.9, heavyIds.length * 0.28);
+          pos[i].x = r * Math.cos(angle);
+          pos[i].y = r * Math.sin(angle);
+          pos[i].z = Math.sin(idx * 2.1) * 0.35;
+        });
+
+        const dblBondAtomSet = new Set();
+        dblBonds.forEach(db => {
+          dblBondAtomSet.add(db.uId);
+          dblBondAtomSet.add(db.vId);
+        });
+
+        hIds.forEach((hId, hIdx) => {
+          const i = idToIdx.get(hId);
+          const parentEdge = (adj.get(hId) || [])[0];
+          if (parentEdge && idToIdx.has(parentEdge.target)) {
+            const pIdx = idToIdx.get(parentEdge.target);
+            const parentPos = pos[pIdx];
+            const isParentDbl = dblBondAtomSet.has(parentEdge.target);
+            const offsetAngle = (hIdx * 1.6) + Math.PI / 4;
+            pos[i].x = parentPos.x + 1.08 * Math.cos(offsetAngle);
+            pos[i].y = parentPos.y + 1.08 * Math.sin(offsetAngle);
+            // 若母体碳处于双键，保持在母体平面内，不施加 Z 轴偏差
+            pos[i].z = isParentDbl ? parentPos.z : (parentPos.z + (hIdx % 2 === 0 ? 0.38 : -0.38));
+          } else {
+            const angle = (2 * Math.PI * hIdx) / Math.max(1, hIds.length);
+            pos[i].x = 1.8 * Math.cos(angle);
+            pos[i].y = 1.8 * Math.sin(angle);
+            pos[i].z = 0;
+          }
+        });
+      }
+
       // 模拟退火力场迭代松弛
-      const iterations = 160;
+      const iterations = 180;
       for (let iter = 0; iter < iterations; iter++) {
         const temp = 0.3 * Math.pow(1 - iter / iterations, 1.2);
         const forces = compIds.map(() => ({ x: 0, y: 0, z: 0 }));
@@ -795,6 +1064,48 @@ const ReactionScriptEngine = {
           }
         }
 
+        // 双键共平面刚性恢复力场 (Coplanar Torsional Restoring Force)
+        dblBonds.forEach(({ uId, vId, uIdx, vIdx }) => {
+          const uNeighbors = (adj.get(uId) || []).filter(e => e.target !== vId && idToIdx.has(e.target)).map(e => idToIdx.get(e.target));
+          const vNeighbors = (adj.get(vId) || []).filter(e => e.target !== uId && idToIdx.has(e.target)).map(e => idToIdx.get(e.target));
+          const alkeneIndices = [uIdx, vIdx, ...uNeighbors, ...vNeighbors];
+
+          const ax = pos[vIdx].x - pos[uIdx].x;
+          const ay = pos[vIdx].y - pos[uIdx].y;
+          const az = pos[vIdx].z - pos[uIdx].z;
+
+          let bestCross = null;
+          let maxCLen = 0;
+          alkeneIndices.forEach(k => {
+            if (k === uIdx || k === vIdx) return;
+            const rx = pos[k].x - pos[uIdx].x;
+            const ry = pos[k].y - pos[uIdx].y;
+            const rz = pos[k].z - pos[uIdx].z;
+            const cx = ry * az - rz * ay;
+            const cy = rz * ax - rx * az;
+            const cz = rx * ay - ry * ax;
+            const clen = Math.hypot(cx, cy, cz);
+            if (clen > maxCLen) {
+              maxCLen = clen;
+              bestCross = [cx / clen, cy / clen, cz / clen];
+            }
+          });
+
+          if (bestCross && maxCLen > 0.001) {
+            const [nx, ny, nz] = bestCross;
+            alkeneIndices.forEach(k => {
+              const rx = pos[k].x - pos[uIdx].x;
+              const ry = pos[k].y - pos[uIdx].y;
+              const rz = pos[k].z - pos[uIdx].z;
+              const dNorm = rx * nx + ry * ny + rz * nz;
+              const kPlanar = 3.5;
+              forces[k].x -= nx * dNorm * kPlanar;
+              forces[k].y -= ny * dNorm * kPlanar;
+              forces[k].z -= nz * dNorm * kPlanar;
+            });
+          }
+        });
+
         for (let i = 0; i < compN; i++) {
           const fLen = Math.hypot(forces[i].x, forces[i].y, forces[i].z);
           if (fLen > 0) {
@@ -805,6 +1116,89 @@ const ReactionScriptEngine = {
           }
         }
       }
+
+      // 双键严格共平面投影与几何角度规整化
+      dblBonds.forEach(({ uId, vId, uIdx, vIdx }) => {
+        const uNeighbors = (adj.get(uId) || []).filter(e => e.target !== vId && idToIdx.has(e.target)).map(e => idToIdx.get(e.target));
+        const vNeighbors = (adj.get(vId) || []).filter(e => e.target !== uId && idToIdx.has(e.target)).map(e => idToIdx.get(e.target));
+        const alkeneIndices = [uIdx, vIdx, ...uNeighbors, ...vNeighbors];
+
+        const ax = pos[vIdx].x - pos[uIdx].x;
+        const ay = pos[vIdx].y - pos[uIdx].y;
+        const az = pos[vIdx].z - pos[uIdx].z;
+        const aLen = Math.hypot(ax, ay, az);
+        if (aLen < 0.001) return;
+
+        let bestCross = null;
+        let maxCLen = 0;
+        alkeneIndices.forEach(k => {
+          if (k === uIdx || k === vIdx) return;
+          const rx = pos[k].x - pos[uIdx].x;
+          const ry = pos[k].y - pos[uIdx].y;
+          const rz = pos[k].z - pos[uIdx].z;
+          const cx = ry * az - rz * ay;
+          const cy = rz * ax - rx * az;
+          const cz = rx * ay - ry * ax;
+          const clen = Math.hypot(cx, cy, cz);
+          if (clen > maxCLen) {
+            maxCLen = clen;
+            bestCross = [cx / clen, cy / clen, cz / clen];
+          }
+        });
+
+        if (bestCross && maxCLen > 0.0001) {
+          const [nx, ny, nz] = bestCross;
+          // 严格将所有双键及关联取代基原子投影至最佳共平面 (使法向距离绝对为 0.000)
+          alkeneIndices.forEach(k => {
+            const rx = pos[k].x - pos[uIdx].x;
+            const ry = pos[k].y - pos[uIdx].y;
+            const rz = pos[k].z - pos[uIdx].z;
+            const dNorm = rx * nx + ry * ny + rz * nz;
+            pos[k].x -= nx * dNorm;
+            pos[k].y -= ny * dNorm;
+            pos[k].z -= nz * dNorm;
+          });
+
+          // 若双键碳端主要为氢原子或小分子（如乙烯 =CH2），规整化平面的 120° 对称分叉夹角
+          const fixFork = (centerIdx, otherDblIdx, neighborIndices) => {
+            if (neighborIndices.length === 2) {
+              const [i1, i2] = neighborIndices;
+              const isAllH = atomMap.get(compIds[i1]).element === 'H' && atomMap.get(compIds[i2]).element === 'H';
+              if (isAllH || compN <= 8) {
+                const uX = (pos[centerIdx].x - pos[otherDblIdx].x) / aLen;
+                const uY = (pos[centerIdx].y - pos[otherDblIdx].y) / aLen;
+                const uZ = (pos[centerIdx].z - pos[otherDblIdx].z) / aLen;
+
+                const wX = ny * uZ - nz * uY;
+                const wY = nz * uX - nx * uZ;
+                const wZ = nx * uY - ny * uX;
+                const wLen = Math.hypot(wX, wY, wZ);
+                if (wLen > 0.001) {
+                  const uwX = wX / wLen, uwY = wY / wLen, uwZ = wZ / wLen;
+                  const L1 = atomMap.get(compIds[i1]).element === 'H' ? 1.08 : 1.45;
+                  const L2 = atomMap.get(compIds[i2]).element === 'H' ? 1.08 : 1.45;
+                  const cos60 = 0.5, sin60 = Math.sqrt(3) / 2;
+
+                  const d1w = (pos[i1].x - pos[centerIdx].x) * uwX + (pos[i1].y - pos[centerIdx].y) * uwY + (pos[i1].z - pos[centerIdx].z) * uwZ;
+                  const s1 = d1w >= 0 ? 1 : -1;
+                  const s2 = -s1;
+
+                  pos[i1].x = pos[centerIdx].x + L1 * (cos60 * uX + s1 * sin60 * uwX);
+                  pos[i1].y = pos[centerIdx].y + L1 * (cos60 * uY + s1 * sin60 * uwY);
+                  pos[i1].z = pos[centerIdx].z + L1 * (cos60 * uZ + s1 * sin60 * uwZ);
+
+                  pos[i2].x = pos[centerIdx].x + L2 * (cos60 * uX + s2 * sin60 * uwX);
+                  pos[i2].y = pos[centerIdx].y + L2 * (cos60 * uY + s2 * sin60 * uwY);
+                  pos[i2].z = pos[centerIdx].z + L2 * (cos60 * uZ + s2 * sin60 * uwZ);
+                }
+              }
+            }
+          };
+
+          fixFork(uIdx, vIdx, uNeighbors);
+          fixFork(vIdx, uIdx, vNeighbors);
+        }
+      });
 
       // 将连通分子居中于局部原点
       let cx = 0, cy = 0, cz = 0;
@@ -855,6 +1249,305 @@ const ReactionScriptEngine = {
         });
       });
     }
+
+    // 最终阶段进行双键烯烃共平面几何强化
+    this.enforceAlkeneCoplanarity(step);
+  },
+
+  /**
+   * 严格保障烯烃 (碳碳双键及相连取代基) 空间共平面性
+   * 无论坐标是算法排布生成还是手动录入，只要含有碳碳双键，均强制消除二面角扭转破缺，
+   * 确保两端取代基 (如乙烯的两组 =CH2) 处于严格一致的几何平面内 (二面角 0.00°，平面法向偏离 0.000 Å)。
+   */
+  enforceAlkeneCoplanarity(step) {
+    if (!step || !Array.isArray(step.atoms) || !Array.isArray(step.bonds)) return;
+    const atomMap = new Map();
+    step.atoms.forEach(a => atomMap.set(a.id, a));
+
+    // 邻接表
+    const adj = new Map();
+    step.atoms.forEach(a => adj.set(a.id, []));
+    step.bonds.forEach(b => {
+      if (adj.has(b.atom1Id) && adj.has(b.atom2Id)) {
+        adj.get(b.atom1Id).push({ target: b.atom2Id, order: b.order || 1 });
+        adj.get(b.atom2Id).push({ target: b.atom1Id, order: b.order || 1 });
+      }
+    });
+
+    // 环键检测 (BFS 判断两原子之间是否存在其他路径)
+    const isRingBond = (uId, vId) => {
+      const visited = new Set([uId]);
+      const queue = [];
+      (adj.get(uId) || []).forEach(e => {
+        if (e.target !== vId) {
+          visited.add(e.target);
+          queue.push(e.target);
+        }
+      });
+      while (queue.length > 0) {
+        const curr = queue.shift();
+        if (curr === vId) return true;
+        (adj.get(curr) || []).forEach(edge => {
+          if (!visited.has(edge.target)) {
+            visited.add(edge.target);
+            queue.push(edge.target);
+          }
+        });
+      }
+      return false;
+    };
+
+    step.bonds.forEach(b => {
+      if (b.order === 2) {
+        const a1 = atomMap.get(b.atom1Id);
+        const a2 = atomMap.get(b.atom2Id);
+        if (!a1 || !a2) return;
+        // 碳碳双键 (烯烃核心)
+        if (a1.element === 'C' && a2.element === 'C') {
+          if (typeof a1.x !== 'number' || typeof a2.x !== 'number' || typeof a1.y !== 'number' || typeof a2.y !== 'number') return;
+
+          const uNeighs = (adj.get(a1.id) || []).filter(e => e.target !== a2.id).map(e => atomMap.get(e.target)).filter(Boolean);
+          const vNeighs = (adj.get(a2.id) || []).filter(e => e.target !== a1.id).map(e => atomMap.get(e.target)).filter(Boolean);
+
+          if (uNeighs.length === 0 && vNeighs.length === 0) return;
+
+          const inRing = isRingBond(a1.id, a2.id);
+          const uIsCH2 = uNeighs.length === 2 && uNeighs.every(n => n.element === 'H');
+          const vIsCH2 = vNeighs.length === 2 && vNeighs.every(n => n.element === 'H');
+
+          // 若双键处于小环内且两端都不是 =CH2 裸末端，不强行破坏环构型
+          if (inRing && !uIsCH2 && !vIsCH2) return;
+
+          const ax = a2.x - a1.x;
+          const ay = a2.y - a1.y;
+          const az = a2.z - a1.z;
+          const aLen = Math.hypot(ax, ay, az);
+          if (aLen < 0.001) return;
+          const ux = ax / aLen, uy = ay / aLen, uz = az / aLen;
+
+          // 计算各端法向量
+          const getNormal = (center, neighs) => {
+            if (neighs.length >= 2) {
+              const r1x = neighs[0].x - center.x, r1y = neighs[0].y - center.y, r1z = neighs[0].z - center.z;
+              const r2x = neighs[1].x - center.x, r2y = neighs[1].y - center.y, r2z = neighs[1].z - center.z;
+              const cx = r1y * r2z - r1z * r2y;
+              const cy = r1z * r2x - r1x * r2z;
+              const cz = r1x * r2y - r1y * r2x;
+              const clen = Math.hypot(cx, cy, cz);
+              if (clen > 0.001) return [cx / clen, cy / clen, cz / clen];
+            } else if (neighs.length === 1) {
+              const rx = neighs[0].x - center.x, ry = neighs[0].y - center.y, rz = neighs[0].z - center.z;
+              const cx = ry * uz - rz * uy;
+              const cy = rz * ux - rx * uz;
+              const cz = rx * uy - ry * ux;
+              const clen = Math.hypot(cx, cy, cz);
+              if (clen > 0.001) return [cx / clen, cy / clen, cz / clen];
+            }
+            return null;
+          };
+
+          const makePerp = (nVec) => {
+            const d = nVec[0] * ux + nVec[1] * uy + nVec[2] * uz;
+            const px = nVec[0] - d * ux, py = nVec[1] - d * uy, pz = nVec[2] - d * uz;
+            const l = Math.hypot(px, py, pz);
+            return l > 0.001 ? [px / l, py / l, pz / l] : null;
+          };
+
+          const nuRaw = getNormal(a1, uNeighs);
+          const nvRaw = getNormal(a2, vNeighs);
+          const nu = nuRaw ? makePerp(nuRaw) : null;
+          const nv = nvRaw ? makePerp(nvRaw) : null;
+
+          let planeNorm = null;
+          if (nu && nv) {
+            const dot = nu[0] * nv[0] + nu[1] * nv[1] + nu[2] * nv[2];
+            // 若两端二面角明显扭转 (如接近 90° 垂直结构)
+            if (Math.abs(dot) < 0.98) {
+              const uHeavy = uNeighs.filter(n => n.element !== 'H').length;
+              const vHeavy = vNeighs.filter(n => n.element !== 'H').length;
+              if (uHeavy > vHeavy) {
+                planeNorm = nu;
+              } else if (vHeavy > uHeavy) {
+                planeNorm = nv;
+              } else {
+                // 两端均为氢（如乙烯）：优先选用更靠近法向 Z 轴的平面，使分子在 XY 视野中平展
+                planeNorm = Math.abs(nu[2]) >= Math.abs(nv[2]) ? nu : nv;
+              }
+            } else {
+              const sign = dot >= 0 ? 1 : -1;
+              const sx = nu[0] + sign * nv[0], sy = nu[1] + sign * nv[1], sz = nu[2] + sign * nv[2];
+              const slen = Math.hypot(sx, sy, sz);
+              planeNorm = slen > 0.001 ? [sx / slen, sy / slen, sz / slen] : nu;
+            }
+          } else {
+            planeNorm = nu || nv;
+          }
+
+          if (!planeNorm) {
+            // 默认垂直于双键轴
+            planeNorm = Math.abs(uz) < 0.9 ? makePerp([0, 0, 1]) : makePerp([1, 0, 0]);
+          }
+
+          if (!planeNorm) return;
+          const [nx, ny, nz] = planeNorm;
+
+          // 将双键碳及其取代基原子严格投影至此共享平面 (零法向位移)
+          const allAlkeneAtoms = inRing ? [a1, a2, ...(uIsCH2 ? uNeighs : []), ...(vIsCH2 ? vNeighs : [])] : [a1, a2, ...uNeighs, ...vNeighs];
+          const midZ = (a1.x * nx + a1.y * ny + a1.z * nz + a2.x * nx + a2.y * ny + a2.z * nz) / 2;
+
+          allAlkeneAtoms.forEach(atom => {
+            const curDist = atom.x * nx + atom.y * ny + atom.z * nz;
+            const diff = curDist - midZ;
+            atom.x = +(atom.x - nx * diff).toFixed(2);
+            atom.y = +(atom.y - ny * diff).toFixed(2);
+            atom.z = +(atom.z - nz * diff).toFixed(2);
+          });
+
+          // 若两端碳上相连的取代基均为氢或小分子（如乙烯 =CH2），规整化平面的 120° 对称分叉夹角
+          const regularizeFork = (center, other, neighs) => {
+            if (neighs.length === 2) {
+              const isAllH = neighs[0].element === 'H' && neighs[1].element === 'H';
+              if (isAllH || (!inRing && step.atoms.length <= 16 && uNeighs.length + vNeighs.length <= 4)) {
+                const axisX = (center.x - other.x) / aLen;
+                const axisY = (center.y - other.y) / aLen;
+                const axisZ = (center.z - other.z) / aLen;
+
+                const wx = ny * axisZ - nz * axisY;
+                const wy = nz * axisX - nx * axisZ;
+                const wz = nx * axisY - ny * axisX;
+                const wLen = Math.hypot(wx, wy, wz);
+                if (wLen < 0.001) return;
+                const uwX = wx / wLen, uwY = wy / wLen, uwZ = wz / wLen;
+
+                const cos60 = 0.5, sin60 = Math.sqrt(3) / 2;
+                const L1 = neighs[0].element === 'H' ? 1.08 : 1.45;
+                const L2 = neighs[1].element === 'H' ? 1.08 : 1.45;
+
+                const d1w = (neighs[0].x - center.x) * uwX + (neighs[0].y - center.y) * uwY + (neighs[0].z - center.z) * uwZ;
+                const s1 = d1w >= 0 ? 1 : -1;
+                const s2 = -s1;
+
+                neighs[0].x = +(center.x + L1 * (cos60 * axisX + s1 * sin60 * uwX)).toFixed(2);
+                neighs[0].y = +(center.y + L1 * (cos60 * axisY + s1 * sin60 * uwY)).toFixed(2);
+                neighs[0].z = +(center.z + L1 * (cos60 * axisZ + s1 * sin60 * uwZ)).toFixed(2);
+
+                neighs[1].x = +(center.x + L2 * (cos60 * axisX + s2 * sin60 * uwX)).toFixed(2);
+                neighs[1].y = +(center.y + L2 * (cos60 * axisY + s2 * sin60 * uwY)).toFixed(2);
+                neighs[1].z = +(center.z + L2 * (cos60 * axisZ + s2 * sin60 * uwZ)).toFixed(2);
+              }
+            }
+          };
+
+          if (!inRing || uIsCH2) regularizeFork(a1, a2, uNeighs);
+          if (!inRing || vIsCH2) regularizeFork(a2, a1, vNeighs);
+        }
+      }
+    });
+
+    // 5元共轭二烯环 (如环戊二烯) 共面几何规整化
+    const atomIds = step.atoms.map(a => a.id);
+    const cycles5 = [];
+    const dfs5 = (curr, start, path, depth) => {
+      if (depth === 5) {
+        if ((adj.get(curr) || []).some(e => e.target === start)) {
+          const sorted = [...path].sort().join(',');
+          if (!cycles5.some(c => c.key === sorted)) {
+            cycles5.push({ key: sorted, path: [...path] });
+          }
+        }
+        return;
+      }
+      (adj.get(curr) || []).forEach(e => {
+        if (!path.includes(e.target)) {
+          dfs5(e.target, start, [...path, e.target], depth + 1);
+        }
+      });
+    };
+    atomIds.forEach(id => dfs5(id, id, [id], 1));
+
+    cycles5.forEach(({ path }) => {
+      let dblCount = 0;
+      for (let i = 0; i < 5; i++) {
+        const u = path[i], v = path[(i + 1) % 5];
+        const edge = (adj.get(u) || []).find(e => e.target === v);
+        if (edge && edge.order === 2) dblCount++;
+      }
+      if (dblCount >= 2) {
+        const ringAtoms = path.map(id => atomMap.get(id)).filter(a => a && typeof a.x === 'number');
+        if (ringAtoms.length < 5) return;
+
+        let nx = 0, ny = 0, nz = 0;
+        for (let i = 0; i < 5; i++) {
+          const cur = ringAtoms[i], next = ringAtoms[(i + 1) % 5];
+          nx += (cur.y - next.y) * (cur.z + next.z);
+          ny += (cur.z - next.z) * (cur.x + next.x);
+          nz += (cur.x - next.x) * (cur.y + next.y);
+        }
+        const nlen = Math.hypot(nx, ny, nz);
+        if (nlen < 0.001) return;
+        let norm = [nx / nlen, ny / nlen, nz / nlen];
+
+        // 若法向量接近 Z 轴 (|nz| > 0.5)，对齐至标准正交视野 [0, 0, 1]
+        if (Math.abs(norm[2]) > 0.5) {
+          norm = [0, 0, norm[2] >= 0 ? 1 : -1];
+        }
+
+        let cx = 0, cy = 0, cz = 0;
+        ringAtoms.forEach(a => { cx += a.x; cy += a.y; cz += a.z; });
+        cx /= 5; cy /= 5; cz /= 5;
+
+        const [unx, uny, unz] = norm;
+
+        // 将环骨架原子正交投影至环平面
+        ringAtoms.forEach(a => {
+          const d = (a.x - cx) * unx + (a.y - cy) * uny + (a.z - cz) * unz;
+          a.x = +(a.x - unx * d).toFixed(2);
+          a.y = +(a.y - uny * d).toFixed(2);
+          a.z = +(a.z - unz * d).toFixed(2);
+        });
+
+        // 环外取代基规整：sp2 氢在平面内，sp3 亚甲基两氢呈对称四面体分叉
+        ringAtoms.forEach(ra => {
+          const neighs = (adj.get(ra.id) || []).filter(e => !path.includes(e.target)).map(e => atomMap.get(e.target)).filter(Boolean);
+          if (neighs.length === 1 && neighs[0].element === 'H') {
+            const h = neighs[0];
+            const d = (h.x - cx) * unx + (h.y - cy) * uny + (h.z - cz) * unz;
+            h.x = +(h.x - unx * d).toFixed(2);
+            h.y = +(h.y - uny * d).toFixed(2);
+            h.z = +(h.z - unz * d).toFixed(2);
+          } else if (neighs.length === 2 && neighs.every(n => n.element === 'H')) {
+            const [hA, hB] = neighs;
+            const ringNeighs = (adj.get(ra.id) || []).filter(e => path.includes(e.target)).map(e => atomMap.get(e.target));
+            if (ringNeighs.length === 2) {
+              const midX = (ringNeighs[0].x + ringNeighs[1].x) / 2;
+              const midY = (ringNeighs[0].y + ringNeighs[1].y) / 2;
+              const midZ = (ringNeighs[0].z + ringNeighs[1].z) / 2;
+              let outX = ra.x - midX, outY = ra.y - midY, outZ = ra.z - midZ;
+              const outLen = Math.hypot(outX, outY, outZ);
+              if (outLen > 0.001) {
+                outX /= outLen; outY /= outLen; outZ /= outLen;
+                const dotN = outX * unx + outY * uny + outZ * unz;
+                outX -= dotN * unx; outY -= dotN * uny; outZ -= dotN * unz;
+                const oL = Math.hypot(outX, outY, outZ);
+                if (oL > 0.001) {
+                  outX /= oL; outY /= oL; outZ /= oL;
+                  const L_proj = 1.09 * Math.cos(54.7 * Math.PI / 180);
+                  const H_h = 1.09 * Math.sin(54.7 * Math.PI / 180);
+
+                  hA.x = +(ra.x + L_proj * outX + H_h * unx).toFixed(2);
+                  hA.y = +(ra.y + L_proj * outY + H_h * uny).toFixed(2);
+                  hA.z = +(ra.z + L_proj * outZ + H_h * unz).toFixed(2);
+
+                  hB.x = +(ra.x + L_proj * outX - H_h * unx).toFixed(2);
+                  hB.y = +(ra.y + L_proj * outY - H_h * uny).toFixed(2);
+                  hB.z = +(ra.z + L_proj * outZ - H_h * unz).toFixed(2);
+                }
+              }
+            }
+          }
+        });
+      }
+    });
   },
 
   /**
