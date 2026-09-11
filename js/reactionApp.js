@@ -387,6 +387,9 @@ class ReactionApp {
     let startWidth = 420;
 
     const onMouseDown = (e) => {
+      // 竖屏与窄屏移动端禁用横向调节柄
+      if (window.matchMedia('(orientation: portrait), (max-width: 820px)').matches) return;
+
       isResizing = true;
       startX = e.clientX;
       startWidth = this.workspaceSidebar.getBoundingClientRect().width;
@@ -528,16 +531,21 @@ class ReactionApp {
       this.prevBtn.addEventListener('click', () => {
         this.pause();
         this.prevStep();
+        if (this.prevBtn) this.prevBtn.blur();
       });
     }
     if (this.nextBtn) {
       this.nextBtn.addEventListener('click', () => {
         this.pause();
         this.nextStep();
+        if (this.nextBtn) this.nextBtn.blur();
       });
     }
     if (this.playBtn) {
-      this.playBtn.addEventListener('click', () => this.togglePlay());
+      this.playBtn.addEventListener('click', () => {
+        this.togglePlay();
+        if (this.playBtn) this.playBtn.blur();
+      });
     }
     if (this.resetStepBtn) {
       this.resetStepBtn.addEventListener('click', () => {
@@ -714,13 +722,22 @@ class ReactionApp {
 
   toggleWorkspace(open) {
     if (!this.workspaceSidebar) return;
+    const mainWorkspace = document.querySelector('.main-workspace');
     if (open) {
       this.workspaceSidebar.classList.remove('collapsed');
+      if (mainWorkspace) mainWorkspace.classList.remove('sidebar-collapsed');
       if (this.btnExpandWorkspace) this.btnExpandWorkspace.classList.remove('visible');
     } else {
       this.workspaceSidebar.classList.add('collapsed');
+      if (mainWorkspace) mainWorkspace.classList.add('sidebar-collapsed');
       if (this.btnExpandWorkspace) this.btnExpandWorkspace.classList.add('visible');
     }
+    setTimeout(() => {
+      if (this.renderer && typeof this.renderer.resize === 'function') {
+        this.renderer.resize();
+        this.renderer.render();
+      }
+    }, 360);
   }
 
   loadReaction(reactionIndex) {
@@ -851,15 +868,37 @@ class ReactionApp {
     // 滚动并高亮当前步骤卡片
     if (this.stepsListContainer) {
       const cards = this.stepsListContainer.querySelectorAll('.step-item-card');
+      let activeCard = null;
       cards.forEach((c, idx) => {
         c.classList.remove('active', 'completed');
         if (idx === stepIndex) {
           c.classList.add('active');
-          c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          activeCard = c;
         } else if (idx < stepIndex) {
           c.classList.add('completed');
         }
       });
+
+      // 仅在步骤选项卡当前处于激活状态时，平滑在内部容器内微调滚动，严禁触发外层视口或窗口的累积位移 (Zero CLS)
+      if (activeCard && this.activeTab === 'steps' && this.workspaceContent) {
+        const container = this.workspaceContent;
+        const cardRect = activeCard.getBoundingClientRect();
+        const contRect = container.getBoundingClientRect();
+        const offsetTop = cardRect.top - contRect.top;
+        const offsetBottom = cardRect.bottom - contRect.bottom;
+        const pad = 10;
+        if (offsetTop < pad) {
+          container.scrollTo({
+            top: container.scrollTop + offsetTop - pad,
+            behavior: 'smooth'
+          });
+        } else if (offsetBottom > -pad) {
+          container.scrollTo({
+            top: container.scrollTop + offsetBottom + pad,
+            behavior: 'smooth'
+          });
+        }
+      }
     }
 
     // 更新时间轴胶囊

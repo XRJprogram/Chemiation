@@ -81,15 +81,57 @@ class Pseudo3DRenderer {
     window.addEventListener('resize', () => this.resize());
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
+    let pinchStartDist = 0;
+    let pinchStartZoom = 78;
+
     const onPointerDown = (e) => {
+      if (e.touches) {
+        if (e.touches.length === 2) {
+          this.isDragging = false;
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          pinchStartDist = Math.hypot(dx, dy);
+          pinchStartZoom = this.targetZoom;
+          return;
+        } else if (e.touches.length === 1) {
+          this.isDragging = true;
+          this.lastMouseX = e.touches[0].clientX;
+          this.lastMouseY = e.touches[0].clientY;
+          pinchStartDist = 0;
+          return;
+        }
+      }
       this.isDragging = true;
-      this.lastMouseX = e.clientX || (e.touches && e.touches[0].clientX);
-      this.lastMouseY = e.clientY || (e.touches && e.touches[0].clientY);
+      this.lastMouseX = e.clientX;
+      this.lastMouseY = e.clientY;
     };
 
     const onPointerMove = (e) => {
-      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      if (e.touches) {
+        if (e.touches.length === 2 && pinchStartDist > 0) {
+          this.isDragging = false;
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const dist = Math.hypot(dx, dy);
+          const factor = dist / pinchStartDist;
+          this.targetZoom = Math.max(30, Math.min(220, pinchStartZoom * factor));
+          return;
+        }
+        if (this.isDragging && e.touches.length === 1) {
+          const clientX = e.touches[0].clientX;
+          const clientY = e.touches[0].clientY;
+          const dx = clientX - this.lastMouseX;
+          const dy = clientY - this.lastMouseY;
+          this.targetRotY += dx * 0.008;
+          this.targetRotX += dy * 0.008;
+          this.lastMouseX = clientX;
+          this.lastMouseY = clientY;
+          return;
+        }
+      }
+
+      const clientX = e.clientX;
+      const clientY = e.clientY;
 
       if (this.isDragging && clientX !== undefined && clientY !== undefined) {
         const dx = clientX - this.lastMouseX;
@@ -106,8 +148,16 @@ class Pseudo3DRenderer {
       }
     };
 
-    const onPointerUp = () => {
-      this.isDragging = false;
+    const onPointerUp = (e) => {
+      if (e.touches && e.touches.length === 1) {
+        this.isDragging = true;
+        this.lastMouseX = e.touches[0].clientX;
+        this.lastMouseY = e.touches[0].clientY;
+        pinchStartDist = 0;
+      } else {
+        this.isDragging = false;
+        pinchStartDist = 0;
+      }
     };
 
     this.canvas.addEventListener('mousedown', onPointerDown);
@@ -117,6 +167,7 @@ class Pseudo3DRenderer {
     this.canvas.addEventListener('touchstart', onPointerDown, { passive: true });
     window.addEventListener('touchmove', onPointerMove, { passive: true });
     window.addEventListener('touchend', onPointerUp);
+    window.addEventListener('touchcancel', onPointerUp);
 
     this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
