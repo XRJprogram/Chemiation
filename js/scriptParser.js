@@ -761,7 +761,12 @@ const ReactionScriptEngine = {
    */
   autoLayoutStep(step) {
     if (!step || !step.atoms || step.atoms.length === 0) return;
-    this.completeImplicitHydrogens(step);
+
+    // 仅当步骤处于自动隐式氢模式 (hydrogensMode: 'auto') 时在空间排布前补全氢原子；
+    // 若所有原子均已有完整明确的三维坐标，严禁无故注入未定位氢原子并破坏现有高精度构型
+    if (step.hydrogensMode === 'auto') {
+      this.completeImplicitHydrogens(step);
+    }
 
     // 检查是否有缺失坐标的原子或无效数值
     const needLayout = step.atoms.some(a => a.x === null || a.y === null || a.z === null || typeof a.x !== 'number' || typeof a.y !== 'number' || typeof a.z !== 'number' || isNaN(a.x) || isNaN(a.y) || isNaN(a.z));

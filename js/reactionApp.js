@@ -5,7 +5,7 @@
 
 class ReactionApp {
   constructor() {
-    this.storageKey = 'chemiation_reactions_v11';
+    this.storageKey = 'chemiation_reactions_v12';
     this.langStorageKey = 'chemiation_lang_preference';
     this.lang = this.loadLanguagePreference();
     this.presets = this.loadInitialPresets();

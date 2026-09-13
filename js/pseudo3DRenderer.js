@@ -212,6 +212,75 @@ class Pseudo3DRenderer {
       return;
     }
 
+    // 若已经处于当前步骤且无正在播放的过渡动画，无需重复触发
+    if (!this.nextStepData && this.currentStepData === stepData && this.transitionProgress >= 1) {
+      return;
+    }
+
+    // 若当前已在向该目标步骤过渡且动画尚未完成，保持当前平滑过渡即可，无需重复打断
+    if (this.nextStepData === stepData && this.transitionProgress < 1) {
+      return;
+    }
+
+    // 若当前正在播放过渡动画中途被打断（从 Step A 走向 Step B 时用户点击了 Step C / 或跳回 Step A）：
+    // 必须从当前空中精准插值出来的瞬时三维姿态无缝接管，杜绝回弹骤变到 Step A
+    if (this.nextStepData && this.transitionProgress < 1) {
+      // 获取当前精确毫秒的瞬时动画进度
+      const now = performance.now();
+      const elapsed = now - this.transitionStartTime;
+      const rawProgress = Math.min(1, Math.max(0, elapsed / this.transitionDuration));
+      if (rawProgress >= 1) {
+        // 上一段动画在物理时间上已完成
+        this.currentStepData = this.nextStepData;
+        this.nextStepData = null;
+        this.transitionProgress = 1;
+      } else {
+        this.transitionProgress = rawProgress * rawProgress * (3 - 2 * rawProgress);
+        const currentScene = this.getInterpolatedScene();
+
+        // 提取空中原子三维坐标
+        const targetAtomIds = new Set((stepData.atoms || []).map(a => a.id));
+        const midAtoms = (currentScene.atoms || [])
+          .filter(a => targetAtomIds.has(a.id) || (a.opacity === undefined || a.opacity > 0.15))
+          .map(a => ({
+            id: a.id,
+            element: a.element,
+            x: a.x,
+            y: a.y,
+            z: a.z,
+            radical: a.radical,
+            charge: a.charge
+          }));
+
+        // 参照拓扑：前半程以原当前步骤为基准，后半程以过渡目标步骤为基准
+        const baseStep = this.transitionProgress >= 0.5 ? this.nextStepData : this.currentStepData;
+        const midAtomIdSet = new Set(midAtoms.map(a => a.id));
+        const validMidBonds = (baseStep.bonds || [])
+          .filter(b => {
+            const id1 = b.atom1Id || b.atom1;
+            const id2 = b.atom2Id || b.atom2;
+            return midAtomIdSet.has(id1) && midAtomIdSet.has(id2);
+          })
+          .map(b => ({
+            atom1Id: b.atom1Id || b.atom1,
+            atom2Id: b.atom2Id || b.atom2,
+            order: b.order || 1
+          }));
+
+        const midAromatic = baseStep.aromatic ? JSON.parse(JSON.stringify(baseStep.aromatic)) : null;
+        const midPolymer = baseStep.polymer ? JSON.parse(JSON.stringify(baseStep.polymer)) : null;
+
+        this.currentStepData = {
+          ...baseStep,
+          name: `(过渡中) ${baseStep.name || ''}`,
+          atoms: midAtoms,
+          bonds: validMidBonds,
+          aromatic: midAromatic,
+          polymer: midPolymer
+        };
+      }
+    }
+
     this.nextStepData = stepData;
     this.transitionProgress = 0;
     this.transitionStartTime = performance.now();
@@ -254,7 +323,7 @@ class Pseudo3DRenderer {
 
     if (this.transitionProgress < 1 && this.nextStepData) {
       const elapsed = now - this.transitionStartTime;
-      const rawProgress = Math.min(1, elapsed / this.transitionDuration);
+      const rawProgress = Math.min(1, Math.max(0, elapsed / this.transitionDuration));
       // 三次平滑缓动
       this.transitionProgress = rawProgress * rawProgress * (3 - 2 * rawProgress);
 

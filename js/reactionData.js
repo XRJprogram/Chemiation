@@ -762,10 +762,10 @@ const REACTION_PRESETS = [
         atoms: [
           { id: "C1", element: "C", x: -1.0, y: 1.2, z: 0.0 },
           { id: "C2", element: "C", x: 0.1, y: 0.6, z: 0.0 },
-          { id: "C3", element: "C", x: 0.1, y: -0.7, z: 0.0, charge: 1 },
+          { id: "C3", element: "C", x: 0.1, y: -0.7, z: 0.0 },
           { id: "C4", element: "C", x: -1.1, y: -1.4, z: 0.0 },
           { id: "C5", element: "C", x: -2.3, y: -0.7, z: 0.0 },
-          { id: "C6", element: "C", x: -2.3, y: 0.6, z: 0.0 },
+          { id: "C6", element: "C", x: -2.3, y: 0.6, z: 0.0, charge: 1 },
 
           { id: "H1", element: "H", x: -0.3, y: 1.7, z: -0.7 },
           { id: "H2", element: "H", x: 1.0, y: 1.1, z: 0.0 },
@@ -774,9 +774,9 @@ const REACTION_PRESETS = [
           { id: "H5", element: "H", x: -3.2, y: -1.2, z: 0.0 },
           { id: "H6", element: "H", x: -3.2, y: 1.1, z: 0.0 },
 
-          { id: "N1", element: "N", x: -1.3, y: 2.3, z: 0.6 },
+          { id: "N1", element: "N", x: -1.3, y: 2.3, z: 0.6, charge: 1 },
           { id: "O1", element: "O", x: -2.1, y: 3.0, z: 0.9 },
-          { id: "O2", element: "O", x: -0.6, y: 2.9, z: 0.7 },
+          { id: "O2", element: "O", x: -0.5, y: 3.1, z: 0.8, charge: -1 },
 
           { id: "O3", element: "O", x: 2.2, y: -0.6, z: -0.2, charge: -1 },
           { id: "H7", element: "H", x: 2.8, y: -0.2, z: 0.1 }
