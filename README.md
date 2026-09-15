@@ -1,3 +1,112 @@
+<div align="center">
+
+# Chemiation · Chemical Reaction Principle & Mechanism Studio
+### 化学反应机理推演工坊
+
+<p align="center">
+  <a href="#-english-default"><b>English</b></a> &nbsp;|&nbsp; <a href="#-简体中文-chinese"><b>简体中文</b></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-English%20%7C%20%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-blue" alt="Language">
+  <img src="https://img.shields.io/badge/Canvas-Pure%20HTML5-success" alt="HTML5 Canvas">
+  <img src="https://img.shields.io/badge/License-MIT-orange" alt="License">
+</p>
+
+---
+
+</div>
+
+<details open id="english-default">
+<summary><h3>🌐 English Version (Default / Click to collapse)</h3></summary>
+
+<br/>
+
+# Chemiation · Chemical Reaction Principle & Mechanism Studio
+
+> **Chemiation** is an interactive, lightweight chemical reaction mechanism simulation and dynamic visualization platform built on pure HTML5 Canvas. It renders elementary reaction dynamics in a pseudo-3D perspective—molecular approach, bond dissociation and coordination, transition state and reactive intermediate evolution, as well as polymer stereocenter backbone elongation.
+
+---
+
+## 🌟 Key Features
+
+1. **Interactive 3D Mechanism Animations**:
+   - Free 360° orbital rotation, smooth zooming, pan controls, and instant viewpoint reset.
+   - Continuous playback without redundant pause intervals, smoothly linking elementary reaction steps.
+   - Seamless **in-flight transition redirection**: switching steps mid-animation smoothly takes over from the instantaneous 3D atom coordinates without visual snapbacks.
+
+2. **Refined Typography & Chemical Bonding**:
+   - Standard CPK element color palette with depth-cue shading; bonds dynamically contour atom radii with crisp spatial hierarchy.
+   - Standardized notation supporting single bonds, double bonds, triple bonds, radical unpaired electrons (`·`), and formal charges (`⊕` / `⊖`).
+
+3. **Strict Mass & Element Conservation**:
+   - Every reaction step strictly obeys atom conservation. Fully traces hydrogen transfers and small-molecule byproducts, eliminating floating or missing atoms.
+
+4. **Polymer Bracket & Monomer View**:
+   - Native support for repeating unit `[ ]ₙ` annotations. Polymer backbones dynamically extend toward the nearest viewport margins during rotation, preventing crossed or distorted bond lines.
+   - Ability to designate backbone atoms and exclude condensation byproducts (such as $H_2O$).
+
+5. **CCPL Scripting Engine & Automatic 3D Coordinate Solver**:
+   - Built-in declarative Chemical Coordinate & Process Language (CCPL). Automatically computes 3D molecular conformations from bond connectivity without requiring manual Cartesian coordinates.
+   - Supports LaTeX-style chemical notations (e.g., `CH_3COOH`, `CO_2`, `N_2 + 3H_2 <=> 2NH_3`, `[C_6H_{10}O_5]_n`).
+   - Integrated in-browser editor with syntax highlighting, line numbers, error diagnostics, and full-screen workspace mode.
+
+6. **Bilingual Support & Interactive Documentation**:
+   - Instant one-click English/Chinese interface toggle with persistent local preference storage.
+   - Interactive syntax manual button automatically links to the corresponding language documentation ([`docs_en.html`](docs_en.html) / [`docs.html`](docs.html)).
+
+---
+
+## 🧪 Built-in Reaction Mechanisms
+
+- **Fischer Esterification (Acetic Acid & Ethanol)**: Nucleophilic acyl addition, tetrahedral intermediate, and water elimination.
+- **Artificial Synthesis of Starch from CO₂ (ASAP Mechanism)**: Catalytic hydrogenation, C-C bond coupling, triose isomerization, and glycosidic condensation.
+- **NBS Allylic Free-Radical Bromination**: Radical initiation, delocalized allylic resonance intermediates, and chain propagation.
+- **Haber-Bosch Ammonia Synthesis**: High-barrier triple-bond dissociation, surface adsorption, and step-wise catalytic hydrogenation.
+- **Diels-Alder [4+2] Cycloaddition**: Concerted pericyclic cycloaddition of cyclopentadiene and ethylene into a rigid bicyclo[2.2.1]heptene (norbornene) scaffold.
+- **Electrophilic Aromatic Substitution (Benzene Nitration)**: Generation of nitronium electrophile ($NO_2^+$), Wheland $\sigma$-complex intermediate formation, and proton elimination restoring aromaticity.
+
+---
+
+## 📂 Project Structure
+
+| File | Description |
+| :--- | :--- |
+| [`index.html`](index.html) | Main application entry: 3D viewport, step timeline track, and CCPL script editor |
+| [`docs.html`](docs.html) | CCPL Syntax & Reference Manual (Chinese) |
+| [`docs_en.html`](docs_en.html) | CCPL Syntax & Reference Manual (English) |
+| [`css/chemiation.css`](css/chemiation.css) | Core styles, responsive layout, and code editor theme |
+| [`js/pseudo3DRenderer.js`](js/pseudo3DRenderer.js) | Pseudo-3D canvas renderer, lighting/shading, in-flight transition interpolation, and polymer bracket projection |
+| [`js/reactionData.js`](js/reactionData.js) | Pre-baked reaction mechanism presets, element properties, and bond topology datasets |
+| [`js/scriptParser.js`](js/scriptParser.js) | CCPL parser, 3D automatic spatial layout solver, and serializer |
+| [`js/reactionApp.js`](js/reactionApp.js) | Main application orchestrator, event bus, timeline manager, and i18n controller |
+
+---
+
+## 🚀 Quick Start
+
+Chemiation is a pure client-side static web application with zero external runtime dependencies, build pipelines, or compile steps:
+
+1. **Direct Launch**: Open [`index.html`](index.html) in any modern web browser.
+2. **Local Static Server**:
+   ```bash
+   npx serve .
+   # or
+   python -m http.server 8080
+   ```
+3. **Deployment**: Host effortlessly on GitHub Pages, Cloudflare Pages, Vercel, or any static hosting service.
+
+<br/>
+
+</details>
+
+<br/>
+
+<details id="chinese-version">
+<summary><h3>🇨🇳 简体中文版本 (点击展开 / Click to expand)</h3></summary>
+
+<br/>
+
 # Chemiation · 化学反应机理推演工坊
 
 > **Chemiation** 是一个基于原生 Canvas 的化学反应机理推演与动态可视化工具，通过三维视角直观呈现分子靠近、化学键断裂与重组、中间体演化及高分子聚合的全流程。
@@ -7,8 +116,9 @@
 ## 🌟 核心特性
 
 1. **三维机理动画**：
-   - 支持 360° 旋转、平滑缩放与视角复位，直观展现断键、成键与原子迁移过程。
+   - 支持 360° 自由旋转、平滑缩放与视角复位，直观展现断键、成键与原子迁移过程。
    - 连续播放无等待间隔，流畅衔接各基元反应步骤。
+   - 支持**瞬时空中过渡接管**：动画中途切换步骤时，直接从空中瞬时坐标平滑转向新目标，杜绝视觉回跳。
 
 2. **清晰的符号与化学键排印**：
    - 采用标准元素符号与景深色阶，化学键自动贴合原子轮廓，层次分明。
@@ -27,7 +137,7 @@
    - 提供代码高亮、行号对齐、错误定位提示与全屏编写模式。
 
 6. **中英双语与文档**：
-   - 界面文字支持中英文一键切换，点击语法手册自动打开对应语言的完整文档。
+   - 界面文字支持中英文一键切换，点击语法手册自动打开对应语言的完整文档（[`docs.html`](docs.html) / [`docs_en.html`](docs_en.html)）。
 
 ---
 
@@ -38,6 +148,7 @@
 - **NBS 烯丙基自由基溴代**：引发生成溴自由基、离域烯丙基共振体与链传递
 - **哈伯-博施法合成氨**：高键能分子解离活化与催化加氢
 - **环戊二烯与乙烯狄尔斯-阿尔德加成**：$[4+2]$ 协同环加成与双环降冰片烯立体桥环构型
+- **苯的亲电芳香取代硝化反应**：亲电试剂产生、Wheland 络合物（芳基碳正离子中间体）形成与质子消除恢复芳香性
 
 ---
 
@@ -69,3 +180,6 @@
    ```
 3. **部署**：可直接托管于 GitHub Pages 等任意静态站点服务。
 
+<br/>
+
+</details>
