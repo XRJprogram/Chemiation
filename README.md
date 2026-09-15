@@ -72,6 +72,8 @@
 
 | File | Description |
 | :--- | :--- |
+| [`package.json`](package.json) | npm package configuration, metadata, scripts, and exports |
+| [`index.js`](index.js) | npm entry point exporting `Pseudo3DRenderer`, `ReactionScriptEngine`, and `REACTION_PRESETS` |
 | [`index.html`](index.html) | Main application entry: 3D viewport, step timeline track, and CCPL script editor |
 | [`docs.html`](docs.html) | CCPL Syntax & Reference Manual (Chinese) |
 | [`docs_en.html`](docs_en.html) | CCPL Syntax & Reference Manual (English) |
@@ -85,16 +87,19 @@
 
 ## 🚀 Quick Start
 
-Chemiation is a pure client-side static web application with zero external runtime dependencies, build pipelines, or compile steps:
+Chemiation can be run directly or managed via npm:
 
-1. **Direct Launch**: Open [`index.html`](index.html) in any modern web browser.
-2. **Local Static Server**:
+1. **Direct Launch**: Open [`index.html`](index.html) directly in any modern web browser.
+2. **Via npm**:
    ```bash
-   npx serve .
-   # or
+   npm start   # Launch local preview server (npx serve)
+   npm test    # Run module & preset integrity verification tests
+   ```
+3. **Local Static Server (Alternative)**:
+   ```bash
    python -m http.server 8080
    ```
-3. **Deployment**: Host effortlessly on GitHub Pages, Cloudflare Pages, Vercel, or any static hosting service.
+4. **Deployment**: Host effortlessly on GitHub Pages, Cloudflare Pages, Vercel, or any static hosting service.
 
 <br/>
 
@@ -156,6 +161,8 @@ Chemiation is a pure client-side static web application with zero external runti
 
 | 文件 | 说明 |
 | :--- | :--- |
+| [`package.json`](package.json) | npm 包配置文件、元数据、脚本与导出定义 |
+| [`index.js`](index.js) | npm 入口文件，导出 `Pseudo3DRenderer`、`ReactionScriptEngine` 及 `REACTION_PRESETS` |
 | [`index.html`](index.html) | 主界面，包含三维视口、步骤时序轨道与 CCPL 脚本编辑器 |
 | [`docs.html`](docs.html) | CCPL 语法手册（中文版） |
 | [`docs_en.html`](docs_en.html) | CCPL 语法手册（英文版） |
@@ -169,16 +176,19 @@ Chemiation is a pure client-side static web application with zero external runti
 
 ## 🚀 快速开始
 
-本项目为纯前端静态 Web 应用，无需编译构建环境：
+本项目既可直接静态运行，也可通过 npm 进行管理与调试：
 
 1. **直接运行**：用现代浏览器打开 [`index.html`](index.html) 即可。
-2. **本地静态服务**：
+2. **通过 npm 启动与测试**：
    ```bash
-   npx serve .
-   # 或
+   npm start   # 启动本地静态预览服务器 (npx serve)
+   npm test    # 运行模块完整性与预设机理验证测试
+   ```
+3. **本地静态服务（备选）**：
+   ```bash
    python -m http.server 8080
    ```
-3. **部署**：可直接托管于 GitHub Pages 等任意静态站点服务。
+4. **部署**：可直接托管于 GitHub Pages 等任意静态站点服务。
 
 <br/>
 

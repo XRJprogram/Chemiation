@@ -1,0 +1,42 @@
+{
+  "name": "@xrjprogram/chemiation",
+  "version": "1.0.0",
+  "description": "Chemical reaction principle and mechanism simulation studio with interactive pseudo-3D canvas visualization",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve .",
+    "test": "node test/test.js"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "chemistry",
+    "chemical-reactions",
+    "reaction-mechanism",
+    "molecular-visualization",
+    "canvas",
+    "pseudo-3d",
+    "ccpl"
+  ],
+  "author": "XRJprogram",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/XRJprogram/Chemiation.git"
+  },
+  "bugs": {
+    "url": "https://github.com/XRJprogram/Chemiation/issues"
+  },
+  "homepage": "https://github.com/XRJprogram/Chemiation#readme",
+  "files": [
+    "index.js",
+    "js/",
+    "css/",
+    "index.html",
+    "docs.html",
+    "docs_en.html",
+    "README.md"
+  ]
+}
