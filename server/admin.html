@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemiation · 服务器管理控制台 (Server Management Console)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/chemiation.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <style>
+    body {
+      background-color: #f7f3e8;
+      color: #3b281c;
+      overflow-y: auto;
+      height: auto;
+      position: static;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    .admin-container {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(94, 65, 47, 0.05);
+    }
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .admin-logo-badge {
+      background: var(--color-accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+    .admin-brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-dark-brown);
+      margin: 0;
+    }
+    .admin-brand p {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin: 2px 0 0;
+    }
+    .admin-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .stat-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(94, 65, 47, 0.04);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--color-accent);
+    }
+    .stat-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stat-card-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-dark-brown);
+      font-family: var(--font-code);
+    }
+    .stat-card-sub {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 6px;
+    }
+    .admin-tabs-bar {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+    }
+    .admin-tab-btn {
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-deep-brown);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-tab-btn:hover {
+      background: rgba(94, 65, 47, 0.06);
+    }
+    .admin-tab-btn.active {
+      background: rgba(184, 74, 40, 0.12);
+      color: var(--color-accent);
+      border-color: rgba(184, 74, 40, 0.3);
+    }
+    .admin-panel {
+      display: none;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(94, 65, 47, 0.05);
+    }
+    .admin-panel.active {
+      display: block;
+    }
+    .panel-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .panel-search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #faf6ea;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 12px;
+      width: 320px;
+      max-width: 100%;
+      transition: all 0.16s ease;
+      box-shadow: 0 1px 3px rgba(94, 65, 47, 0.05);
+    }
+    .panel-search-box:hover {
+      background: #fff;
+      border-color: var(--border-focus);
+      box-shadow: 0 2px 6px rgba(94, 65, 47, 0.08);
+    }
+    .panel-search-box:focus-within {
+      background: #fff;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 2px rgba(184, 74, 40, 0.18);
+    }
+    .panel-search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      color: var(--color-dark-brown);
+      width: 100%;
+    }
+    .form-select,
+    .admin-select {
+      height: 36px;
+      padding: 6px 32px 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-dark-brown);
+      background-color: #faf6ea;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235e412f' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 13px 13px;
+      transition: all 0.16s ease;
+      box-sizing: border-box;
+    }
+    .form-select:hover,
+    .admin-select:hover {
+      background-color: #fff;
+      border-color: var(--border-focus);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b84a28' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+    .form-select:focus,
+    .admin-select:focus {
+      background-color: #fff;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 2px rgba(184, 74, 40, 0.18);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b84a28' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+    .form-select option,
+    .admin-select option {
+      background: #fff;
+      color: var(--color-dark-brown);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .admin-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    .admin-table th {
+      background: #f5eedc;
+      padding: 12px 14px;
+      font-weight: 700;
+      color: var(--color-dark-brown);
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(94, 65, 47, 0.08);
+      vertical-align: middle;
+    }
+    .admin-table tr:hover {
+      background: rgba(184, 74, 40, 0.03);
+    }
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .role-badge.admin {
+      background: rgba(184, 74, 40, 0.15);
+      color: var(--color-accent);
+      border: 1px solid rgba(184, 74, 40, 0.3);
+    }
+    .role-badge.user {
+      background: rgba(94, 65, 47, 0.08);
+      color: var(--color-deep-brown);
+      border: 1px solid rgba(94, 65, 47, 0.2);
+    }
+    .user-avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f0e8d5;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-right: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .btn-action-sm {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(94, 65, 47, 0.05);
+      color: var(--color-deep-brown);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+    .btn-action-sm:hover {
+      background: rgba(184, 74, 40, 0.1);
+      color: var(--color-accent);
+      border-color: rgba(184, 74, 40, 0.3);
+    }
+    .btn-action-danger {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid rgba(220, 53, 69, 0.3);
+      background: rgba(220, 53, 69, 0.06);
+      color: #c82333;
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+    .btn-action-danger:hover {
+      background: #c82333;
+      color: #fff;
+    }
+    .log-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: var(--font-code);
+      font-weight: 700;
+    }
+    .log-badge.USER_REGISTER { background: #e3f2fd; color: #1565c0; }
+    .log-badge.USER_LOGIN { background: #e8f5e9; color: #2e7d32; }
+    .log-badge.REPO_CREATE { background: #fff3e0; color: #e65100; }
+    .log-badge.REPO_UPDATE { background: #f3e5f5; color: #7b1fa2; }
+    .log-badge.REPO_DELETE { background: #ffebee; color: #c62828; }
+    .log-badge.SYSTEM_INIT { background: #efebe9; color: #4e342e; }
+
+    /* Script modal viewer */
+    .script-viewer-pre {
+      background: #2b2520;
+      color: #f7f3e8;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: var(--font-code);
+      font-size: 12px;
+      line-height: 1.6;
+      max-height: 480px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <!-- 顶部导航栏 -->
+    <header class="admin-header">
+      <div class="admin-brand">
+        <span class="admin-logo-badge">SERVER HOST</span>
+        <div>
+          <h1>Chemiation · 服务器管理控制台</h1>
+          <p>实时监控本地服务器状态、审计注册用户与全局机理仓库</p>
+        </div>
+      </div>
+      <div class="admin-header-actions">
+        <span id="admin-user-info" style="font-size: 12px; font-weight: 600; color: var(--color-dark-brown); background: rgba(94,65,47,0.06); padding: 4px 8px; border-radius: 6px;">检查管理员登录...</span>
+        <button id="btn-admin-auth" class="header-lang-btn" style="display: none; background: var(--color-accent); color: #fff;">登录管理账号</button>
+        <button id="btn-admin-logout" class="header-lang-btn" style="display: none; color: #c82333;">退出管理</button>
+        <button id="btn-refresh-data" class="header-lang-btn" title="刷新服务器实时指标">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          刷新数据
+        </button>
+        <a href="index.html" class="header-docs-btn" title="返回推演主工作区">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          返回前台推演工坊
+        </a>
+      </div>
+    </header>
+
+    <!-- 顶部核心指标卡片 -->
+    <div class="stat-cards-grid">
+      <div class="stat-card">
+        <div class="stat-card-title">
+          <span>注册用户总数</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div id="stat-users-count" class="stat-card-value">--</div>
+        <div class="stat-card-sub" id="stat-users-sub">本地服务器注册账户</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-title">
+          <span>存储机理总数</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31L4.54 19.34C3.82 20.35 4.54 22 5.79 22h12.42c1.25 0 1.97-1.65 1.25-2.66L14 9.31V2h-4z"></path></svg>
+        </div>
+        <div id="stat-reactions-count" class="stat-card-value">--</div>
+        <div class="stat-card-sub" id="stat-reactions-sub">公开与私有反应模型</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-title">
+          <span>持久化存储占用</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+        </div>
+        <div id="stat-storage-size" class="stat-card-value">--</div>
+        <div class="stat-card-sub">server/data/*.json 原子文件库</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-title">
+          <span>服务器运行时间</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div id="stat-uptime" class="stat-card-value">--</div>
+        <div class="stat-card-sub" id="stat-node-ver">Node.js 极简原生架构</div>
+      </div>
+    </div>
+
+    <!-- 标签切换栏 -->
+    <div class="admin-tabs-bar">
+      <button class="admin-tab-btn active" data-tab="tab-users" style="display: inline-flex; align-items: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        <span>用户管理与资料审计</span> (<span id="tab-users-badge">0</span>)
+      </button>
+      <button class="admin-tab-btn" data-tab="tab-reactions" style="display: inline-flex; align-items: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31L4.54 19.34C3.82 20.35 4.54 22 5.79 22h12.42c1.25 0 1.97-1.65 1.25-2.66L14 9.31V2h-4z"></path></svg>
+        <span>全局反应机理仓库</span> (<span id="tab-reactions-badge">0</span>)
+      </button>
+      <button class="admin-tab-btn" data-tab="tab-logs" style="display: inline-flex; align-items: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        <span>系统活动审计日志</span> (<span id="tab-logs-badge">0</span>)
+      </button>
+      <button class="admin-tab-btn" data-tab="tab-system" style="display: inline-flex; align-items: center; gap: 6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>服务器系统配置与维护</span>
+      </button>
+    </div>
+
+    <!-- 面板 1: 用户管理 -->
+    <section id="tab-users" class="admin-panel active">
+      <div class="panel-toolbar">
+        <div class="panel-search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="user-search-input" placeholder="按用户名、昵称或邮箱搜索用户...">
+        </div>
+        <div style="font-size: 12px; color: var(--color-text-muted);">
+          提示：点击“查看详情及机理”可深入审计该用户的所有反应推演项目
+        </div>
+      </div>
+
+      <div class="admin-table-wrapper">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>用户身份</th>
+              <th>权限角色</th>
+              <th>电子邮箱</th>
+              <th>注册时间</th>
+              <th>最后活跃 / 登录</th>
+              <th>登录次数</th>
+              <th>云端机理数</th>
+              <th>审计操作</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">加载用户数据中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 面板 2: 全局反应机理仓库 -->
+    <section id="tab-reactions" class="admin-panel">
+      <div class="panel-toolbar">
+        <div class="panel-search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="reaction-search-input" placeholder="按机理标题、方程式或作者搜索...">
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select id="reaction-category-filter" class="form-select admin-select" style="width: 140px;">
+            <option value="all">全部分类</option>
+            <option value="基础机理">基础机理</option>
+            <option value="自定推演">自定推演</option>
+            <option value="外部导入">外部导入</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-table-wrapper">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>反应标题</th>
+              <th>化学方程式</th>
+              <th>所属作者</th>
+              <th>机理分类与标签</th>
+              <th>可见性</th>
+              <th>热度指标</th>
+              <th>最后更新</th>
+              <th>管理操作</th>
+            </tr>
+          </thead>
+          <tbody id="reactions-table-body">
+            <tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">加载机理数据中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 面板 3: 系统活动审计日志 -->
+    <section id="tab-logs" class="admin-panel">
+      <div class="panel-toolbar">
+        <div class="panel-search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="log-search-input" placeholder="按操作事件或用户名筛选日志...">
+        </div>
+        <div style="font-size: 12px; color: var(--color-text-muted);">
+          实时记录注册、登录、推演保存与权限调整操作
+        </div>
+      </div>
+
+      <div class="admin-table-wrapper">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>时间戳</th>
+              <th>事件类型</th>
+              <th>操作用户</th>
+              <th>详细信息</th>
+              <th>IP 来源</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table-body">
+            <tr><td colspan="5" style="text-align: center; color: var(--color-text-muted);">加载日志中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 面板 4: 服务器系统配置 -->
+    <section id="tab-system" class="admin-panel">
+      <h3 style="margin-top: 0; color: var(--color-dark-brown);">本地服务器系统架构与环境</h3>
+      <p style="font-size: 13px; color: var(--color-text-muted); line-height: 1.6;">
+        Chemiation 采用全栈自主可控的微架构，服务端完全基于 Node.js 标准库实现，不依赖外部大型关系型数据库或复杂的云设施，
+        通过轻量级原子化 JSON 事务引擎保证在任何机器上均可作为本地独立服务器即开即用。
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 20px;">
+        <div style="background: #faf6ea; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+          <h4 style="margin: 0 0 10px; font-size: 14px; color: var(--color-dark-brown);">数据存储持久化路径</h4>
+          <ul style="margin: 0; padding-left: 20px; font-size: 12px; font-family: var(--font-code); line-height: 1.8;">
+            <li>server/data/users.json (用户账号与安全哈希)</li>
+            <li>server/data/reactions.json (推演机理与CCPL脚本库)</li>
+            <li>server/data/logs.json (服务器审计日志流水)</li>
+            <li>server/data/session.secret (HMAC 秘钥安全文件)</li>
+          </ul>
+        </div>
+
+        <div style="background: #faf6ea; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+          <h4 style="margin: 0 0 10px; font-size: 14px; color: var(--color-dark-brown);">安全加密机制</h4>
+          <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: var(--color-deep-brown); line-height: 1.8;">
+            <li>PBKDF2 SHA-512 (100,000 次哈希迭代 + 随机加盐)</li>
+            <li>HMAC-SHA256 签名会话令牌 (JWT 规范，7天有效)</li>
+            <li>常数时间比对算法 (防止时间差侧信道攻击)</li>
+            <li>路径穿越防护与 10MB 请求负载熔断</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 用户详细信息与机理审计弹窗 -->
+  <div id="admin-user-detail-modal" class="modal-backdrop">
+    <div class="modal-box modal-box-lg">
+      <div class="modal-top">
+        <h2 id="modal-user-title">用户详细审计档案</h2>
+        <button class="close-modal-btn" onclick="closeUserDetailModal()">×</button>
+      </div>
+      <div class="modal-inner">
+        <div id="modal-user-profile-card" style="background: #faf6ea; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <!-- 动态注入用户档案 -->
+        </div>
+
+        <h3 style="margin-bottom: 10px; color: var(--color-dark-brown);">该用户创建的推演机理仓库列表</h3>
+        <div id="modal-user-reactions-list" class="admin-table-wrapper">
+          <!-- 动态注入该用户的反应列表 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CCPL 脚本预览弹窗 -->
+  <div id="admin-script-preview-modal" class="modal-backdrop">
+    <div class="modal-box modal-box-lg">
+      <div class="modal-top">
+        <h2 id="modal-script-title">CCPL 机理推演脚本查看</h2>
+        <button class="close-modal-btn" onclick="closeScriptModal()">×</button>
+      </div>
+      <div class="modal-inner">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span id="modal-script-equation" style="font-family: var(--font-code); font-size: 13px; color: var(--color-accent); font-weight: 600;"></span>
+          <button id="btn-copy-script" class="btn-action-sm">复制脚本</button>
+        </div>
+        <pre id="modal-script-pre" class="script-viewer-pre"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员身份认证弹窗 (Admin Login Modal) -->
+  <div id="admin-auth-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-box modal-box-sm" style="max-width: 440px;">
+      <div class="modal-top">
+        <h2>管理员身份验证 (Admin Authentication)</h2>
+      </div>
+      <div class="modal-inner">
+        <p style="font-size: 13px; color: var(--color-text-muted); margin-top: 0; line-height: 1.5;">
+          控制台涉及系统级审计及用户角色管理，请先输入系统管理员账号与密码登录。
+        </p>
+        <form id="admin-login-form">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="admin-login-username">管理员用户名</label>
+            <input id="admin-login-username" class="form-input" type="text" value="admin" required autocomplete="username" style="width: 100%; box-sizing: border-box;">
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" for="admin-login-password">密码</label>
+            <input id="admin-login-password" class="form-input" type="password" placeholder="请输入管理员密码 (默认: admin123)" required autocomplete="current-password" style="width: 100%; box-sizing: border-box;">
+          </div>
+          <div id="admin-login-error" class="modal-error-tip" style="display: none; color: #c82333; font-size: 12px; margin-bottom: 14px; background: rgba(200,35,51,0.08); padding: 8px; border-radius: 6px;"></div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <a href="index.html" class="btn-action-sm" style="text-decoration: none; padding: 7px 14px; display: inline-flex; align-items: center;">返回前台</a>
+            <button type="submit" id="btn-admin-submit-login" class="btn-action-sm" style="background: var(--color-accent); color: #fff; padding: 7px 16px; border: none; font-weight: 600;">验证登录</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allUsers = [];
+    let allReactions = [];
+    let allLogs = [];
+
+    // Authentication & Session Management
+    function getAuthToken() {
+      return localStorage.getItem('chemiation_auth_token') || '';
+    }
+
+    function getAuthHeaders() {
+      const token = getAuthToken();
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    function showAdminAuthModal(errorMsg = '') {
+      const modal = document.getElementById('admin-auth-modal');
+      const errEl = document.getElementById('admin-login-error');
+      if (errorMsg) {
+        errEl.textContent = errorMsg;
+        errEl.style.display = 'block';
+      } else {
+        errEl.style.display = 'none';
+      }
+      modal.style.display = 'flex';
+      const pwdInput = document.getElementById('admin-login-password');
+      if (pwdInput) {
+        setTimeout(() => pwdInput.focus(), 100);
+      }
+    }
+
+    function hideAdminAuthModal() {
+      document.getElementById('admin-auth-modal').style.display = 'none';
+    }
+
+    function updateAdminHeader(user) {
+      const infoEl = document.getElementById('admin-user-info');
+      const authBtn = document.getElementById('btn-admin-auth');
+      const logoutBtn = document.getElementById('btn-admin-logout');
+
+      if (user && user.role === 'admin') {
+        infoEl.textContent = `管理员: @${user.nickname || user.username}`;
+        infoEl.style.background = 'rgba(184, 74, 40, 0.12)';
+        infoEl.style.color = 'var(--color-accent)';
+        authBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-flex';
+      } else {
+        infoEl.textContent = '未认证管理员';
+        infoEl.style.background = 'rgba(94,65,47,0.06)';
+        infoEl.style.color = 'var(--color-dark-brown)';
+        authBtn.style.display = 'inline-flex';
+        logoutBtn.style.display = 'none';
+      }
+    }
+
+    async function apiFetch(url, options = {}) {
+      const headers = {
+        ...getAuthHeaders(),
+        ...(options.headers || {})
+      };
+      const res = await fetch(url, { ...options, headers });
+      if (res.status === 401 || res.status === 403) {
+        updateAdminHeader(null);
+        showAdminAuthModal(res.status === 401 ? '需要管理员登录授权，请输入密码' : '当前登录账户无管理员权限，请登录系统管理员');
+        throw new Error(`Auth failed (${res.status})`);
+      }
+      return res;
+    }
+
+    // Format Uptime
+    function formatUptime(seconds) {
+      if (!seconds || seconds < 60) return `${seconds || 0} 秒`;
+      const mins = Math.floor(seconds / 60);
+      if (mins < 60) return `${mins} 分钟`;
+      const hours = Math.floor(mins / 60);
+      const remMins = mins % 60;
+      return `${hours} 小时 ${remMins} 分`;
+    }
+
+    // Format Date
+    function formatDate(isoStr) {
+      if (!isoStr) return '--';
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return isoStr;
+      return d.toLocaleString('zh-CN', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+    }
+
+    // Escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Load Overview Stats
+    async function loadStats() {
+      try {
+        const res = await apiFetch('/api/admin/overview');
+        const data = await res.json();
+        if (data.success && data.stats) {
+          const s = data.stats;
+          document.getElementById('stat-users-count').textContent = s.counts.users;
+          document.getElementById('stat-reactions-count').textContent = s.counts.reactions;
+          document.getElementById('stat-reactions-sub').textContent = `公开: ${s.counts.publicReactions} | 私有: ${s.counts.privateReactions}`;
+          document.getElementById('stat-storage-size').textContent = s.storage.formatted;
+          document.getElementById('stat-uptime').textContent = formatUptime(s.uptimeSeconds);
+          document.getElementById('stat-node-ver').textContent = `Node.js ${s.nodeVersion} · 内存 ${s.memory.heapUsed}`;
+        }
+      } catch (err) {
+        console.error('Error loading stats:', err);
+      }
+    }
+
+    // Load Users
+    async function loadUsers() {
+      try {
+        const res = await apiFetch('/api/admin/users');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+          allUsers = data.users;
+          document.getElementById('tab-users-badge').textContent = allUsers.length;
+          renderUsersTable(allUsers);
+        }
+      } catch (err) {
+        console.error('Error loading users:', err);
+      }
+    }
+
+    function renderUsersTable(users) {
+      const tbody = document.getElementById('users-table-body');
+      if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">暂无匹配的用户记录</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="user-avatar-circle">${escapeHtml(((u.nickname || u.username) || 'U').charAt(0).toUpperCase())}</span>
+              <div>
+                <strong style="color: var(--color-dark-brown);">${escapeHtml(u.nickname || u.username)}</strong>
+                <div style="font-size: 11px; color: var(--color-text-muted); font-family: var(--font-code);">@${escapeHtml(u.username)}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-badge ${u.role}">${u.role}</span></td>
+          <td style="font-family: var(--font-code); font-size: 12px;">${escapeHtml(u.email || '未绑定')}</td>
+          <td style="font-size: 12px; color: var(--color-text-muted);">${formatDate(u.createdAt)}</td>
+          <td style="font-size: 12px; color: var(--color-text-muted);">${formatDate(u.lastLoginAt)}</td>
+          <td style="font-family: var(--font-code); text-align: center; font-weight: 600;">${u.loginCount || 1}</td>
+          <td style="font-family: var(--font-code); text-align: center; color: var(--color-accent); font-weight: 700;">${u.repoCount || 0}</td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn-action-sm" onclick="inspectUser('${u.id}')">查看档案及机理</button>
+              ${u.id !== 'u_admin_root' ? `
+                <button class="btn-action-sm" onclick="toggleUserRole('${u.id}', '${u.role}')">${u.role === 'admin' ? '降为普通用户' : '设为管理员'}</button>
+                <button class="btn-action-danger" onclick="deleteUser('${u.id}', '${u.username}')">删除</button>
+              ` : '<span style="font-size: 11px; color: var(--color-text-muted); padding: 4px;">超级管理</span>'}
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Inspect User Detail Modal
+    async function inspectUser(userId) {
+      try {
+        const res = await apiFetch(`/api/admin/users/${userId}`);
+        const data = await res.json();
+        if (!data.success || !data.user) return alert('无法获取用户详情');
+
+        const u = data.user;
+        const modal = document.getElementById('admin-user-detail-modal');
+        document.getElementById('modal-user-title').textContent = `用户档案审计: @${u.username}`;
+
+        const card = document.getElementById('modal-user-profile-card');
+        card.innerHTML = `
+          <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="font-size: 24px; font-weight: 700; background: var(--color-accent); color: #fff; width: 64px; height: 64px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-transform: uppercase;">
+              ${escapeHtml(((u.nickname || u.username) || 'U').substring(0, 3).toUpperCase())}
+            </div>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <h3 style="margin: 0; font-size: 16px;">${escapeHtml(u.nickname)}</h3>
+                <span class="role-badge ${u.role}">${u.role}</span>
+                <span style="font-size: 12px; color: var(--color-text-muted); font-family: var(--font-code);">ID: ${u.id}</span>
+              </div>
+              <p style="margin: 0 0 8px; font-size: 12px; color: var(--color-deep-brown);">${escapeHtml(u.bio || '该用户暂未填写个性签名。')}</p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; font-size: 12px; color: var(--color-text-muted);">
+                <div>注册时间: <strong>${formatDate(u.createdAt)}</strong></div>
+                <div>最后活跃: <strong>${formatDate(u.lastLoginAt)}</strong></div>
+                <div>累计登录: <strong>${u.loginCount || 1} 次</strong></div>
+                <div>机理存储: <strong>${u.repoCount || 0} 个项目</strong></div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const rList = document.getElementById('modal-user-reactions-list');
+        if (!data.reactions || data.reactions.length === 0) {
+          rList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--color-text-muted);">该用户目前尚未在云端仓库保存任何化学机理推演。</div>';
+        } else {
+          rList.innerHTML = `
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>反应名称</th>
+                  <th>方程式</th>
+                  <th>可见性</th>
+                  <th>热度</th>
+                  <th>更新时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.reactions.map(r => `
+                  <tr>
+                    <td><strong>${escapeHtml(r.title)}</strong></td>
+                    <td style="font-family: var(--font-code); font-size: 11px;">${escapeHtml(r.equation || '--')}</td>
+                    <td><span class="role-badge ${r.isPublic ? 'user' : 'admin'}">${r.isPublic ? '公开' : '私有'}</span></td>
+                    <td style="font-size: 11px;">赞 ${r.stars || 0} · 浏览 ${r.views || 0}</td>
+                    <td style="font-size: 11px; color: var(--color-text-muted);">${formatDate(r.updatedAt)}</td>
+                    <td>
+                      <button class="btn-action-sm" onclick="previewScript('${r.id}')">查看脚本</button>
+                      <a href="index.html?load_repo=${r.id}" target="_blank" class="btn-action-sm" style="text-decoration: none;">前台播放</a>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+
+        modal.style.display = 'flex';
+      } catch (err) {
+        if (!err.message?.includes('Auth failed')) {
+          alert('加载用户详细信息失败: ' + err.message);
+        }
+      }
+    }
+
+    function closeUserDetailModal() {
+      document.getElementById('admin-user-detail-modal').style.display = 'none';
+    }
+
+    // Toggle Role
+    async function toggleUserRole(userId, currentRole) {
+      const newRole = currentRole === 'admin' ? 'user' : 'admin';
+      if (!confirm(`确定要将该用户的权限切换为 [${newRole}] 吗？`)) return;
+
+      try {
+        const res = await apiFetch(`/api/admin/users/${userId}/role`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ role: newRole })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('权限修改成功！');
+          loadUsers();
+          loadStats();
+        } else {
+          alert(data.error || '修改权限失败');
+        }
+      } catch (err) {
+        if (!err.message?.includes('Auth failed')) alert('请求失败: ' + err.message);
+      }
+    }
+
+    // Delete User
+    async function deleteUser(userId, username) {
+      if (!confirm(`警告：确定要删除用户 @${username} 吗？\n该操作不可撤销，其个人私有机理也将一并被清理！`)) return;
+
+      try {
+        const res = await apiFetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('用户已成功删除！');
+          loadUsers();
+          loadReactions();
+          loadStats();
+        } else {
+          alert(data.error || '删除失败');
+        }
+      } catch (err) {
+        if (!err.message?.includes('Auth failed')) alert('请求失败: ' + err.message);
+      }
+    }
+
+    // Load Reactions
+    async function loadReactions() {
+      try {
+        const res = await apiFetch('/api/admin/reactions');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.reactions)) {
+          allReactions = data.reactions;
+          document.getElementById('tab-reactions-badge').textContent = allReactions.length;
+          renderReactionsTable(allReactions);
+        }
+      } catch (err) {
+        console.error('Error loading reactions:', err);
+      }
+    }
+
+    function renderReactionsTable(reactions) {
+      const tbody = document.getElementById('reactions-table-body');
+      if (!reactions || reactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">暂无机理记录</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = reactions.map(r => `
+        <tr>
+          <td>
+            <strong style="color: var(--color-dark-brown);">${escapeHtml(r.title)}</strong>
+            <div style="font-size: 11px; color: var(--color-text-muted);">${escapeHtml(r.summary || '无机理描述')}</div>
+          </td>
+          <td style="font-family: var(--font-code); font-size: 12px; color: var(--color-accent); font-weight: 600;">${escapeHtml(r.equation || '--')}</td>
+          <td>
+            <span style="font-size: 12px;">@${escapeHtml(r.authorName)}</span>
+          </td>
+          <td>
+            <span class="role-badge user">${escapeHtml(r.category || '未分类')}</span>
+            ${(r.tags || []).map(t => `<span style="font-size: 10px; background: rgba(94,65,47,0.06); padding: 2px 5px; border-radius: 4px; margin-left: 4px;">${escapeHtml(t)}</span>`).join('')}
+          </td>
+          <td>
+            <span class="role-badge ${r.isPublic ? 'user' : 'admin'}">${r.isPublic ? '公开社区' : '私有存储'}</span>
+          </td>
+          <td style="font-size: 12px; font-family: var(--font-code);">
+            赞 ${r.stars || 0} · Fork ${r.forks || 0} · 浏览 ${r.views || 0}
+          </td>
+          <td style="font-size: 12px; color: var(--color-text-muted);">${formatDate(r.updatedAt)}</td>
+          <td>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn-action-sm" onclick="previewScript('${r.id}')">查看脚本</button>
+              <a href="index.html?load_repo=${r.id}" target="_blank" class="btn-action-sm" style="text-decoration: none;">前台播放</a>
+              <button class="btn-action-danger" onclick="deleteReaction('${r.id}', '${r.title}')">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Delete Reaction
+    async function deleteReaction(reactionId, title) {
+      if (!confirm(`确定要从服务器数据库中删除机理 [${title}] 吗？`)) return;
+
+      try {
+        const res = await apiFetch(`/api/admin/reactions/${reactionId}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('机理项目已成功删除！');
+          loadReactions();
+          loadStats();
+        } else {
+          alert(data.error || '删除失败');
+        }
+      } catch (err) {
+        if (!err.message?.includes('Auth failed')) alert('请求失败: ' + err.message);
+      }
+    }
+
+    // Preview Script Modal
+    let activeScriptCode = '';
+    async function previewScript(reactionId) {
+      try {
+        const res = await fetch(`/api/repo/${reactionId}`, {
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (!data.success || !data.item) return alert('无法获取机理数据');
+
+        const item = data.item;
+        document.getElementById('modal-script-title').textContent = `机理脚本: ${item.title}`;
+        document.getElementById('modal-script-equation').textContent = item.equation || '';
+        document.getElementById('modal-script-pre').textContent = item.script || '# 无脚本内容';
+        activeScriptCode = item.script || '';
+
+        document.getElementById('admin-script-preview-modal').style.display = 'flex';
+      } catch (err) {
+        alert('获取脚本失败: ' + err.message);
+      }
+    }
+
+    function closeScriptModal() {
+      document.getElementById('admin-script-preview-modal').style.display = 'none';
+    }
+
+    document.getElementById('btn-copy-script').addEventListener('click', () => {
+      if (activeScriptCode) {
+        navigator.clipboard.writeText(activeScriptCode);
+        alert('CCPL 脚本已成功复制到剪贴板！');
+      }
+    });
+
+    // Load Logs
+    async function loadLogs() {
+      try {
+        const res = await apiFetch('/api/admin/logs?limit=100');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.logs)) {
+          allLogs = data.logs;
+          document.getElementById('tab-logs-badge').textContent = allLogs.length;
+          renderLogsTable(allLogs);
+        }
+      } catch (err) {
+        console.error('Error loading logs:', err);
+      }
+    }
+
+    function renderLogsTable(logs) {
+      const tbody = document.getElementById('logs-table-body');
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted);">暂无系统日志记录</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td style="font-size: 11px; font-family: var(--font-code); color: var(--color-text-muted);">${formatDate(l.timestamp)}</td>
+          <td><span class="log-badge ${l.action}">${escapeHtml(l.action)}</span></td>
+          <td><strong>@${escapeHtml(l.username)}</strong> <span style="font-size: 11px; color: var(--color-text-muted); font-family: var(--font-code);">(${escapeHtml(l.userId)})</span></td>
+          <td style="font-size: 12px; color: var(--color-deep-brown);">${escapeHtml(l.details)}</td>
+          <td style="font-family: var(--font-code); font-size: 11px; color: var(--color-text-muted);">${escapeHtml(l.ip)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Tab Switching
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        const panel = document.getElementById(targetId);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    // Search filters
+    document.getElementById('user-search-input').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = allUsers.filter(u =>
+        u.username.toLowerCase().includes(q) ||
+        (u.nickname && u.nickname.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q))
+      );
+      renderUsersTable(filtered);
+    });
+
+    document.getElementById('reaction-search-input').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const cat = document.getElementById('reaction-category-filter').value;
+      const filtered = allReactions.filter(r => {
+        if (cat !== 'all' && r.category !== cat) return false;
+        return r.title.toLowerCase().includes(q) ||
+          (r.equation && r.equation.toLowerCase().includes(q)) ||
+          (r.authorName && r.authorName.toLowerCase().includes(q));
+      });
+      renderReactionsTable(filtered);
+    });
+
+    document.getElementById('reaction-category-filter').addEventListener('change', () => {
+      document.getElementById('reaction-search-input').dispatchEvent(new Event('input'));
+    });
+
+    document.getElementById('log-search-input').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = allLogs.filter(l =>
+        l.action.toLowerCase().includes(q) ||
+        l.username.toLowerCase().includes(q) ||
+        (l.details && l.details.toLowerCase().includes(q))
+      );
+      renderLogsTable(filtered);
+    });
+
+    function loadAllData() {
+      loadStats();
+      loadUsers();
+      loadReactions();
+      loadLogs();
+    }
+
+    async function checkAdminAuth() {
+      const token = getAuthToken();
+      if (!token) {
+        updateAdminHeader(null);
+        showAdminAuthModal();
+        return false;
+      }
+      try {
+        const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (data.success && data.user) {
+          if (data.user.role !== 'admin') {
+            updateAdminHeader(data.user);
+            showAdminAuthModal(`当前账号 @${data.user.username} 不是管理员，请登录管理员账号`);
+            return false;
+          }
+          updateAdminHeader(data.user);
+          hideAdminAuthModal();
+          return true;
+        } else {
+          updateAdminHeader(null);
+          showAdminAuthModal();
+          return false;
+        }
+      } catch {
+        updateAdminHeader(null);
+        showAdminAuthModal();
+        return false;
+      }
+    }
+
+    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('admin-login-username').value.trim();
+      const password = document.getElementById('admin-login-password').value.trim();
+      const errEl = document.getElementById('admin-login-error');
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          if (data.user.role !== 'admin') {
+            errEl.textContent = '该账号不是系统管理员账号，无权访问管理控制台';
+            errEl.style.display = 'block';
+            return;
+          }
+          localStorage.setItem('chemiation_auth_token', data.token);
+          hideAdminAuthModal();
+          updateAdminHeader(data.user);
+          loadAllData();
+        } else {
+          errEl.textContent = data.error || '登录验证失败，请检查密码';
+          errEl.style.display = 'block';
+        }
+      } catch (err) {
+        errEl.textContent = '请求失败: ' + err.message;
+        errEl.style.display = 'block';
+      }
+    });
+
+    document.getElementById('btn-admin-auth').addEventListener('click', () => {
+      showAdminAuthModal();
+    });
+
+    document.getElementById('btn-admin-logout').addEventListener('click', () => {
+      if (confirm('确定要退出当前管理员登录状态吗？')) {
+        localStorage.removeItem('chemiation_auth_token');
+        updateAdminHeader(null);
+        showAdminAuthModal('已安全退出管理登录');
+      }
+    });
+
+    document.getElementById('btn-refresh-data').addEventListener('click', () => {
+      loadAllData();
+    });
+
+    // Init with Admin Auth Check
+    checkAdminAuth().then(isAuth => {
+      if (isAuth) {
+        loadAllData();
+      }
+    });
+  </script>
+</body>
+</html>

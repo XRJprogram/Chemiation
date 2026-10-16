@@ -4,9 +4,12 @@
   "description": "Chemical reaction principle and mechanism simulation studio with interactive pseudo-3D canvas visualization",
   "main": "index.js",
   "scripts": {
-    "start": "npx serve .",
-    "dev": "npx serve .",
-    "test": "node test/test.js"
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "server": "node server/server.js",
+    "serve:static": "npx serve .",
+    "test": "node test/test.js",
+    "test:server": "node server/test_suite.js"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -37,6 +40,7 @@
     "index.html",
     "docs.html",
     "docs_en.html",
+    "server/",
     "README.md"
   ]
 }

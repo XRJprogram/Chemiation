@@ -45,6 +45,26 @@
       <div id="header-equation-display" class="header-status-equation">
         <span id="reaction-equation">CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O</span>
       </div>
+
+      <!-- 页眉最右侧：云端机理仓库与登录/注册操作区（仅当服务端启动连接时显示） -->
+      <div class="header-right-actions cloud-online-only" id="header-right-actions">
+        <button id="header-repo-cloud-btn" class="header-repo-btn-cloud cloud-online-only" title="浏览云端机理模型与社区作品">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+          </svg>
+          <span data-i18n="cloudRepoBtn">机理仓库</span>
+        </button>
+
+        <div id="header-user-section" class="header-user-section cloud-online-only">
+          <button id="header-auth-btn" class="header-auth-btn cloud-online-only" title="登录或注册账号以使用云端机理仓库">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span data-i18n="authBtn">登录 / 注册</span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <!-- 主工作区：左侧 Canvas 伪3D视口 + 右侧反应推演工作区 -->
@@ -196,6 +216,14 @@
                     <polyline points="7 3 7 8 15 8"></polyline>
                   </svg>
                 </button>
+                <button id="btn-save-cloud" class="script-btn icon-only cloud-online-only" title="保存至云端仓库">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  <span class="btn-label" data-i18n="btnSaveCloud">存到云端</span>
+                </button>
                 <button id="btn-fullscreen-script" class="script-btn icon-only" title="全屏编写模式 (快捷键: F11 / Esc 退出)">
                   <svg class="icon-expand" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
@@ -290,6 +318,231 @@
         <button id="chem-dialog-cancel-btn" class="chem-dialog-btn secondary">取消</button>
         <button id="chem-dialog-confirm-btn" class="chem-dialog-btn primary">确定</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 用户认证弹窗 (登录 / 注册) -->
+  <div id="auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h2 id="auth-modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent);">
+            <path d="M10 2v7.31L4.54 19.34C3.82 20.35 4.54 22 5.79 22h12.42c1.25 0 1.97-1.65 1.25-2.66L14 9.31V2h-4z"></path>
+            <line x1="8" y1="2" x2="16" y2="2"></line>
+          </svg>
+          <span data-i18n="authModalTitle">用户中心 · 登录与注册</span>
+        </h2>
+        <button class="close-modal-btn close-auth-modal" title="关闭 (Esc)" aria-label="关闭">×</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button id="auth-tab-login" class="modal-tab-btn active">用户登录</button>
+        <button id="auth-tab-register" class="modal-tab-btn">注册新账号</button>
+      </div>
+
+      <div id="auth-status-message" class="auth-message" style="display: none;" role="alert" aria-live="polite"></div>
+
+      <!-- 登录表单 -->
+      <form id="auth-form-login">
+        <div class="form-group">
+          <label class="form-label" for="login-input-username">用户名 / 账号</label>
+          <input id="login-input-username" class="form-input" type="text" placeholder="请输入您的用户名" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-input-password">账户密码</label>
+          <input id="login-input-password" class="form-input" type="password" placeholder="请输入密码 (默认管理员: admin / admin123)" autocomplete="current-password" required>
+        </div>
+        <div class="modal-btn-row">
+          <button type="button" class="btn-secondary close-auth-modal">取消</button>
+          <button type="submit" class="btn-primary">立即登录</button>
+        </div>
+      </form>
+
+      <!-- 注册表单 -->
+      <form id="auth-form-register" style="display: none;">
+        <div class="form-group">
+          <label class="form-label" for="reg-input-username">登录用户名 <span style="color:#b84a28;">*</span></label>
+          <input id="reg-input-username" class="form-input" type="text" placeholder="字母、数字或下划线 (至少3位)" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-input-nickname">显示昵称</label>
+          <input id="reg-input-nickname" class="form-input" type="text" placeholder="例如: 居里夫人 (留空默认与用户名相同)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-input-email">电子邮箱</label>
+          <input id="reg-input-email" class="form-input" type="email" placeholder="name@example.com (选填)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-input-password">设置密码 <span style="color:#b84a28;">*</span></label>
+          <input id="reg-input-password" class="form-input" type="password" placeholder="至少6位安全密码" autocomplete="new-password" required>
+        </div>
+        <div class="modal-btn-row">
+          <button type="button" class="btn-secondary close-auth-modal">取消</button>
+          <button type="submit" class="btn-primary">注册并登录</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 用户个人资料弹窗 -->
+  <div id="profile-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h2 id="profile-modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent);">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>个人资料与设置</span>
+        </h2>
+        <button class="close-modal-btn close-profile-modal" title="关闭 (Esc)" aria-label="关闭">×</button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding: 12px; background: rgba(94, 65, 47, 0.05); border-radius: 8px;">
+        <div class="profile-avatar-circle" id="profile-modal-avatar-preview">U</div>
+        <div>
+          <div style="font-weight: 700; font-size: 15px;" id="profile-modal-username">@username</div>
+          <div style="font-size: 11px; color: var(--color-text-muted);">
+            身份: <span id="profile-modal-role" class="role-badge user">user</span> · <span id="profile-modal-repocount">0 个机理项目</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="profile-status-message" class="auth-message" style="display: none;" role="alert" aria-live="polite"></div>
+
+      <form id="profile-form">
+        <div class="form-group">
+          <label class="form-label" for="profile-input-nickname">显示昵称</label>
+          <input id="profile-input-nickname" class="form-input" type="text" placeholder="设置您的对外显示昵称">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-input-avatar">头像代号 (1-3位字母/简写)</label>
+          <input id="profile-input-avatar" class="form-input" type="text" maxlength="4" placeholder="例如: CM、MC、RS 等代号">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-input-email">电子邮箱</label>
+          <input id="profile-input-email" class="form-input" type="email" placeholder="name@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-input-bio">研究者签名 / 个人简介</label>
+          <textarea id="profile-input-bio" class="form-textarea" rows="2" placeholder="填写您的研究方向或个人化学座右铭..."></textarea>
+        </div>
+        <div class="modal-btn-row">
+          <button type="button" class="btn-secondary close-profile-modal">取消</button>
+          <button type="submit" class="btn-primary">保存个人资料</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 云端机理模型仓库与社区工坊弹窗 -->
+  <div id="repo-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="repo-modal-title" style="display: none;">
+    <div class="modal-box modal-box-lg">
+      <div class="modal-top">
+        <h2 id="repo-modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent);">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>化学反应机理云端仓库 (Reaction Repository)</span>
+        </h2>
+        <button class="close-modal-btn close-repo-modal" title="关闭 (Esc)" aria-label="关闭">×</button>
+      </div>
+
+      <div class="modal-tabs" style="justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 8px;">
+          <button id="repo-tab-public" class="modal-tab-btn active">公开社区作品</button>
+          <button id="repo-tab-my" class="modal-tab-btn">我的个人仓库</button>
+          <button id="repo-tab-offline" class="modal-tab-btn">本地离线草稿</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-export-repos-json" class="btn-secondary" style="padding: 4px 12px; font-size: 12px;" title="导出个人机理数据为 JSON 文件">
+            导出 JSON
+          </button>
+          <button class="btn-primary" style="padding: 4px 12px; font-size: 12px;" id="btn-open-save-repo-modal">
+            + 保存当前机理
+          </button>
+        </div>
+      </div>
+
+      <!-- 搜索与筛选工具栏 -->
+      <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+        <input id="repo-search-input" class="form-input" type="text" placeholder="搜索反应名称、方程式或机理标签..." style="flex: 1; min-width: 200px;">
+        <select id="repo-category-filter" class="form-select" style="width: 150px;">
+          <option value="all">全部分类</option>
+          <option value="organic">有机化学反应</option>
+          <option value="inorganic">无机化学反应</option>
+          <option value="catalysis">催化与配位</option>
+          <option value="polymer">聚合物合成</option>
+          <option value="other">其他推演</option>
+        </select>
+      </div>
+
+      <!-- 机理项目卡片列表 -->
+      <div id="repo-card-grid" class="repo-cards-grid">
+        <div class="repo-empty-state">正在载入云端机理数据...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 保存机理至云端仓库弹窗 -->
+  <div id="save-repo-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="save-repo-modal-title" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h2 id="save-repo-modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent);">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>保存当前反应推演到云端仓库</span>
+        </h2>
+        <button class="close-modal-btn close-save-repo-modal" title="关闭 (Esc)" aria-label="关闭">×</button>
+      </div>
+
+      <div id="save-repo-status-message" class="auth-message" style="display: none;" role="alert" aria-live="polite"></div>
+
+      <form id="save-repo-form">
+        <div class="form-group">
+          <label class="form-label" for="save-repo-title">反应机理名称 <span style="color:#b84a28;">*</span></label>
+          <input id="save-repo-title" class="form-input" type="text" placeholder="例如: 乙醇催化氧化机理" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="save-repo-equation">化学方程式</label>
+          <input id="save-repo-equation" class="form-input" type="text" placeholder="例如: 2CH₃CH₂OH + O₂ → 2CH₃CHO + 2H₂O">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="save-repo-category">机理分类</label>
+          <select id="save-repo-category" class="form-select">
+            <option value="organic">有机化学反应</option>
+            <option value="inorganic">无机化学反应</option>
+            <option value="catalysis">催化与配位</option>
+            <option value="polymer">聚合物合成</option>
+            <option value="other">其他机理推演</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="save-repo-desc">机理原理简要描述</label>
+          <textarea id="save-repo-desc" class="form-textarea" rows="2" placeholder="简要说明反应的反应物、催化机理与决速步..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="save-repo-tags">标签 (逗号分隔)</label>
+          <input id="save-repo-tags" class="form-input" type="text" placeholder="有机机理, 氧化还原, 催化">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="save-repo-script">CCPL 推演脚本内容 <span style="color:#b84a28;">*</span></label>
+          <textarea id="save-repo-script" class="form-textarea" rows="5" style="font-family: var(--font-code); font-size: 11px;" required></textarea>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px;">
+            <input type="checkbox" id="save-repo-public" checked>
+            <span>公开此机理模型 (允许其他研究员在公共社区浏览与载入)</span>
+          </label>
+        </div>
+        <div class="modal-btn-row">
+          <button type="button" class="btn-secondary close-save-repo-modal">取消</button>
+          <button type="submit" class="btn-primary">确认保存到云端</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -422,6 +675,9 @@
   <script src="js/scriptParser.js"></script>
   <script src="js/storageManager.js"></script>
   <script src="js/pseudo3DRenderer.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/repo.js"></script>
   <script src="js/aiAssistant.js"></script>
   <script src="js/reactionApp.js"></script>
 </body>

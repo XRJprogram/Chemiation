@@ -2154,3 +2154,28 @@ input[type="checkbox"]:focus {
     min-height: 190px !important;
   }
 }
+
+/* =========================================================================
+   Cloud Platform Online-Only Components
+   When Chemiation server is not running (e.g. static site or offline),
+   these cloud-specific elements are strictly hidden.
+   ========================================================================= */
+.cloud-online-only {
+  display: none !important;
+}
+
+body.server-connected .cloud-online-only {
+  display: flex !important;
+}
+
+body.server-connected button.cloud-online-only {
+  display: inline-flex !important;
+}
+
+body.server-connected div.header-right-actions {
+  display: flex !important;
+}
+
+body.server-connected div.header-user-section {
+  display: flex !important;
+}

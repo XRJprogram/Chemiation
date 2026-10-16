@@ -72,57 +72,71 @@
 
 ---
 
-## Branch Architecture
+## Architecture & Dynamic Online Detection
 
-This repository maintains a clean, decoupled dual-branch architecture:
+Chemiation adopts a unified architecture on the `main` branch with seamless static and fullstack modes:
 
-- **`main` (Current Branch — Pure Static Web Edition)**:
-  - 100% serverless, zero backend dependencies.
-  - Can be run directly from local disk or hosted on static services (GitHub Pages, Vercel, Cloudflare Pages).
-  - Includes full 3D mechanism visualizer, CCPL IDE, and client-side AI Chemical Copilot.
-- **`cloud-platform` (Fullstack Cloud Platform Edition)**:
-  - Built-in lightweight Node.js server (`server/`), JSON database, and REST APIs.
-  - User registration & JWT authentication (`js/auth.js`, `js/api.js`).
-  - Community reaction repository for cloud saving, sharing, starring, and forking (`js/repo.js`).
-  - Server administration & audit inspection dashboard ([`admin.html`](admin.html)).
-  - To switch to the cloud platform branch: `git checkout cloud-platform`
+- **Static / Offline Mode (Default)**:
+  - 100% serverless with zero backend requirements. Can be launched directly from disk (`file://`) or hosted on GitHub Pages, Cloudflare Pages, or Vercel.
+  - When the server is not detected, all cloud actions (login, registration, mechanism repository, and cloud save) are automatically hidden from the interface.
+  - Core 3D visualization, CCPL scripting IDE, and client-side AI Copilot work out of the box.
+
+- **Optional Fullstack Cloud Platform (`server/`)**:
+  - The repository includes a lightweight, zero-dependency Node.js backend under [`server/`](server/) using native Node.js standard libraries (`http`, `crypto`, `fs`).
+  - When the server is started (`npm start` or double-clicking `server/start-server.bat`), the client dynamically detects connectivity via `/api/health` heartbeat.
+  - The UI automatically reveals the Cloud Mechanism Repository, User Authentication, Star/Fork community system, and Cloud Save buttons.
+  - Includes PBKDF2 password hashing, HMAC-SHA256 session tokens, role-based access control (RBAC), community reaction repository, and an administrative inspection dashboard ([`server/admin.html`](server/admin.html)).
 
 ---
 
 ## Project Structure
 
-| File | Description |
+| File / Folder | Description |
 | :--- | :--- |
 | [`package.json`](package.json) | npm package configuration, metadata, scripts, and exports |
 | [`index.js`](index.js) | npm entry point exporting `Pseudo3DRenderer`, `ReactionScriptEngine`, and `REACTION_PRESETS` |
 | [`index.html`](index.html) | Main application entry: 3D viewport, step timeline track, AI Copilot, and CCPL script editor |
 | [`docs.html`](docs.html) | CCPL Syntax & Reference Manual (Chinese) |
 | [`docs_en.html`](docs_en.html) | CCPL Syntax & Reference Manual (English) |
-| [`css/chemiation.css`](css/chemiation.css) | Core styles, responsive layout, and code editor theme |
-| [`css/modal.css`](css/modal.css) | Dialog overlay and AI Copilot modal styles |
+| [`css/chemiation.css`](css/chemiation.css) | Core styles, responsive layout, dynamic online detection classes, and editor theme |
+| [`css/modal.css`](css/modal.css) | Dialog overlay, authentication, repository, and AI Copilot modal styles |
 | [`js/pseudo3DRenderer.js`](js/pseudo3DRenderer.js) | Pseudo-3D canvas renderer, lighting/shading, in-flight transition interpolation, and polymer bracket projection |
 | [`js/reactionData.js`](js/reactionData.js) | Pre-baked reaction mechanism presets, element properties, and bond topology datasets |
 | [`js/scriptParser.js`](js/scriptParser.js) | CCPL parser, 3D automatic spatial layout solver, and serializer |
 | [`js/aiAssistant.js`](js/aiAssistant.js) | Pure client-side AI Chemical Copilot (natural language generation, smart syntax debugging, BYOK multi-provider support) |
+| [`js/api.js`](js/api.js) | Client API SDK with automatic `/api/health` detection and online state dispatch |
+| [`js/auth.js`](js/auth.js) | Client authentication controller and user profile dialog management |
+| [`js/repo.js`](js/repo.js) | Community mechanism repository controller (cloud save, explore, star, fork) |
 | [`js/reactionApp.js`](js/reactionApp.js) | Main application orchestrator, event bus, timeline manager, and i18n controller |
+| [`server/`](server/) | Self-contained fullstack Node.js server, JSON database, REST API, test suite, and admin console |
+| [`server/admin.html`](server/admin.html) | Server administration dashboard for user management, reaction moderation, and audit inspection |
 
 ---
 
 ## Quick Start
 
-Chemiation can be run directly or managed via npm:
+Chemiation supports both pure static usage and fullstack cloud capabilities:
 
-1. **Direct Launch**: Open [`index.html`](index.html) directly in any modern web browser.
-2. **Via npm**:
+1. **Static / Offline Mode**:
+   - Double-click [`index.html`](index.html) in any modern browser, or host on GitHub Pages / Vercel.
+   - Cloud buttons are automatically hidden. 3D mechanism simulation, CCPL IDE, and AI Copilot work offline.
+
+2. **Fullstack Cloud Mode (Node.js)**:
+   - Start the built-in server:
+     ```bash
+     npm start
+     # or: node server/server.js
+     # or double-click server/start-server.bat
+     ```
+   - Open `http://localhost:3000` in your browser.
+   - Cloud repository, user accounts, and mechanism saving automatically activate.
+   - Access the admin panel at `http://localhost:3000/admin.html` (default credentials: `admin` / `Admin123!`).
+
+3. **Running Tests**:
    ```bash
-   npm start   # Launch local preview server (npx serve)
-   npm test    # Run module & preset integrity verification tests
+   npm test            # Run client-side presets and module integrity tests
+   npm run test:server # Run fullstack server test suite (23 integration tests)
    ```
-3. **Local Static Server (Alternative)**:
-   ```bash
-   python -m http.server 8080
-   ```
-4. **Deployment**: Host effortlessly on GitHub Pages, Cloudflare Pages, Vercel, or any static hosting service.
 
 ---
 
@@ -180,54 +194,68 @@ Chemiation can be run directly or managed via npm:
 
 ---
 
-## 双分支架构说明
+## 架构与动态服务端集成
 
-本项目采用清晰解耦的双分支管理策略：
+本项目在 `main` 主分支上统一管理，支持静态单机与全栈云端两种模式无缝平滑切换：
 
-- **`main`（当前主分支 · 纯前端单机版）**：
-  - 100% 纯静态无后端，开箱即用，双击即可运行。
-  - 完美适配 GitHub Pages、Vercel 等静态托管平台。
-  - 完整集成三维机理动画、CCPL 脚本 IDE 与纯前端 AI 推演助手（BYOK 本地直连）。
-- **`cloud-platform`（全栈云端平台分支）**：
-  - 内置 Node.js 标准库 REST API 服务端与原子 JSON 数据库（`server/`）。
-  - 用户注册登录认证与 JWT 令牌管理（`js/auth.js`、`js/api.js`）。
-  - 云端机理作品社区仓库（发布、分享、点赞收藏、在线复刻 Fork，`js/repo.js`）。
-  - 服务器运维监控与作品审计后台控制台（[`admin.html`](admin.html)）。
-  - 切换至云端平台分支：`git checkout cloud-platform`
+- **静态单机模式（默认）**：
+  - 100% 纯前端静态无后端依赖，支持本地双击运行（`file://`）或直接部署到 GitHub Pages、Vercel 等静态托管服务。
+  - 当未启动或未连接服务端时，界面自动完全隐藏云端仓库、登录注册、个人中心及云端保存按钮，零干扰。
+  - 三维机理动画、CCPL 推演 IDE、纯前端 AI 机理助手（BYOK 本地直连）完全可用。
+
+- **可选全栈云端平台（`server/` 独立目录）**：
+  - 所有服务端文件统一收敛至 [`server/`](server/) 目录，采用 Node.js 原生标准库（`http`、`crypto`、`fs`）开发，零第三方 npm 依赖。
+  - 启动服务端（`npm start` 或双击 `server/start-server.bat`）后，前端通过 `/api/health` 探针自动感知服务在线状态。
+  - 界面自动唤醒并展示云端机理社区仓库、用户注册登录、点赞收藏、在线复刻与云端保存功能。
+  - 内置基于 PBKDF2 的加盐密码哈希、HMAC-SHA256 签名会话、角色权限控制（RBAC）、审计日志及独立运维管理后台（[`server/admin.html`](server/admin.html)）。
 
 ---
 
 ## 项目结构
 
-| 文件 | 说明 |
+| 文件 / 目录 | 说明 |
 | :--- | :--- |
 | [`package.json`](package.json) | npm 包配置文件、元数据、脚本与导出定义 |
 | [`index.js`](index.js) | npm 入口文件，导出 `Pseudo3DRenderer`、`ReactionScriptEngine` 及 `REACTION_PRESETS` |
 | [`index.html`](index.html) | 主界面，包含三维视口、步骤时序轨道、AI 助手与 CCPL 脚本编辑器 |
 | [`docs.html`](docs.html) | CCPL 语法手册（中文版） |
 | [`docs_en.html`](docs_en.html) | CCPL 语法手册（英文版） |
-| [`css/chemiation.css`](css/chemiation.css) | 界面样式、布局与代码编辑器主题 |
-| [`css/modal.css`](css/modal.css) | 弹窗对话框与 AI Copilot 交互模态框样式 |
+| [`css/chemiation.css`](css/chemiation.css) | 界面样式、布局、动态在线感知类与代码编辑器主题 |
+| [`css/modal.css`](css/modal.css) | 弹窗对话框、认证模态框、作品社区与 AI 助手样式 |
 | [`js/pseudo3DRenderer.js`](js/pseudo3DRenderer.js) | 空间伪 3D 渲染器、化学键光影、过渡动画与聚合物括号绘制 |
 | [`js/reactionData.js`](js/reactionData.js) | 内置机理数据、元素参数与反应拓扑 |
 | [`js/scriptParser.js`](js/scriptParser.js) | CCPL 语法解析器、自动空间排布算法与序列化工具 |
 | [`js/aiAssistant.js`](js/aiAssistant.js) | 纯前端 AI 反应机理助手（自然语言推演、智能排错、多模型直连） |
+| [`js/api.js`](js/api.js) | 客户端 API SDK，支持自动 `/api/health` 探针检测与在线状态调度 |
+| [`js/auth.js`](js/auth.js) | 客户端用户认证控制器与个人中心弹窗管理 |
+| [`js/repo.js`](js/repo.js) | 云端机理社区仓库控制器（云端保存、探索广场、点赞、复刻） |
 | [`js/reactionApp.js`](js/reactionApp.js) | 主控制器、交互事件与多语言中枢 |
+| [`server/`](server/) | 独立全栈 Node.js 服务端、原子 JSON 数据库、REST API、测试套件与运维后台 |
+| [`server/admin.html`](server/admin.html) | 服务端运维管理后台（用户管理、机理审核与审计日志） |
 
 ---
 
 ## 快速开始
 
-本项目既可直接静态运行，也可通过 npm 进行管理与调试：
+本项目既可纯静态离线运行，也可体验完整的全栈云端功能：
 
-1. **直接运行**：用现代浏览器打开 [`index.html`](index.html) 即可。
-2. **通过 npm 启动与测试**：
+1. **静态离线运行**：
+   - 现代浏览器直接双击打开 [`index.html`](index.html)，或部署至 GitHub Pages 等静态托管环境。
+   - 云端交互元素自动隐藏，三维动画、CCPL 编写与 AI 助手正常工作。
+
+2. **全栈云端模式（Node.js）**：
+   - 启动内置服务端：
+     ```bash
+     npm start
+     # 或执行: node server/server.js
+     # 或双击 server/start-server.bat
+     ```
+   - 在浏览器中访问 `http://localhost:3000`。
+   - 云端作品仓库、用户系统与云端保存功能自动激活。
+   - 访问管理后台：`http://localhost:3000/admin.html`（默认管理员账号：`admin` / `Admin123!`）。
+
+3. **运行测试**：
    ```bash
-   npm start   # 启动本地静态预览服务器 (npx serve)
-   npm test    # 运行模块完整性与预设机理验证测试
+   npm test            # 运行前端模块与预设机理验证测试
+   npm run test:server # 运行服务端全栈集成测试套件（23 项测试）
    ```
-3. **本地静态服务（备选）**：
-   ```bash
-   python -m http.server 8080
-   ```
-4. **部署**：可直接托管于 GitHub Pages 等任意静态站点服务。

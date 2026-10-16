@@ -97,7 +97,12 @@ class ReactionApp {
         btnAiAssistant: 'AI 辅助',
         aiAssistantTitle: 'AI 辅助推演与机理生成 (快捷键: Alt + A)',
         aiModalTitle: 'AI 机理推演脚本生成器',
-        aiBtn: 'AI 助手'
+        aiBtn: 'AI 助手',
+        btnSaveCloud: '存到云端',
+        saveCloudTitle: '保存至云端仓库',
+        cloudRepoBtn: '机理仓库',
+        authBtn: '登录 / 注册',
+        authModalTitle: '用户中心 · 登录与注册'
       },
       en: {
         docsBtn: 'Docs',
@@ -119,6 +124,15 @@ class ReactionApp {
         labelShrink: 'Collapse',
         placeholderScript: 'Compose or edit CCPL deduction scripts here...',
         stepCardNum: 'Step',
+        btnAiAssistant: 'AI Copilot',
+        aiAssistantTitle: 'AI Mechanism Copilot & Generator (Alt + A)',
+        aiModalTitle: 'AI Mechanism Deduction Script Generator',
+        aiBtn: 'AI Copilot',
+        btnSaveCloud: 'Save Cloud',
+        saveCloudTitle: 'Save to Cloud Repository',
+        cloudRepoBtn: 'Cloud Repos',
+        authBtn: 'Sign In / Register',
+        authModalTitle: 'User Center · Sign In & Register',
         // Dialogs and operations
         duplicateNameTitle: 'Duplicate Reaction Name',
         duplicateNameMsg: 'A reaction named "{name}" already exists in the library. Please choose a unique name.',
@@ -226,6 +240,15 @@ class ReactionApp {
       repoBtn.title = this.lang === 'zh' ? '前往 GitHub 源代码仓库' : 'Visit GitHub Repository';
       repoBtn.textContent = dict.repoBtn || (this.lang === 'en' ? 'Repository' : 'GitHub 仓库');
     }
+    if (this.btnSaveCloud) {
+      this.btnSaveCloud.title = dict.saveCloudTitle || '保存至云端仓库';
+    }
+    if (this.headerRepoCloudBtn) {
+      this.headerRepoCloudBtn.title = this.lang === 'zh' ? '浏览云端机理模型与社区作品' : 'Browse Cloud Mechanism Repositories';
+    }
+    if (window.authCtrl && typeof window.authCtrl.updateHeaderBadge === 'function') {
+      window.authCtrl.updateHeaderBadge();
+    }
 
     this.updatePlayButtonUI();
   }
@@ -318,6 +341,8 @@ class ReactionApp {
     this.btnCompleteHydrogens = document.getElementById('btn-complete-hydrogens');
     this.btnAiAssistant = document.getElementById('btn-ai-assistant');
     this.headerAiBtn = document.getElementById('header-ai-btn');
+    this.btnSaveCloud = document.getElementById('btn-save-cloud');
+    this.headerRepoCloudBtn = document.getElementById('header-repo-cloud-btn');
     this.scriptErrorToast = document.getElementById('script-error-toast');
 
     // 底部时间轴与播放控制
@@ -516,6 +541,20 @@ class ReactionApp {
       this.headerAiBtn.addEventListener('click', () => {
         if (window.aiAssistant && typeof window.aiAssistant.openModal === 'function') {
           window.aiAssistant.openModal('new');
+        }
+      });
+    }
+    if (this.btnSaveCloud) {
+      this.btnSaveCloud.addEventListener('click', () => {
+        if (window.repoCtrl && typeof window.repoCtrl.openSaveModal === 'function') {
+          window.repoCtrl.openSaveModal();
+        }
+      });
+    }
+    if (this.headerRepoCloudBtn) {
+      this.headerRepoCloudBtn.addEventListener('click', () => {
+        if (window.repoCtrl && typeof window.repoCtrl.openModal === 'function') {
+          window.repoCtrl.openModal('public');
         }
       });
     }
@@ -1555,6 +1594,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.app = new ReactionApp();
   window.reactionApp = window.app;
 
+  // 初始化用户认证控制器 (无论是否启动 server，调用 init 都会初始化基础状态并进行安全鉴权)
+  if (window.authCtrl && typeof window.authCtrl.init === 'function') {
+    try {
+      await window.authCtrl.init();
+    } catch (err) {
+      console.warn('[Chemiation] 初始化用户认证控制器异常:', err);
+    }
+  }
+
+  // 初始化云端仓库控制器
+  if (window.repoCtrl && typeof window.repoCtrl.init === 'function') {
+    try {
+      window.repoCtrl.init();
+    } catch (err) {
+      console.warn('[Chemiation] 初始化云端仓库控制器异常:', err);
+    }
+  }
+
   // 初始化 AI 辅助机理推演控制器
   if (window.aiAssistant && typeof window.aiAssistant.init === 'function') {
     try {
@@ -1562,6 +1619,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       console.warn('[Chemiation] 初始化 AI 辅助模块异常:', err);
     }
+  }
+
+  // 支持通过 URL 参数 (?load_repo=<id>) 直接载入云端机理推演
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const repoId = urlParams.get('load_repo');
+    if (repoId && window.api) {
+      const res = await window.api.getRepo(repoId);
+      if (res && res.reaction && window.repoCtrl) {
+        window.repoCtrl.loadIntoWorkspace(res.reaction);
+      }
+    }
+  } catch (err) {
+    console.warn('[Chemiation] 无法从 URL 载入机理:', err);
   }
 
   // URL View parameter handler for instant screenshot capture & demo view
@@ -1572,7 +1643,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.reactionApp.setLanguage(lang);
     }
     const view = urlParams.get('view');
-    if (view === 'ai' && window.aiAssistant) {
+    if (view === 'auth' && window.authCtrl) {
+      window.authCtrl.openModal('login');
+    } else if (view === 'repo' && window.repoCtrl) {
+      window.repoCtrl.openModal('public');
+    } else if (view === 'ai' && window.aiAssistant) {
       window.aiAssistant.openModal('new');
       const promptEl = document.getElementById('ai-prompt-input');
       if (promptEl) promptEl.value = '请为 SN2 亲核取代反应设计三维微观机理，体现 OH⁻ 离子背面 180° 直线进攻与瓦尔登翻转。';

@@ -3,3 +3,5 @@ Thumbs.db
 .DS_Store
 node_modules/
 *.log
+server/data/session.secret
+server/data/audit_logs.json
