@@ -67,7 +67,9 @@ function getCorsHeaders(req) {
         u.hostname === 'localhost' ||
         u.hostname === '127.0.0.1' ||
         u.hostname === '[::1]' ||
-        u.hostname.endsWith('.local')
+        u.hostname.endsWith('.local') ||
+        u.hostname.endsWith('.localhost') ||
+        u.protocol === 'tauri:'
       ) {
         headers['Access-Control-Allow-Origin'] = origin;
         headers['Vary'] = 'Origin';
