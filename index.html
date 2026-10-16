@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/chemiation.css?v=1.2.0">
-  <link rel="stylesheet" href="css/modal.css?v=1.2.0">
+  <link rel="stylesheet" href="css/modal.css?v=1.2.0-ai6">
 </head>
 <body>
   <div class="app-container">
@@ -239,6 +239,16 @@
                   </svg>
                   <span class="label-shrink" data-i18n="labelShrink">缩小</span>
                 </button>
+
+                <span class="script-toolbar-divider" aria-hidden="true"></span>
+
+                <button type="button" id="btn-ai-restore-draft" class="script-btn icon-only" title="撤销 AI 载入，恢复原草稿" aria-label="撤销 AI 载入" disabled>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 14 4 9 9 4"></polyline><path d="M4 9h10a6 6 0 0 1 0 12h-2"></path>
+                  </svg>
+                  <span class="btn-label">撤销 AI 载入</span>
+                </button>
+                <!-- 视图与控制组: 还原当前机理 & 全屏切换 -->
                 <button id="btn-reset-script" class="script-btn icon-only" title="还原当前机理">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="1 4 1 10 7 10"></polyline>
@@ -570,9 +580,11 @@
       <div class="modal-tabs" style="margin-bottom: 14px;">
         <button type="button" id="ai-tab-generate" class="modal-tab-btn active">机理生成与修改</button>
         <button type="button" id="ai-tab-settings" class="modal-tab-btn">API 密钥与模型配置</button>
+        <button type="button" id="ai-tab-history" class="modal-tab-btn">历史与版本</button>
       </div>
 
       <div id="ai-modal-toast" class="ai-modal-toast" style="display: none;"></div>
+      <p id="ai-history-save-notice" class="ai-help ai-history-notice" role="status" style="display: none;"></p>
 
       <!-- 面板 1: 机理生成与修改 -->
       <div id="ai-pane-generate">
@@ -580,6 +592,18 @@
           <button type="button" id="ai-mode-new" class="ai-mode-btn active">全新机理生成</button>
           <button type="button" id="ai-mode-refine" class="ai-mode-btn">完善当前脚本</button>
           <button type="button" id="ai-mode-fix" class="ai-mode-btn">语法智能排错</button>
+        </div>
+
+        <div id="ai-edit-scope" class="ai-edit-scope" style="display: none;">
+          <span class="form-label">修改范围</span>
+          <div class="ai-option-row">
+            <label><input id="ai-scope-all" type="radio" name="ai-edit-scope" checked> 整份脚本</label>
+            <label><input id="ai-scope-selected" type="radio" name="ai-edit-scope"> 只改选定步骤</label>
+          </div>
+          <div id="ai-step-picker" style="display: none;">
+            <div id="ai-step-options" class="ai-step-options" role="group" aria-label="选择允许修改的步骤"></div>
+            <p id="ai-scope-help" class="ai-help"></p>
+          </div>
         </div>
 
         <div class="ai-chips-wrap">
@@ -597,6 +621,20 @@
           <textarea id="ai-prompt-input" class="form-textarea" rows="3" placeholder="例如: 乙酸乙酯酸催化水解机理；或 Diels-Alder 环加成反应推演..."></textarea>
         </div>
 
+        <p id="ai-automation-summary" class="ai-automation-summary" role="status">自动显示生成过程；检查失败时最多自动修正 2 次。</p>
+        <details id="ai-advanced-settings" class="ai-advanced-settings">
+          <summary>高级设置<span class="ai-advanced-hint">一般无需调整</span></summary>
+          <div class="ai-repair-options">
+            <label><input id="ai-stream-enabled" type="checkbox" checked> 逐步显示生成内容</label>
+            <label><input id="ai-auto-repair" type="checkbox" checked> 检查失败时自动纠错</label>
+            <select id="ai-repair-limit" class="form-input" aria-label="自动纠错次数上限">
+              <option value="1">最多追加 1 次请求</option>
+              <option value="2" selected>最多追加 2 次请求</option>
+            </select>
+            <p class="ai-help">默认自动逐步显示和纠错。接口不支持逐步显示时可关闭；自动纠错会再次调用模型，可能增加等待和费用。所有请求共用超时时间，可随时中止。</p>
+          </div>
+        </details>
+
         <div class="ai-actions-row">
           <button type="button" id="ai-btn-generate" class="btn-primary" style="padding: 6px 16px;">开始生成 / 修改</button>
           <button type="button" id="ai-btn-cancel" class="btn-secondary" style="display: none; padding: 6px 12px;">中止生成</button>
@@ -605,15 +643,80 @@
 
         <!-- 脚本预览区 -->
         <div id="ai-preview-section" class="ai-preview-section" style="display: none;">
+          <div id="ai-stream-progress" class="ai-stream-progress" style="display: none;">
+            <span class="ai-stream-spinner" aria-hidden="true"></span>
+            <span id="ai-stream-progress-text" role="status" aria-live="polite">等待模型返回脚本</span>
+          </div>
           <div class="ai-preview-header">
-            <span class="ai-preview-title">生成 CCPL 脚本预览</span>
+            <span id="ai-preview-title" class="ai-preview-title">生成脚本预览</span>
             <div class="ai-preview-btns">
               <button type="button" id="ai-btn-copy" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;">复制脚本</button>
-              <button type="button" id="ai-btn-apply" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;">载入编辑器</button>
-              <button type="button" id="ai-btn-run" class="btn-primary" style="padding: 3px 10px; font-size: 11px;">载入并立即推演</button>
+              <button type="button" id="ai-btn-apply" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;" disabled>载入编辑器</button>
+              <button type="button" id="ai-btn-run" class="btn-primary" style="padding: 3px 10px; font-size: 11px;" disabled>载入并立即推演</button>
             </div>
           </div>
+          <div class="ai-stream-preview-options">
+            <p id="ai-stream-note" class="ai-help" style="display: none;"></p>
+            <label><input id="ai-stream-follow" type="checkbox" checked> 跟随最新内容</label>
+          </div>
           <textarea id="ai-preview-code" class="form-textarea ai-preview-textarea" rows="8" readonly></textarea>
+          <details id="ai-comparison-section" class="ai-comparison-section" open style="display: none;">
+            <summary>修改前后对比</summary>
+            <p id="ai-change-summary" class="ai-help" role="status"></p>
+            <div class="ai-compare-grid">
+              <label>修改前 · 生成开始时的草稿
+                <textarea id="ai-compare-before" class="form-textarea ai-preview-textarea" rows="8" readonly aria-label="修改前脚本"></textarea>
+              </label>
+              <label>修改后 · 待确认结果
+                <textarea id="ai-compare-after" class="form-textarea ai-preview-textarea" rows="8" readonly aria-label="修改后脚本"></textarea>
+              </label>
+            </div>
+            <details class="ai-line-comparison">
+              <summary>查看逐行变化（− 删除，+ 新增）</summary>
+              <div id="ai-diff-lines" class="ai-diff-lines" aria-label="脚本逐行变化"></div>
+            </details>
+          </details>
+        </div>
+        <details id="ai-backup-section" style="display: none; margin-top: 12px;">
+          <summary>AI 载入前的草稿备份</summary>
+          <p style="font-size: 12px;">恢复前会检查当前内容；若已继续修改，可在此复制原稿。</p>
+          <textarea id="ai-backup-code" class="form-textarea ai-preview-textarea" rows="5" readonly aria-label="AI 载入前的草稿"></textarea>
+          <button type="button" id="ai-btn-restore-draft" class="btn-secondary" disabled>恢复载入前草稿</button>
+        </details>
+      </div>
+
+      <div id="ai-pane-history" style="display: none;">
+        <p id="ai-history-storage-info" class="ai-help">历史保存在当前浏览器，按本地账号区分；不会跨设备同步。</p>
+        <div class="ai-history-tools">
+          <input id="ai-history-search" class="form-input" type="search" placeholder="搜索需求、机理或模型" aria-label="搜索生成历史">
+          <select id="ai-history-filter" class="form-select" aria-label="筛选历史状态">
+            <option value="all">全部记录</option><option value="ready">检查通过</option>
+            <option value="other">失败或未完成</option><option value="snapshot">草稿快照</option>
+          </select>
+          <button id="ai-history-refresh" type="button" class="btn-secondary">刷新</button>
+          <button id="ai-history-save-draft" type="button" class="btn-secondary">保存当前草稿</button>
+          <button id="ai-history-export" type="button" class="btn-secondary">导出历史</button>
+        </div>
+        <p id="ai-history-feedback" class="ai-help" role="status"></p>
+        <div id="ai-history-list" class="ai-history-list" aria-label="生成历史记录"></div>
+        <div id="ai-history-detail" class="ai-history-detail" style="display: none;">
+          <p id="ai-history-meta" class="ai-help"></p>
+          <details><summary>查看当时的需求</summary><p id="ai-history-prompt" class="ai-help"></p></details>
+          <label class="form-label" for="ai-history-version">选择版本</label>
+          <select id="ai-history-version" class="form-select"></select>
+          <textarea id="ai-history-code" class="form-textarea ai-preview-textarea" rows="8" readonly aria-label="所选历史版本内容"></textarea>
+          <div class="ai-history-tools">
+            <button id="ai-history-copy" type="button" class="btn-secondary" disabled>复制此版本</button>
+            <button id="ai-history-prepare" type="button" class="btn-secondary" disabled>与当前草稿对比</button>
+          </div>
+          <div id="ai-history-comparison" class="ai-comparison-section" style="display: none;">
+            <p id="ai-history-compare-summary" class="ai-help"></p>
+            <div class="ai-compare-grid">
+              <label>当前草稿 · 恢复前<textarea id="ai-history-current" class="form-textarea ai-preview-textarea" rows="8" readonly aria-label="恢复前当前草稿"></textarea></label>
+              <label>选中的旧版本<textarea id="ai-history-selected" class="form-textarea ai-preview-textarea" rows="8" readonly aria-label="准备恢复的历史版本"></textarea></label>
+            </div>
+            <button id="ai-history-restore" type="button" class="btn-primary" disabled>恢复此版本到当前编辑器</button>
+          </div>
         </div>
       </div>
 
@@ -660,6 +763,11 @@
           <input id="ai-model-name" class="form-input" type="text" placeholder="deepseek-chat">
         </div>
 
+        <div class="form-group">
+          <label class="form-label" for="ai-timeout-seconds">请求超时（秒）</label>
+          <input id="ai-timeout-seconds" class="form-input" type="number" min="5" max="300" step="1" value="90">
+          <p style="font-size: 11px; margin-top: 6px;">默认 90 秒，可设置为 5–300 秒；超时会结束请求并保留草稿。</p>
+        </div>
         <div style="display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap;">
           <button type="button" id="ai-btn-save-config" class="btn-primary" style="padding: 6px 16px;">保存配置</button>
           <button type="button" id="ai-btn-test-conn" class="btn-secondary" style="padding: 6px 14px;">测试连接</button>
@@ -703,9 +811,14 @@
   <script src="js/storageManager.js?v=20261016b"></script>
   <script src="js/pseudo3DRenderer.js?v=20261016b"></script>
   <script src="js/api.js?v=20261016b"></script>
-  <script src="js/auth.js?v=20261016b"></script>
-  <script src="js/repo.js?v=20261016b"></script>
-  <script src="js/aiAssistant.js?v=20261016b"></script>
-  <script src="js/reactionApp.js?v=20261016b"></script>
+  <script src="js/auth.js?v=20261016-ai6"></script>
+  <script src="js/repo.js?v=20261016-ai6"></script>
+  <script src="js/aiStream.js?v=20261016-ai6"></script>
+  <script src="js/aiTaskSafety.js?v=20261016-ai6"></script>
+  <script src="js/aiEditingTools.js?v=20261016-ai6"></script>
+  <script src="js/aiHistory.js?v=20261016-ai6"></script>
+  <script src="js/aiHistoryPanel.js?v=20261016-ai6"></script>
+  <script src="js/aiAssistant.js?v=20261016-ai6"></script>
+  <script src="js/reactionApp.js?v=20261016-ai6"></script>
 </body>
 </html>

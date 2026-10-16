@@ -970,9 +970,9 @@ class ReactionApp {
       card.innerHTML = `
         <div class="step-card-top">
           <div class="step-card-num">${idx + 1}</div>
-          <div class="step-card-title">${cleanTitle}</div>
+          <div class="step-card-title">${this.escapeHtml(cleanTitle)}</div>
         </div>
-        <div class="step-card-note">${cleanNote}</div>
+        <div class="step-card-note">${this.escapeHtml(cleanNote)}</div>
       `;
 
       card.addEventListener('click', () => {
@@ -1028,7 +1028,7 @@ class ReactionApp {
       const cleanTitle = format(step.name.replace(/^\d+\.\s*/, ''));
       this.canvasStepToast.innerHTML = `
         <span class="toast-num">${stepIndex + 1}/${totalSteps}</span>
-        <span class="toast-title">${cleanTitle}</span>
+        <span class="toast-title">${this.escapeHtml(cleanTitle)}</span>
       `;
     }
 
