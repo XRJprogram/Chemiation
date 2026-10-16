@@ -407,3 +407,11 @@ const authCtrl = {
 };
 
 window.authCtrl = authCtrl;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('chemiation:server-online', () => {
+    if (window.authCtrl && typeof window.authCtrl.init === 'function') {
+      window.authCtrl.init().catch(() => {});
+    }
+  });
+}

@@ -24,11 +24,8 @@ echo   * 客户端主站地址:   http://localhost:3000
 echo   * 服务器监控管理台: http://localhost:3000/admin.html
 echo =====================================================================
 echo.
-echo 正在为您在默认浏览器中打开 Chemiation...
-start "" "http://localhost:3000"
-
-echo 正在运行服务主机，按 Ctrl + C 可终止服务...
+echo 正在启动服务并在就绪后自动打开浏览器，按 Ctrl + C 可终止服务...
 echo.
-node "%~dp0server.js"
+node "%~dp0server.js" --open
 
 pause

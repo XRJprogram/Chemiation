@@ -66,6 +66,7 @@ const api = {
   },
 
   setServerConnected(connected) {
+    const prevState = this.isServerAvailable;
     this.isServerAvailable = !!connected;
     if (typeof document !== 'undefined' && document.body) {
       if (this.isServerAvailable) {
@@ -74,32 +75,55 @@ const api = {
         document.body.classList.remove('server-connected');
       }
     }
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && prevState !== this.isServerAvailable) {
       try {
         window.dispatchEvent(new CustomEvent(connected ? 'chemiation:server-online' : 'chemiation:server-offline'));
       } catch {}
     }
   },
 
-  // Health check to test server connectivity with 600ms timeout
+  // Health check to test server connectivity with fallback URLs and 1200ms timeout
   async ping() {
-    try {
-      const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-      const timeoutId = controller ? setTimeout(() => controller.abort(), 600) : null;
-      const res = await fetch(`${API_CONFIG.baseUrl}/api/health`, {
-        method: 'GET',
-        signal: controller ? controller.signal : undefined
-      });
-      if (timeoutId) clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const ok = data && data.status === 'ok';
-        this.setServerConnected(ok);
-        return ok;
+    const tryPingUrl = async (url) => {
+      try {
+        const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), 1200) : null;
+        const res = await fetch(`${url}/api/health`, {
+          method: 'GET',
+          signal: controller ? controller.signal : undefined
+        });
+        if (timeoutId) clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return data && data.status === 'ok';
+        }
+      } catch {}
+      return false;
+    };
+
+    // 1. Probe current baseUrl
+    let ok = await tryPingUrl(API_CONFIG.baseUrl);
+
+    // 2. Fallback to http://localhost:3000 if different
+    if (!ok && API_CONFIG.baseUrl !== 'http://localhost:3000') {
+      const okLocal = await tryPingUrl('http://localhost:3000');
+      if (okLocal) {
+        API_CONFIG.baseUrl = 'http://localhost:3000';
+        ok = true;
       }
-    } catch {}
-    this.setServerConnected(false);
-    return false;
+    }
+
+    // 3. Fallback to http://127.0.0.1:3000 if different
+    if (!ok && API_CONFIG.baseUrl !== 'http://127.0.0.1:3000') {
+      const okIp = await tryPingUrl('http://127.0.0.1:3000');
+      if (okIp) {
+        API_CONFIG.baseUrl = 'http://127.0.0.1:3000';
+        ok = true;
+      }
+    }
+
+    this.setServerConnected(ok);
+    return ok;
   },
 
   // =========================================================================
@@ -525,15 +549,35 @@ const api = {
 
 if (typeof window !== 'undefined') {
   window.api = api;
+
+  let _pollTimer = null;
+  const startPingLoop = (initialDelay = 100) => {
+    if (_pollTimer) clearTimeout(_pollTimer);
+    _pollTimer = setTimeout(async () => {
+      const isOnline = await api.ping().catch(() => false);
+      // When offline, poll every 3s so starting server.bat connects quickly
+      // When online, poll every 20s to maintain heartbeat
+      startPingLoop(isOnline ? 20000 : 3000);
+    }, initialDelay);
+  };
+
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        api.ping().catch(() => {});
+        startPingLoop(100);
       });
     } else {
-      api.ping().catch(() => {});
+      startPingLoop(100);
     }
   }
+
+  // Ping immediately when user focuses the tab (e.g. switching from server.bat terminal to browser)
+  window.addEventListener('focus', () => {
+    api.ping().catch(() => {});
+  });
+  window.addEventListener('online', () => {
+    api.ping().catch(() => {});
+  });
 }
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = api;

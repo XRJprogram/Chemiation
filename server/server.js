@@ -58,7 +58,7 @@ function getCorsHeaders(req) {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'X-Content-Type-Options': 'nosniff'
   };
-  if (!origin) {
+  if (!origin || origin === 'null' || origin.startsWith('file://')) {
     headers['Access-Control-Allow-Origin'] = '*';
   } else {
     try {
@@ -942,7 +942,16 @@ const server = http.createServer(handleRequest);
 server.handleRequest = handleRequest;
 
 if (require.main === module) {
-  server.listen(PORT, () => {
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n[错误] 端口 ${PORT} 已被占用！无法启动服务端。`);
+      console.error(`请检查是否有其他 Chemiation 或 Node.js 进程正在运行，或关闭占用 ${PORT} 端口的程序。\n`);
+    } else {
+      console.error('\n[Server Fatal Error]', err);
+    }
+  });
+
+  server.listen(PORT, '0.0.0.0', () => {
     console.log('================================================================');
     console.log(' Chemiation · Chemical Reaction Principle & Mechanism Studio');
     console.log(` Server Engine running at: http://localhost:${PORT}`);
@@ -950,6 +959,12 @@ if (require.main === module) {
     console.log(` Static Root: ${ROOT_DIR}`);
     console.log(' Pure Minimalist Architecture · Zero External Dependencies');
     console.log('================================================================');
+
+    if (process.argv.includes('--open') || process.env.AUTO_OPEN === '1') {
+      const openCmd = process.platform === 'win32' ? 'start ""' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
+      const { exec } = require('child_process');
+      exec(`${openCmd} "http://localhost:${PORT}"`);
+    }
   });
 }
 

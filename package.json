@@ -41,6 +41,8 @@
     "docs.html",
     "docs_en.html",
     "server/",
+    "server.bat",
+    "start-server.bat",
     "README.md"
   ]
 }
