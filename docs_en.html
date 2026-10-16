@@ -342,7 +342,7 @@
 <span class="comment"># Mechanism summary and background (optional)</span>
 <span class="keyword">summary</span> <span class="string">"Nucleophilic acyl substitution: reactant approach, tetrahedral intermediate formation, followed by elimination to form ethyl acetate and water."</span></code></pre>
       <div class="note-box">
-        <strong>💡 Subscript & LaTeX Notation:</strong> When writing equations, summaries, or step notes, <strong>there is no need to manually insert Unicode subscript characters</strong>:
+        <strong>[Note] Subscript & LaTeX Notation:</strong> When writing equations, summaries, or step notes, <strong>there is no need to manually insert Unicode subscript characters</strong>:
         <ul style="margin: 6px 0 0 18px; padding: 0;">
           <li><strong>Automatic Chemical Subscripts</strong>: Digits following element symbols or closing brackets (such as <code>CH3COOH</code>, <code>H2O</code>, <code>CO2</code>, <code>C6H12O6</code>) are automatically parsed into subscripts (<code>CH₃COOH</code>, <code>H₂O</code>, <code>CO₂</code>, <code>C₆H₁₂O₆</code>).</li>
           <li><strong>Explicit Subscript Syntax</strong>: Supports <code>_2</code>, <code>_{10}</code>, and <code>_n</code> (e.g. <code>H_2O</code> &rarr; <code>H₂O</code>, <code>[C6H10O5]_n</code> &rarr; <code>[C₆H₁₀O₅]ₙ</code>).</li>
@@ -408,7 +408,7 @@
         <li><code>bond N1 N2 3</code>: Triple bond between N1 and N2 (e.g. dinitrogen N&equiv;N).</li>
       </ul>
       <div class="note-box">
-        <strong>💡 Note:</strong> Bonds are rendered with a smooth depth gradient reflecting both connected atoms and spatial depth.
+        <strong>[Note]</strong> Bonds are rendered with a smooth depth gradient reflecting both connected atoms and spatial depth.
       </div>
 
       <h3>4.3 Radicals (radical) and Formal Charges (charge)</h3>
@@ -491,7 +491,7 @@
         <li><code>atom &lt;ID&gt; &lt;Element&gt; explicit</code> (or <code>noImplicitH</code>): Explicitly suppresses hydrogen completion on individual atoms, leaving bare radical sites or unsatisfied coordination positions.</li>
       </ul>
       <div class="note-box">
-        <strong>💡 Toolbar "Complete H":</strong> Clicking the "Complete H" button in the deduction studio toolbar (or pressing <kbd>Alt + H</kbd>) converts the current script's implicit hydrogens into explicit <code>atom H...</code> and <code>bond ... 1</code> declarations in the editor, allowing further manual edits or individual proton-transfer steps.
+        <strong>[Note] Toolbar "Complete H":</strong> Clicking the "Complete H" button in the deduction studio toolbar (or pressing <kbd>Alt + H</kbd>) converts the current script's implicit hydrogens into explicit <code>atom H...</code> and <code>bond ... 1</code> declarations in the editor, allowing further manual edits or individual proton-transfer steps.
       </div>
 
     </section>
@@ -600,6 +600,37 @@
         <div class="kbd-item">
           <span>Complete Hydrogens</span>
           <kbd>Alt + H</kbd>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. AI Mechanism Assistant & CCPL Generator -->
+    <section class="section-card" id="ai-generator">
+      <h2>8. AI Mechanism Assistant & CCPL Generator</h2>
+      <p>
+        Chemiation includes an intelligent AI assistant module integrated directly into the CCPL editor. Click the <code>[AI Assistant]</code> button in the script toolbar to open the interactive generator.
+      </p>
+
+      <div class="callout callout-tip">
+        <strong>Privacy & Security Commitment:</strong> Your API Key is strictly stored in your local browser's LocalStorage and is never uploaded, proxied, or logged by the Chemiation server.
+      </div>
+
+      <div class="card-grid">
+        <div class="rule-card">
+          <h4>Multi-Provider Presets</h4>
+          <p>Built-in configurations for DeepSeek (deepseek-chat), Alibaba Qwen (DashScope compatible), OpenAI (GPT-4o-mini), SiliconFlow, Moonshot (Kimi), and local offline Ollama models, as well as custom OpenAI-compatible endpoints.</p>
+        </div>
+        <div class="rule-card">
+          <h4>Strict Chemical & CCPL Constraints</h4>
+          <p>Engineered system prompt enforces atomic mass conservation, elementary step charge balance, and 3D VSEPR spatial topologies. Generated output is validated in real time by Chemiation's CCPL parser.</p>
+        </div>
+        <div class="rule-card">
+          <h4>Three Operating Modes</h4>
+          <p>
+            1. <strong>New Mechanism Generation:</strong> Generate complete multi-step deduction scripts from chemical names and prompts.<br>
+            2. <strong>Refine Current Script:</strong> Modify, expand, or insert transition states into the editor's existing CCPL script.<br>
+            3. <strong>Smart Syntax Repair:</strong> Automatically diagnose and correct syntax and structural errors with one click.
+          </p>
         </div>
       </div>
     </section>

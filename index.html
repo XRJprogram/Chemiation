@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/chemiation.css">
+  <link rel="stylesheet" href="css/modal.css">
 </head>
 <body>
   <div class="app-container">
@@ -32,6 +33,12 @@
           </svg>
           <span data-i18n="repoBtn">GitHub 仓库</span>
         </a>
+        <button id="header-ai-btn" class="header-lang-btn" style="color: var(--color-accent, #b84a28); border-color: rgba(184, 74, 40, 0.35); background: rgba(184, 74, 40, 0.08); display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;" title="AI 辅助推演与机理生成 (Alt+A)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+          <span data-i18n="aiBtn">AI 助手</span>
+        </button>
         <button id="header-lang-btn" class="header-lang-btn" title="切换语言 / Switch Language">中文</button>
       </div>
 
@@ -211,6 +218,12 @@
                   </svg>
                   <span data-i18n="btnCompleteH">补全 H</span>
                 </button>
+                <button id="btn-ai-assistant" class="script-btn ai-btn icon-only" title="AI 辅助推演与机理生成 (快捷键: Alt + A)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                  </svg>
+                  <span class="btn-label" data-i18n="btnAiAssistant">AI 辅助</span>
+                </button>
               </div>
             </div>
 
@@ -280,11 +293,136 @@
     </div>
   </div>
 
+  <!-- AI 辅助机理推演与 CCPL 脚本生成器弹窗 (严格无 Emoji) -->
+  <div id="ai-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title" style="display: none;">
+    <div class="modal-box ai-modal-box">
+      <div class="modal-top">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <h2 id="ai-modal-title" style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent, #b84a28);">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+            <span data-i18n="aiModalTitle">AI 机理推演脚本生成器</span>
+          </h2>
+          <span id="ai-key-status-badge" class="ai-status-pill unconfigured">[未配置 API 密钥]</span>
+        </div>
+        <button class="close-modal-btn close-ai-modal" title="关闭 (Esc)" aria-label="关闭">×</button>
+      </div>
+
+      <div class="modal-tabs" style="margin-bottom: 14px;">
+        <button type="button" id="ai-tab-generate" class="modal-tab-btn active">机理生成与修改</button>
+        <button type="button" id="ai-tab-settings" class="modal-tab-btn">API 密钥与模型配置</button>
+      </div>
+
+      <div id="ai-modal-toast" class="ai-modal-toast" style="display: none;"></div>
+
+      <!-- 面板 1: 机理生成与修改 -->
+      <div id="ai-pane-generate">
+        <div class="ai-mode-selector">
+          <button type="button" id="ai-mode-new" class="ai-mode-btn active">全新机理生成</button>
+          <button type="button" id="ai-mode-refine" class="ai-mode-btn">完善当前脚本</button>
+          <button type="button" id="ai-mode-fix" class="ai-mode-btn">语法智能排错</button>
+        </div>
+
+        <div class="ai-chips-wrap">
+          <span class="ai-chips-label">常用预设模板：</span>
+          <div class="ai-chips-list">
+            <button type="button" class="ai-chip" data-prompt="乙醇浓硫酸催化脱水制乙烯机理 (质子化、脱水碳正离子生成、消除反应)">乙醇脱水制乙烯</button>
+            <button type="button" class="ai-chip" data-prompt="苯的硝化亲电芳香取代机理 (NO2+亲电进攻、西格玛络合物加成与去质子复芳构化)">苯亲电硝化</button>
+            <button type="button" class="ai-chip" data-prompt="乙酸与乙醇浓硫酸催化费歇尔酯化机理 (质子化、亲核加成四面体中间体、脱水消去与脱质子)">费歇尔酯化反应</button>
+            <button type="button" class="ai-chip" data-prompt="环戊二烯与顺丁烯二酸酐 Diels-Alder [4+2] 环加成反应协同单步机理">Diels-Alder 环加成</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label id="ai-prompt-label" class="form-label" for="ai-prompt-input">反应名称或推演要求：</label>
+          <textarea id="ai-prompt-input" class="form-textarea" rows="3" placeholder="例如: 乙酸乙酯酸催化水解机理；或 Diels-Alder 环加成反应推演..."></textarea>
+        </div>
+
+        <div class="ai-actions-row">
+          <button type="button" id="ai-btn-generate" class="btn-primary" style="padding: 6px 16px;">开始生成 / 修改</button>
+          <button type="button" id="ai-btn-cancel" class="btn-secondary" style="display: none; padding: 6px 12px;">中止生成</button>
+          <span id="ai-generation-status" class="ai-status-badge pending" style="display: none;">[等待操作]</span>
+        </div>
+
+        <!-- 脚本预览区 -->
+        <div id="ai-preview-section" class="ai-preview-section" style="display: none;">
+          <div class="ai-preview-header">
+            <span class="ai-preview-title">生成 CCPL 脚本预览</span>
+            <div class="ai-preview-btns">
+              <button type="button" id="ai-btn-copy" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;">复制脚本</button>
+              <button type="button" id="ai-btn-apply" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;">载入编辑器</button>
+              <button type="button" id="ai-btn-run" class="btn-primary" style="padding: 3px 10px; font-size: 11px;">载入并立即推演</button>
+            </div>
+          </div>
+          <textarea id="ai-preview-code" class="form-textarea ai-preview-textarea" rows="8" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- 面板 2: API 密钥与模型配置 -->
+      <div id="ai-pane-settings" style="display: none;">
+        <div class="ai-settings-banner" style="margin-bottom: 14px;">
+          API 密钥仅保存在当前浏览器的 LocalStorage 中，不会传输至 Chemiation 服务器。
+          支持任何符合 OpenAI 规范的 API 接口 (如 DeepSeek, Qwen DashScope, SiliconFlow, Ollama 等)。
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ai-provider-select">模型服务商预设</label>
+          <select id="ai-provider-select" class="form-select">
+            <option value="deepseek">DeepSeek (deepseek-chat / deepseek-reasoner)</option>
+            <option value="qwen">通义千问 Qwen (DashScope 兼容)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="siliconflow">SiliconFlow 硅基流动 (DeepSeek-V3 / Qwen-2.5)</option>
+            <option value="moonshot">Moonshot 月之暗面 (Kimi)</option>
+            <option value="ollama">Ollama (本地部署开源大模型)</option>
+            <option value="custom">自定义兼容端点 (Custom OpenAI Endpoint)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ai-base-url">API 接口地址 (Base URL)</label>
+          <input id="ai-base-url" class="form-input" type="text" placeholder="https://api.deepseek.com/v1">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ai-api-key">API 密钥 (API Key)</label>
+          <div class="ai-key-input-wrap">
+            <input id="ai-api-key" class="form-input" type="password" placeholder="sk-..." autocomplete="off">
+            <button type="button" id="ai-toggle-key-visibility" class="ai-eye-btn" title="显示或隐藏密钥">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ai-model-name">模型标识 (Model Identifier)</label>
+          <input id="ai-model-name" class="form-input" type="text" placeholder="deepseek-chat">
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap;">
+          <button type="button" id="ai-btn-save-config" class="btn-primary" style="padding: 6px 16px;">保存配置</button>
+          <button type="button" id="ai-btn-test-conn" class="btn-secondary" style="padding: 6px 14px;">测试连接</button>
+          <button type="button" id="ai-btn-clear-key" class="btn-secondary" style="padding: 6px 12px; color: #b84a28;">清空本地密钥</button>
+        </div>
+
+        <div id="ai-test-result" class="ai-test-result" style="display: none;"></div>
+
+        <p style="font-size: 11px; color: var(--color-text-muted, #7e6351); margin-top: 14px; line-height: 1.5;">
+          注：系统提示词已内置 CCPL 语法规则、原子拓扑守恒与 VSEPR 立体构型约束。大模型输出后将由 Chemiation 引擎即时校验结构合法性。
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- 核心逻辑与引擎脚本加载 -->
   <script src="js/reactionData.js"></script>
   <script src="js/scriptParser.js"></script>
   <script src="js/storageManager.js"></script>
   <script src="js/pseudo3DRenderer.js"></script>
+  <script src="js/aiAssistant.js"></script>
   <script src="js/reactionApp.js"></script>
 </body>
 </html>

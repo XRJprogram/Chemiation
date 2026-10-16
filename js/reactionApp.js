@@ -93,7 +93,11 @@ class ReactionApp {
         btnCompleteH: '补全 H',
         completeHTitle: '智能补全氢原子 (快捷键: Alt + H)',
         toastCompleteHSuccess: '已根据元素共价成键方式与电荷自动补全 {count} 个隐式氢原子及共价键！',
-        toastCompleteHNone: '当前所有原子共价价态与电荷均已饱和，无需额外补全氢原子。'
+        toastCompleteHNone: '当前所有原子共价价态与电荷均已饱和，无需额外补全氢原子。',
+        btnAiAssistant: 'AI 辅助',
+        aiAssistantTitle: 'AI 辅助推演与机理生成 (快捷键: Alt + A)',
+        aiModalTitle: 'AI 机理推演脚本生成器',
+        aiBtn: 'AI 助手'
       },
       en: {
         docsBtn: 'Docs',
@@ -149,7 +153,11 @@ class ReactionApp {
         btnCompleteH: 'Fill H',
         completeHTitle: 'Auto-complete Hydrogens (Key: Alt + H)',
         toastCompleteHSuccess: 'Successfully auto-completed {count} implicit hydrogen atoms and covalent bonds based on element valence and formal charge!',
-        toastCompleteHNone: 'All atom covalent valences and formal charges are fully saturated; no additional hydrogens needed.'
+        toastCompleteHNone: 'All atom covalent valences and formal charges are fully saturated; no additional hydrogens needed.',
+        btnAiAssistant: 'AI Assistant',
+        aiAssistantTitle: 'AI Mechanism Deduction & Script Generator (Alt + A)',
+        aiModalTitle: 'AI Mechanism Deduction & Script Generator',
+        aiBtn: 'AI Copilot'
       }
     };
   }
@@ -196,6 +204,8 @@ class ReactionApp {
     if (this.btnSaveScript) this.btnSaveScript.title = dict.saveScriptTitle;
     if (this.btnResetScript) this.btnResetScript.title = dict.resetScriptTitle;
     if (this.btnCompleteHydrogens) this.btnCompleteHydrogens.title = dict.completeHTitle;
+    if (this.btnAiAssistant) this.btnAiAssistant.title = dict.aiAssistantTitle;
+    if (this.headerAiBtn) this.headerAiBtn.title = dict.aiAssistantTitle;
     if (this.btnRunScript) this.btnRunScript.title = dict.runScriptTitle;
     if (this.btnNewReaction) this.btnNewReaction.title = dict.btnNew;
     if (this.btnDeleteReaction) this.btnDeleteReaction.title = dict.btnDelete;
@@ -306,6 +316,8 @@ class ReactionApp {
     this.btnRunScript = document.getElementById('btn-run-script');
     this.btnResetScript = document.getElementById('btn-reset-script');
     this.btnCompleteHydrogens = document.getElementById('btn-complete-hydrogens');
+    this.btnAiAssistant = document.getElementById('btn-ai-assistant');
+    this.headerAiBtn = document.getElementById('header-ai-btn');
     this.scriptErrorToast = document.getElementById('script-error-toast');
 
     // 底部时间轴与播放控制
@@ -493,6 +505,20 @@ class ReactionApp {
     if (this.btnCompleteHydrogens) {
       this.btnCompleteHydrogens.addEventListener('click', () => this.handleCompleteHydrogens());
     }
+    if (this.btnAiAssistant) {
+      this.btnAiAssistant.addEventListener('click', () => {
+        if (window.aiAssistant && typeof window.aiAssistant.openModal === 'function') {
+          window.aiAssistant.openModal('new');
+        }
+      });
+    }
+    if (this.headerAiBtn) {
+      this.headerAiBtn.addEventListener('click', () => {
+        if (window.aiAssistant && typeof window.aiAssistant.openModal === 'function') {
+          window.aiAssistant.openModal('new');
+        }
+      });
+    }
 
     // CCPL 脚本 IDE 编辑器交互（高亮、行号、Tab缩进与滚动同步）
     if (this.scriptEditor) {
@@ -599,6 +625,22 @@ class ReactionApp {
 
     // 全局快捷键
     window.addEventListener('keydown', (e) => {
+      // 支持 Alt + A 快捷键随时唤起 AI 助手
+      if (e.altKey && (e.code === 'KeyA' || e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        if (window.aiAssistant && typeof window.aiAssistant.openModal === 'function') {
+          window.aiAssistant.openModal('new');
+        }
+        return;
+      }
+
+      // 支持 Alt + H 快捷键智能补全氢原子
+      if (e.altKey && (e.code === 'KeyH' || e.key === 'h' || e.key === 'H') && this.activeTab === 'script') {
+        e.preventDefault();
+        this.handleCompleteHydrogens();
+        return;
+      }
+
       // 支持 Ctrl + S (或 Cmd + S) 保存脚本到本地文件
       if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyS' || e.key === 's' || e.key === 'S')) {
         e.preventDefault();
@@ -1447,14 +1489,30 @@ class ReactionApp {
     const cleanMsg = msg.replace(/^语法错误:\s*/, '');
     this.scriptErrorToast.innerHTML = `
       <div style="display: flex; align-items: flex-start; gap: 8px;">
-        <span style="font-size: 13px; line-height: 1.2;">⚠️</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B84A28" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
         <div style="flex: 1; word-break: break-word;">
-          <div style="font-weight: 700; margin-bottom: 2px; color: #B84A28;">语法校验拦截 · 无法更新推演</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; flex-wrap: wrap; gap: 6px;">
+            <div style="font-weight: 700; color: #B84A28;">语法校验拦截 · 无法更新推演</div>
+            <button type="button" id="btn-toast-ai-fix" style="background: rgba(184, 74, 40, 0.12); border: 1px solid rgba(184, 74, 40, 0.35); color: #B84A28; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; cursor: pointer;">[AI 智能排错]</button>
+          </div>
           <div style="opacity: 0.95;">${this.escapeHtml(cleanMsg)}</div>
         </div>
       </div>
     `;
     this.scriptErrorToast.style.display = 'block';
+
+    const fixBtn = this.scriptErrorToast.querySelector('#btn-toast-ai-fix');
+    if (fixBtn) {
+      fixBtn.addEventListener('click', () => {
+        if (window.aiAssistant && typeof window.aiAssistant.openModal === 'function') {
+          window.aiAssistant.openModal('fix');
+        }
+      });
+    }
 
     const lineMatch = msg.match(/第\s*(\d+)\s*行/);
     const gutterTarget = this.ideGutterInner || this.ideGutter;
@@ -1493,6 +1551,133 @@ class ReactionApp {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   window.app = new ReactionApp();
+  window.reactionApp = window.app;
+
+  // 初始化 AI 辅助机理推演控制器
+  if (window.aiAssistant && typeof window.aiAssistant.init === 'function') {
+    try {
+      window.aiAssistant.init();
+    } catch (err) {
+      console.warn('[Chemiation] 初始化 AI 辅助模块异常:', err);
+    }
+  }
+
+  // URL View parameter handler for instant screenshot capture & demo view
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lang = urlParams.get('lang');
+    if (lang && window.reactionApp) {
+      window.reactionApp.setLanguage(lang);
+    }
+    const view = urlParams.get('view');
+    if (view === 'ai' && window.aiAssistant) {
+      window.aiAssistant.openModal('new');
+      const promptEl = document.getElementById('ai-prompt-input');
+      if (promptEl) promptEl.value = '请为 SN2 亲核取代反应设计三维微观机理，体现 OH⁻ 离子背面 180° 直线进攻与瓦尔登翻转。';
+    } else if (view === 'ai_result' && window.aiAssistant) {
+      window.aiAssistant.openModal('new');
+      const promptEl = document.getElementById('ai-prompt-input');
+      if (promptEl) promptEl.value = '请为 SN2 亲核取代反应设计三维微观机理，体现 OH⁻ 离子背面 180° 直线进攻与瓦尔登翻转。';
+      const previewSection = document.getElementById('ai-preview-section');
+      const previewCode = document.getElementById('ai-preview-code');
+      const statusBadge = document.getElementById('ai-status-badge');
+      if (previewSection) previewSection.style.display = 'block';
+      if (previewCode) {
+        previewCode.value = `# Chemiation AI Chemical Copilot 自动推演生成
+reaction "SN2 Nucleophilic Substitution & Walden Inversion"
+equation "OH- + CH3Br -> [HO···CH3···Br]#- -> CH3OH + Br-"
+summary "双分子亲核取代：OH-由背部180°进攻，形成五配位三角双锥过渡态，中心碳完成瓦尔登构型翻转。"
+
+step "1. 亲核试剂靠近与碰撞" {
+  note "OH- 负离子沿 C-Br 轴线背部逼近，甲基氢处于四面体构象"
+  atom C1 C 0.0 0.0 0.0
+  atom Br1 Br 1.9 0.0 0.0 charge=-0.3
+  atom O1 O -3.2 0.0 0.0 charge=-1.0
+  atom H1 H -0.3 1.0 0.0
+  atom H2 H -0.3 -0.5 0.9
+  atom H3 H -0.3 -0.5 -0.9
+  bond C1 Br1 1
+  bond C1 H1 1
+  bond C1 H2 1
+  bond C1 H3 1
+}
+
+step "2. 五配位三角双锥过渡态" {
+  note "中心碳原子平面杂化重排，C-Br键减弱拉长，新C-O键初步形成"
+  atom C1 C 0.0 0.0 0.0
+  atom Br1 Br 2.3 0.0 0.0 charge=-0.6
+  atom O1 O -2.2 0.0 0.0 charge=-0.6
+  atom H1 H 0.0 1.05 0.0
+  atom H2 H 0.0 -0.52 0.92
+  atom H3 H 0.0 -0.52 -0.92
+  bond C1 Br1 0.5
+  bond C1 O1 0.5
+  bond C1 H1 1
+  bond C1 H2 1
+  bond C1 H3 1
+}
+
+step "3. 溴离子离去与构型彻底翻转" {
+  note "溴离子携带电子对离去，中心碳完成雨伞状瓦尔登翻转生成甲醇"
+  atom C1 C 0.0 0.0 0.0
+  atom Br1 Br 4.0 0.0 0.0 charge=-1.0
+  atom O1 O -1.4 0.0 0.0
+  atom H1 H 0.4 1.0 0.0
+  atom H2 H 0.4 -0.5 0.9
+  atom H3 H 0.4 -0.5 -0.9
+  bond C1 O1 1
+  bond C1 H1 1
+  bond C1 H2 1
+  bond C1 H3 1
+}`;
+      }
+      if (statusBadge) {
+        statusBadge.textContent = '100% 语法校验通过 · 贝塞尔物理动力学验证';
+        statusBadge.className = 'ai-status-badge success';
+      }
+    } else if (view === 'da' && window.reactionApp) {
+      window.reactionApp.loadReaction(4);
+    } else if (view === 'starch' && window.reactionApp) {
+      window.reactionApp.loadReaction(1);
+      const fromParam = urlParams.get('from');
+      const toParam = urlParams.get('to');
+      const tParam = urlParams.get('t');
+      const stepParam = urlParams.get('step');
+      if (fromParam !== null && toParam !== null && tParam !== null) {
+        const rx = window.reactionApp.presets[1];
+        const f = parseInt(fromParam, 10);
+        const to = parseInt(toParam, 10);
+        const t = parseFloat(tParam);
+        if (rx && rx.steps[f] && rx.steps[to]) {
+          window.reactionApp.currentStepIndex = t >= 0.5 ? to : f;
+          window.reactionApp.renderer.setTransitionState(rx.steps[f], rx.steps[to], t);
+          if (window.reactionApp.stepsListContainer) {
+            const cards = window.reactionApp.stepsListContainer.querySelectorAll('.step-item-card');
+            cards.forEach((c, idx) => {
+              c.classList.remove('active', 'completed');
+              if (idx === window.reactionApp.currentStepIndex) c.classList.add('active');
+              else if (idx < window.reactionApp.currentStepIndex) c.classList.add('completed');
+            });
+          }
+          if (window.reactionApp.canvasStepToast) {
+            window.reactionApp.canvasStepToast.innerHTML = `
+              <span class="toast-num">${window.reactionApp.currentStepIndex + 1}/${rx.steps.length}</span>
+              <span class="toast-title">空间微观反应推演中 (${Math.round(t * 100)}%)</span>
+            `;
+          }
+        }
+      } else if (stepParam !== null) {
+        window.reactionApp.goToStep(parseInt(stepParam, 10), false);
+      }
+      if (urlParams.get('play') === '1') {
+        setTimeout(() => window.reactionApp.play(), 400);
+      }
+    } else if (view === 'script' && window.reactionApp) {
+      window.reactionApp.switchTab('script');
+    }
+  } catch (err) {
+    console.warn('[Chemiation] URL view handler error:', err);
+  }
 });

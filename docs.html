@@ -334,7 +334,7 @@
 <span class="comment"># 机理概述与背景说明（可选）</span>
 <span class="keyword">summary</span> <span class="string">"经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。"</span></code></pre>
       <div class="note-box">
-        <strong>💡 上下标与化学式符号排印：</strong> 编写方程式、机理概述或步骤说明时，<strong>无需手动输入 Unicode 下标字符</strong>：
+        <strong>[说明] 上下标与化学式符号排印：</strong> 编写方程式、机理概述或步骤说明时，<strong>无需手动输入 Unicode 下标字符</strong>：
         <ul style="margin: 6px 0 0 18px; padding: 0;">
           <li><strong>化学式数字自动下标</strong>：元素符号或括号后跟随的普通数字（如 <code>CH3COOH</code>、<code>H2O</code>、<code>CO2</code>、<code>C6H12O6</code>）会自动解析排印为下标 <code>CH₃COOH</code>、<code>H₂O</code>、<code>CO₂</code>、<code>C₆H₁₂O₆</code>。</li>
           <li><strong>显式下标语法</strong>：支持 <code>_2</code> 或 <code>_{10}</code>、<code>_n</code> 等语法（如 <code>H_2O</code> → <code>H₂O</code>，<code>[C6H10O5]_n</code> → <code>[C₆H₁₀O₅]ₙ</code>）。</li>
@@ -400,7 +400,7 @@
         <li><code>bond N1 N2 3</code>：在 N1 与 N2 之间建立<strong>三键</strong>（如氮气分子 N≡N）。</li>
       </ul>
       <div class="note-box">
-        <strong>💡 提示：</strong> 渲染器会自动根据两个原子的元素类型，在键上绘制平滑的<strong>双向渐变色与纵深光影</strong>，不同元素原子之间一目了然。
+        <strong>[提示]</strong> 渲染器会自动根据两个原子的元素类型，在键上绘制平滑的<strong>双向渐变色与纵深光影</strong>，不同元素原子之间一目了然。
       </div>
 
       <h3>4.3 自由基单电子 (radical) 与形式电荷 (charge)</h3>
@@ -483,7 +483,7 @@
         <li><code>atom &lt;ID&gt; &lt;Element&gt; explicit</code>（或 <code>noImplicitH</code>）：针对单个原子显式抑制补氢，保留未饱和孤对电子或裸露位点。</li>
       </ul>
       <div class="note-box">
-        <strong>💡 编辑器工具栏「补全 H」：</strong> 在推演工坊工具栏中点击「补全 H」按钮（或使用快捷键 <kbd>Alt + H</kbd>），可将编辑器中的 CCPL 脚本一键展开为显式声明的氢原子与 <code>bond</code> 单键代码，便于在显式脚本基础上进一步调整特定氢原子的质子转移或空间位阻。
+        <strong>[提示] 编辑器工具栏「补全 H」：</strong> 在推演工坊工具栏中点击「补全 H」按钮（或使用快捷键 <kbd>Alt + H</kbd>），可将编辑器中的 CCPL 脚本一键展开为显式声明的氢原子与 <code>bond</code> 单键代码，便于在显式脚本基础上进一步调整特定氢原子的质子转移或空间位阻。
       </div>
 
     </section>
@@ -592,6 +592,37 @@
         <div class="kbd-item">
           <span>展开补全氢原子</span>
           <kbd>Alt + H</kbd>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. AI 辅助推演与 CCPL 脚本生成 -->
+    <section class="doc-section" id="ai-generator">
+      <h2>8. AI 辅助推演与 CCPL 生成器</h2>
+      <p>
+        Chemiation 内置了与大语言模型协同的 AI 辅助推演模块。点击 CCPL 脚本编辑器顶部的 <code>[AI 辅助]</code> 按钮即可唤起交互弹窗。
+      </p>
+
+      <div class="callout callout-tip">
+        <strong>隐私与密钥安全承诺：</strong> 您填入的 API Key 仅保存在当前本地浏览器的 LocalStorage 中，绝不经由 Chemiation 服务器中转或记录。
+      </div>
+
+      <div class="card-grid">
+        <div class="rule-card">
+          <h4>多模型服务商生态</h4>
+          <p>内置 DeepSeek (deepseek-chat)、通义千问 Qwen (DashScope 兼容)、OpenAI (GPT-4o-mini)、硅基流动 SiliconFlow、月之暗面 Kimi 以及本地离线 Ollama 的端点预设，亦支持任何标准兼容的反向代理端点。</p>
+        </div>
+        <div class="rule-card">
+          <h4>严苛的 CCPL 语法与化学约束</h4>
+          <p>内置计算化学系统提示词，强制约束模型遵循原子质量守恒、基元步电荷守恒与 3D VSEPR 空间构型规范。输出结果将经过 Chemiation 解析引擎实时语法校验。</p>
+        </div>
+        <div class="rule-card">
+          <h4>三大操作模式</h4>
+          <p>
+            1. <strong>全新机理生成：</strong> 输入化学反应名称与机理要求直接生成多步推演脚本。<br>
+            2. <strong>完善当前脚本：</strong> 针对编辑器中现有脚本提出增删步骤或优化过渡态等修改指示。<br>
+            3. <strong>语法智能排错：</strong> 遇到语法报错时，编辑器错误栏与弹窗可一键排查并修复语法错误。
+          </p>
         </div>
       </div>
     </section>

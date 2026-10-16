@@ -286,6 +286,19 @@ class Pseudo3DRenderer {
     this.transitionStartTime = performance.now();
   }
 
+  setTransitionState(curStep, nxtStep, t) {
+    if (curStep && typeof ReactionScriptEngine !== 'undefined') {
+      if (ReactionScriptEngine.autoLayoutStep) ReactionScriptEngine.autoLayoutStep(curStep);
+    }
+    if (nxtStep && typeof ReactionScriptEngine !== 'undefined') {
+      if (ReactionScriptEngine.autoLayoutStep) ReactionScriptEngine.autoLayoutStep(nxtStep);
+    }
+    this.currentStepData = curStep;
+    this.nextStepData = nxtStep;
+    this.transitionProgress = Math.max(0, Math.min(1, t));
+    this.render();
+  }
+
   start() {
     if (this.animationFrameId) return;
     const loop = (now) => {
@@ -1417,7 +1430,7 @@ class Pseudo3DRenderer {
       return atom ? { config: cfg, atom } : null;
     }).filter(Boolean);
 
-    // 🌟 核心改进：动态视差自适应与“左右就近延伸”
+    // [核心改进] 动态视差自适应与“左右就近延伸”
     // 视角在三维空间中旋转时，参与聚合的两个端点在屏幕上的投影 X 坐标 (sx) 会发生互换或偏移。
     // 按当前投影屏幕的 sx 升序排序：sx 较小者必然处于分子左侧，就近穿透左括号 (leftX)；
     // sx 较大者必然处于分子右侧，就近穿透右括号 (rightX)。绝不产生跨越整个分子的交叉错位！
