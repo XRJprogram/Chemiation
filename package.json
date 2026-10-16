@@ -10,6 +10,7 @@
     "serve:static": "npx serve .",
     "test": "node test/test.js",
     "test:server": "node server/test_suite.js",
+    "build": "node scripts/build_dist.js",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"

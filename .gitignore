@@ -12,3 +12,4 @@ src-tauri/gen/
 .env
 *.env
 server/.env
+dist/

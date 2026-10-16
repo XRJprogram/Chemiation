@@ -2,9 +2,10 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Chemiation",
   "version": "1.0.0",
-  "identifier": "org.chemiation.app",
+  "identifier": "com.xrjprogram.chemiation",
   "build": {
-    "frontendDist": "../"
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [
