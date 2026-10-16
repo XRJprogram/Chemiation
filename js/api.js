@@ -5,10 +5,22 @@
  * - Offline Fallback: Gracefully operates via localStorage when server is offline or file:// is used.
  */
 
+const PRIMARY_CLOUD_URL = 'https://chemiation.onrender.com';
+
 const API_CONFIG = {
-  baseUrl: (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && (!window.location.protocol || !window.location.protocol.startsWith('file')))
-    ? window.location.origin
-    : 'http://localhost:3000',
+  baseUrl: (() => {
+    if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null') {
+      const orig = window.location.origin;
+      const proto = window.location.protocol || '';
+      // If served directly from a web domain (and not tauri or file)
+      if (!proto.startsWith('file') && !orig.includes('tauri.localhost') && !proto.startsWith('tauri')) {
+        return orig;
+      }
+    }
+    // Default to primary cloud service for desktop apps and static files
+    return PRIMARY_CLOUD_URL;
+  })(),
+  cloudUrl: PRIMARY_CLOUD_URL,
   tokenKey: 'chemiation_auth_token',
   offlineReposKey: 'chemiation_offline_repos',
   offlineUserKey: 'chemiation_offline_user'
@@ -82,12 +94,16 @@ const api = {
     }
   },
 
-  // Health check to test server connectivity with fallback URLs and 1200ms timeout
+  // Health check to test server connectivity with intelligent fallback:
+  // 1. Current API_CONFIG.baseUrl
+  // 2. Localhost server http://localhost:3000 (if running locally)
+  // 3. Primary cloud server https://chemiation.onrender.com (global production)
+  // 4. Local IP fallback http://127.0.0.1:3000
   async ping() {
-    const tryPingUrl = async (url) => {
+    const tryPingUrl = async (url, timeoutMs = 2500) => {
       try {
         const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-        const timeoutId = controller ? setTimeout(() => controller.abort(), 1200) : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
         const res = await fetch(`${url}/api/health`, {
           method: 'GET',
           signal: controller ? controller.signal : undefined
@@ -101,29 +117,27 @@ const api = {
       return false;
     };
 
-    // 1. Probe current baseUrl
-    let ok = await tryPingUrl(API_CONFIG.baseUrl);
+    const candidates = [
+      API_CONFIG.baseUrl,
+      'http://localhost:3000',
+      PRIMARY_CLOUD_URL,
+      'http://127.0.0.1:3000'
+    ].filter((v, idx, arr) => v && arr.indexOf(v) === idx);
 
-    // 2. Fallback to http://localhost:3000 if different
-    if (!ok && API_CONFIG.baseUrl !== 'http://localhost:3000') {
-      const okLocal = await tryPingUrl('http://localhost:3000');
-      if (okLocal) {
-        API_CONFIG.baseUrl = 'http://localhost:3000';
-        ok = true;
+    let connected = false;
+    for (const url of candidates) {
+      const isLocal = url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1');
+      const timeout = isLocal ? 800 : 3500;
+      const ok = await tryPingUrl(url, timeout);
+      if (ok) {
+        API_CONFIG.baseUrl = url;
+        connected = true;
+        break;
       }
     }
 
-    // 3. Fallback to http://127.0.0.1:3000 if different
-    if (!ok && API_CONFIG.baseUrl !== 'http://127.0.0.1:3000') {
-      const okIp = await tryPingUrl('http://127.0.0.1:3000');
-      if (okIp) {
-        API_CONFIG.baseUrl = 'http://127.0.0.1:3000';
-        ok = true;
-      }
-    }
-
-    this.setServerConnected(ok);
-    return ok;
+    this.setServerConnected(connected);
+    return connected;
   },
 
   // =========================================================================
