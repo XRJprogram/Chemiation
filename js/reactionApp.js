@@ -47,7 +47,7 @@ class ReactionApp {
         tabScript: 'CCPL 脚本',
         libraryTitle: '反应机理库',
         btnNew: '+ 新建',
-        btnDelete: '🗑 删除',
+        btnDelete: '删除',
         stepsSequence: '步骤序列',
         stepsHint: '点击直达任意步',
         scriptTitle: 'CCPL 推演脚本',
@@ -59,6 +59,19 @@ class ReactionApp {
         labelShrink: '缩小',
         placeholderScript: '在此编写或修改 CCPL 反应推演脚本...',
         stepCardNum: '步骤',
+        exportVideoBtn: '导出视频',
+        exportVideoTitle: '导出完整推演视频',
+        exportVideoModalTitle: '导出完整推演视频',
+        videoReactionName: '反应名称',
+        videoStepsCount: '包含步骤',
+        videoDuration: '预计时长',
+        videoPlaySpeed: '推演播放速率',
+        videoOverlayToggle: '在视频画面中包含反应式与步骤说明标签',
+        startExportBtn: '开始录制并导出',
+        recordingProgress: '正在录制推演视频... 步骤 {current} / {total}',
+        toastRecordingSuccess: '推演视频导出成功！已自动触发下载保存。',
+        toastRecordingCancelled: '已取消推演视频导出。',
+        toastRecordingNotSupported: '当前浏览器或运行环境不支持 Canvas 视频录制功能 (需支持 MediaRecorder 与 canvas.captureStream)。',
         // 对话框与操作
         duplicateNameTitle: '反应名称重复',
         duplicateNameMsg: '机理库中已存在名为 "{name}" 的反应，请使用不同名称以避免混淆。',
@@ -112,7 +125,7 @@ class ReactionApp {
         tabScript: 'CCPL Script',
         libraryTitle: 'Mechanism Library',
         btnNew: '+ New',
-        btnDelete: '🗑 Delete',
+        btnDelete: 'Delete',
         stepsSequence: 'Step Sequence',
         stepsHint: 'Click to navigate',
         scriptTitle: 'CCPL Script',
@@ -124,6 +137,19 @@ class ReactionApp {
         labelShrink: 'Collapse',
         placeholderScript: 'Compose or edit CCPL deduction scripts here...',
         stepCardNum: 'Step',
+        exportVideoBtn: 'Export Video',
+        exportVideoTitle: 'Export Full Deduction Video',
+        exportVideoModalTitle: 'Export Full Deduction Video',
+        videoReactionName: 'Reaction Name',
+        videoStepsCount: 'Included Steps',
+        videoDuration: 'Estimated Duration',
+        videoPlaySpeed: 'Playback Speed',
+        videoOverlayToggle: 'Include reaction equation & step labels in video',
+        startExportBtn: 'Start Recording & Export',
+        recordingProgress: 'Recording deduction video... Step {current} / {total}',
+        toastRecordingSuccess: 'Deduction video exported successfully! Download initiated.',
+        toastRecordingCancelled: 'Deduction video export cancelled.',
+        toastRecordingNotSupported: 'Current browser environment does not support canvas video recording.',
         btnAiAssistant: 'AI Copilot',
         aiAssistantTitle: 'AI Mechanism Copilot & Generator (Alt + A)',
         aiModalTitle: 'AI Mechanism Deduction Script Generator',
@@ -223,6 +249,8 @@ class ReactionApp {
     if (this.btnRunScript) this.btnRunScript.title = dict.runScriptTitle;
     if (this.btnNewReaction) this.btnNewReaction.title = dict.btnNew;
     if (this.btnDeleteReaction) this.btnDeleteReaction.title = dict.btnDelete;
+    if (this.btnExportVideo) this.btnExportVideo.title = dict.exportVideoTitle;
+    if (this.btnExportVideoFloat) this.btnExportVideoFloat.title = dict.exportVideoTitle;
 
     if (this.headerLangBtn) {
       this.headerLangBtn.textContent = this.lang === 'zh' ? '中文' : 'English';
@@ -364,6 +392,25 @@ class ReactionApp {
     // 画布浮动状态胶囊
     this.canvasStepToast = document.getElementById('canvas-step-toast');
 
+    // 视频导出控制 DOM
+    this.btnExportVideo = document.getElementById('btn-export-video');
+    this.btnExportVideoFloat = document.getElementById('btn-export-video-float');
+    this.videoExportModal = document.getElementById('video-export-modal');
+    this.canvasRecordingIndicator = document.getElementById('canvas-recording-indicator');
+    this.recordingText = document.getElementById('recording-text');
+    this.btnCancelRecording = document.getElementById('btn-cancel-recording');
+    this.videoExportReactionName = document.getElementById('video-export-reaction-name');
+    this.videoExportStepsCount = document.getElementById('video-export-steps-count');
+    this.videoExportDuration = document.getElementById('video-export-duration');
+    this.videoExportSpeed = document.getElementById('video-export-speed');
+    this.videoExportOverlayToggle = document.getElementById('video-export-overlay-toggle');
+    this.btnStartRecordVideo = document.getElementById('btn-start-record-video');
+    this.closeVideoModalBtns = document.querySelectorAll('.close-video-modal');
+
+    this.isRecordingVideo = false;
+    this.isRecordingCancelled = false;
+    this.activeMediaRecorder = null;
+
     // 检测 Tauri 原生桌面运行环境并接入窗口控制
     if (window.__TAURI_INTERNALS__ || window.__TAURI__) {
       document.body.classList.add('tauri-app');
@@ -435,6 +482,8 @@ class ReactionApp {
     let startWidth = 420;
 
     const onMouseDown = (e) => {
+      // 录制视频期间隐性加锁，禁止拖动调节工作区
+      if (this.isRecordingVideo) return;
       // 竖屏与窄屏移动端禁用横向调节柄
       if (window.matchMedia('(orientation: portrait), (max-width: 820px)').matches) return;
 
@@ -528,7 +577,10 @@ class ReactionApp {
       this.btnToggleWorkspace.addEventListener('click', () => this.toggleWorkspace(false));
     }
     if (this.btnExpandWorkspace) {
-      this.btnExpandWorkspace.addEventListener('click', () => this.toggleWorkspace(true));
+      this.btnExpandWorkspace.addEventListener('click', () => {
+        if (this.isRecordingVideo) return; // 录制期间隐性加锁，无法点击调出
+        this.toggleWorkspace(true);
+      });
     }
 
     // 脚本解析与运行
@@ -734,8 +786,44 @@ class ReactionApp {
       });
     }
 
+    // 导出完整推演视频交互
+    if (this.btnExportVideo) {
+      this.btnExportVideo.addEventListener('click', () => this.openVideoExportModal());
+    }
+    if (this.btnExportVideoFloat) {
+      this.btnExportVideoFloat.addEventListener('click', () => this.openVideoExportModal());
+    }
+    if (this.btnStartRecordVideo) {
+      this.btnStartRecordVideo.addEventListener('click', () => this.startVideoRecording());
+    }
+    if (this.btnCancelRecording) {
+      this.btnCancelRecording.addEventListener('click', () => this.cancelVideoRecording());
+    }
+    if (this.closeVideoModalBtns) {
+      this.closeVideoModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => this.closeVideoExportModal());
+      });
+    }
+    if (this.videoExportModal) {
+      this.videoExportModal.addEventListener('click', (e) => {
+        if (e.target === this.videoExportModal) this.closeVideoExportModal();
+      });
+    }
+
     // 全局快捷键
     window.addEventListener('keydown', (e) => {
+      if (this.isRecordingVideo) {
+        if (e.key === 'Escape') {
+          this.cancelVideoRecording();
+        }
+        return;
+      }
+
+      if (e.key === 'Escape' && this.videoExportModal && this.videoExportModal.style.display !== 'none') {
+        this.closeVideoExportModal();
+        return;
+      }
+
       // 支持 Alt + A 快捷键随时唤起 AI 助手
       if (e.altKey && (e.code === 'KeyA' || e.key === 'a' || e.key === 'A')) {
         e.preventDefault();
@@ -875,6 +963,7 @@ class ReactionApp {
 
   toggleWorkspace(open) {
     if (!this.workspaceSidebar) return;
+    if (this.isRecordingVideo && open) return; // 录制推演视频期间隐性加锁，不允许调出工作区
     const mainWorkspace = document.querySelector('.main-workspace');
     if (open) {
       this.workspaceSidebar.classList.remove('collapsed');
@@ -1663,6 +1752,341 @@ class ReactionApp {
       const gutterLines = this.ideGutter.querySelectorAll('.gutter-error');
       gutterLines.forEach(div => div.classList.remove('gutter-error'));
     }
+  }
+
+  /**
+   * =========================================================================
+   * 反应推演全过程视频导出引擎 (Video Export Engine via Native MediaRecorder)
+   * =========================================================================
+   */
+
+  openVideoExportModal() {
+    if (!this.videoExportModal) return;
+    const reaction = this.presets[this.currentReactionIndex];
+    if (!reaction) return;
+
+    const totalSteps = (reaction.steps && reaction.steps.length) || 1;
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+
+    if (this.videoExportReactionName) {
+      this.videoExportReactionName.textContent = format(reaction.name);
+    }
+    if (this.videoExportStepsCount) {
+      this.videoExportStepsCount.textContent = this.lang === 'en'
+        ? `${totalSteps} steps (from initial reactants to final products)`
+        : `共 ${totalSteps} 步 (从起始态到最终产物)`;
+    }
+
+    const initialHold = 1.6;
+    const stepTransition = 0.92;
+    const stepHold = 1.6;
+    const finalHold = 2.0;
+    const intermediateTotal = Math.max(0, totalSteps - 1) * (stepTransition + stepHold);
+    const totalSec = Math.max(3, Math.round(initialHold + intermediateTotal + finalHold));
+    if (this.videoExportDuration) {
+      this.videoExportDuration.textContent = this.lang === 'en'
+        ? `approx. ${totalSec} seconds`
+        : `约 ${totalSec} 秒`;
+    }
+
+    this.videoExportModal.style.display = 'flex';
+  }
+
+  closeVideoExportModal() {
+    if (this.videoExportModal) {
+      this.videoExportModal.style.display = 'none';
+    }
+  }
+
+  async startVideoRecording() {
+    if (this.isRecordingVideo) return;
+
+    if (!this.canvas || typeof this.canvas.captureStream !== 'function' || typeof window.MediaRecorder === 'undefined') {
+      await this.showAlertDialog({
+        title: this.lang === 'en' ? 'Recording Not Supported' : '环境不支持视频录制',
+        message: this.t('toastRecordingNotSupported')
+      });
+      return;
+    }
+
+    const reaction = this.presets[this.currentReactionIndex];
+    if (!reaction || !reaction.steps || reaction.steps.length === 0) {
+      await this.showAlertDialog({
+        title: this.lang === 'en' ? 'Cannot Export Video' : '无法导出推演视频',
+        message: this.lang === 'en' ? 'Current reaction has no mechanism steps.' : '当前反应没有可推演的机理步骤。'
+      });
+      return;
+    }
+
+    const speed = 1.0;
+    const showOverlay = this.videoExportOverlayToggle ? this.videoExportOverlayToggle.checked : true;
+
+    this.closeVideoExportModal();
+
+    // 记录原始工作状态以供导出后恢复
+    const originalStep = this.currentStepIndex;
+    const wasPlaying = this.isPlaying;
+    const wasSidebarCollapsed = this.workspaceSidebar ? this.workspaceSidebar.classList.contains('collapsed') : false;
+
+    // 暂停当前交互播放
+    this.pause();
+
+    // 为了获得高清全画幅视觉体验，录制时收起工作区侧边栏，录制完成后自动恢复
+    if (!wasSidebarCollapsed && this.workspaceSidebar) {
+      this.toggleWorkspace(false);
+      await new Promise(r => setTimeout(r, 380));
+    }
+
+    this.isRecordingVideo = true;
+    this.isRecordingCancelled = false;
+
+    // 隐藏视口内 DOM 浮动标签（反应式与步骤说明），彻底消除与 Canvas 画面视频标签的重叠
+    document.body.classList.add('recording-in-progress');
+
+    // 显示画布悬浮录制胶囊
+    if (this.canvasRecordingIndicator) {
+      this.canvasRecordingIndicator.style.display = 'flex';
+    }
+    this.updateRecordingIndicatorText(0, reaction.steps.length);
+
+    try {
+      // 临时根据速率调节渲染器转场速度
+      const originalTransitionDuration = this.renderer.transitionDuration;
+      this.renderer.transitionDuration = Math.round(920 / speed);
+
+      // 初始化步骤 0
+      this.goToStep(0, false);
+      if (showOverlay) {
+        this.updateVideoExportOverlay(0);
+      } else {
+        this.renderer.videoExportOverlay = null;
+      }
+      this.renderer.render();
+
+      await new Promise(r => setTimeout(r, 300));
+
+      // 捕获 Canvas 视频流 (30 fps) 并提升码率至 8Mbps 以消除色块与压缩振铃
+      const stream = this.canvas.captureStream(30);
+      const mimeType = this.getSupportedVideoMimeType();
+      let recorder;
+      try {
+        recorder = new MediaRecorder(stream, {
+          mimeType,
+          videoBitsPerSecond: 8000000
+        });
+      } catch (errRec) {
+        recorder = new MediaRecorder(stream);
+      }
+
+      this.activeMediaRecorder = recorder;
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      const recordStopPromise = new Promise((resolve, reject) => {
+        recorder.onstop = () => resolve();
+        recorder.onerror = (e) => reject(e);
+      });
+
+      // 记录精确物理录制开始时间戳
+      const recordingStartTime = performance.now();
+
+      // 启动录制 (每 100ms 刷新切片)
+      recorder.start(100);
+
+      // 第一步起始态静止展示 (~1600ms)
+      const initialHold = Math.round(1600 / speed);
+      const stepHold = Math.round(1600 / speed);
+      const finalHold = Math.round(2000 / speed);
+
+      await this.sleepWithCancelCheck(initialHold);
+
+      // 顺次推进各步骤
+      for (let s = 1; s < reaction.steps.length; s++) {
+        if (this.isRecordingCancelled) break;
+
+        this.updateRecordingIndicatorText(s, reaction.steps.length);
+        this.goToStep(s, true);
+        if (showOverlay) {
+          this.updateVideoExportOverlay(s);
+        }
+
+        // 等待步骤三维过渡动画完成
+        await this.sleepWithCancelCheck(this.renderer.transitionDuration + 100);
+        if (this.isRecordingCancelled) break;
+
+        // 步骤完成态驻留
+        await this.sleepWithCancelCheck(stepHold);
+        if (this.isRecordingCancelled) break;
+      }
+
+      // 最终产物态驻留
+      if (!this.isRecordingCancelled) {
+        await this.sleepWithCancelCheck(finalHold);
+      }
+
+      // 停止录制并等待流刷新
+      if (recorder.state !== 'inactive') {
+        recorder.stop();
+        await recordStopPromise;
+      }
+
+      // 计算真实录制总时长 (毫秒)
+      const recordingEndTime = performance.now();
+      const totalDurationMs = Math.max(100, Math.round(recordingEndTime - recordingStartTime));
+
+      // 恢复渲染器转场速度与清空画面水印
+      this.renderer.transitionDuration = originalTransitionDuration;
+      this.renderer.videoExportOverlay = null;
+      this.renderer.render();
+
+      // 如果未被用户主动取消，则通过视频元数据补全引擎回填时长与拖拽索引
+      if (!this.isRecordingCancelled && chunks.length > 0) {
+        const actualMime = recorder.mimeType || mimeType;
+        const rawBlob = new Blob(chunks, { type: actualMime });
+        let finalBlob = rawBlob;
+        let ext = 'mp4';
+
+        if (window.ChemiationVideoPatcher && typeof window.ChemiationVideoPatcher.fixVideoBlob === 'function') {
+          try {
+            const fixedResult = await window.ChemiationVideoPatcher.fixVideoBlob(rawBlob, totalDurationMs);
+            if (fixedResult && fixedResult.blob) {
+              finalBlob = fixedResult.blob;
+              ext = fixedResult.ext || 'mp4';
+            }
+          } catch (errFix) {
+            console.warn('[Chemiation] 视频时长与索引元数据补全异常，降级为原生流:', errFix);
+          }
+        }
+
+        const safeName = (reaction.name || '反应机理')
+          .replace(/[\\/:*?"<>|]/g, '_')
+          .replace(/\s+/g, '_')
+          .trim();
+        const fileName = `${safeName}_推演全过程.${ext}`;
+
+        const blobUrl = URL.createObjectURL(finalBlob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        }, 3000);
+
+        this.showAlertDialog({
+          title: this.lang === 'en' ? 'Export Successful' : '视频导出成功',
+          message: this.t('toastRecordingSuccess')
+        });
+      } else if (this.isRecordingCancelled) {
+        this.showAlertDialog({
+          title: this.lang === 'en' ? 'Export Cancelled' : '导出已取消',
+          message: this.t('toastRecordingCancelled')
+        });
+      }
+
+    } catch (err) {
+      console.error('[Chemiation] 视频录制导出异常:', err);
+      this.showAlertDialog({
+        title: this.lang === 'en' ? 'Recording Error' : '视频录制失败',
+        message: err.message || String(err)
+      });
+    } finally {
+      // 状态收尾与界面恢复
+      this.isRecordingVideo = false;
+      this.isRecordingCancelled = false;
+      this.activeMediaRecorder = null;
+      this.renderer.videoExportOverlay = null;
+
+      // 恢复视口内原生 DOM 浮动标签展示
+      document.body.classList.remove('recording-in-progress');
+
+      if (this.canvasRecordingIndicator) {
+        this.canvasRecordingIndicator.style.display = 'none';
+      }
+
+      // 恢复侧边栏状态
+      if (!wasSidebarCollapsed && this.workspaceSidebar) {
+        this.toggleWorkspace(true);
+      }
+
+      // 恢复原步骤与播放状态
+      this.goToStep(originalStep, false);
+      if (wasPlaying) {
+        this.play();
+      }
+    }
+  }
+
+  cancelVideoRecording() {
+    if (!this.isRecordingVideo) return;
+    this.isRecordingCancelled = true;
+    if (this.activeMediaRecorder && this.activeMediaRecorder.state !== 'inactive') {
+      try {
+        this.activeMediaRecorder.stop();
+      } catch (e) {}
+    }
+  }
+
+  sleepWithCancelCheck(ms) {
+    return new Promise(resolve => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        if (this.isRecordingCancelled || Date.now() - start >= ms) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 50);
+    });
+  }
+
+  updateRecordingIndicatorText(currentStepIdx, totalSteps) {
+    if (!this.recordingText) return;
+    const current = currentStepIdx + 1;
+    this.recordingText.textContent = this.t('recordingProgress', { current, total: totalSteps });
+  }
+
+  updateVideoExportOverlay(stepIndex) {
+    const reaction = this.presets[this.currentReactionIndex];
+    if (!reaction || !reaction.steps || !reaction.steps[stepIndex]) return;
+    const step = reaction.steps[stepIndex];
+    this.renderer.videoExportOverlay = {
+      title: reaction.name || '',
+      equation: reaction.equation || '',
+      stepIndex,
+      totalSteps: reaction.steps.length,
+      stepTitle: step.name || '',
+      stepNote: step.note || ''
+    };
+    this.renderer.render();
+  }
+
+  getSupportedVideoMimeType() {
+    const types = [
+      'video/mp4;codecs=avc1',
+      'video/mp4;codecs=h264',
+      'video/mp4',
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm'
+    ];
+    if (typeof window.MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function') {
+      for (const t of types) {
+        if (MediaRecorder.isTypeSupported(t)) {
+          return t;
+        }
+      }
+    }
+    return 'video/mp4';
   }
 
   escapeHtml(str) {
