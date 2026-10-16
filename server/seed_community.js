@@ -20,7 +20,7 @@ if (!fs.existsSync(DATA_DIR)) {
 // Fixed salt & hash for predictable password "password123"
 const sharedSalt = '3bfe6906c61abea0c58d679d27c7dafc';
 const userPasswordHash = auth.hashPassword('password123', sharedSalt);
-const adminPasswordHash = auth.hashPassword('admin123', sharedSalt);
+const adminPasswordHash = auth.hashPassword('chemiationadmin123', sharedSalt);
 
 const now = new Date().toISOString();
 const pastDate = (daysAgo) => new Date(Date.now() - daysAgo * 86400000).toISOString();

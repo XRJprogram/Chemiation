@@ -355,7 +355,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="login-input-password">账户密码</label>
-          <input id="login-input-password" class="form-input" type="password" placeholder="请输入密码 (默认管理员: admin / admin123)" autocomplete="current-password" required>
+          <input id="login-input-password" class="form-input" type="password" placeholder="请输入密码" autocomplete="current-password" required>
         </div>
         <div class="modal-btn-row">
           <button type="button" class="btn-secondary close-auth-modal">取消</button>
@@ -671,6 +671,28 @@
         <p style="font-size: 11px; color: var(--color-text-muted, #7e6351); margin-top: 14px; line-height: 1.5;">
           注：系统提示词已内置 CCPL 语法规则、原子拓扑守恒与 VSEPR 立体构型约束。大模型输出后将由 Chemiation 引擎即时校验结构合法性。
         </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CCPL 语法手册内嵌弹窗 (Docs In-App Modal) -->
+  <div id="docs-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-box" style="max-width: 960px; width: 92vw; height: 86vh; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+      <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--color-deep-brown);">CCPL 语法手册与规范</h2>
+          <span class="brand-tag" style="font-size: 11px; background: rgba(184,74,40,0.1); color: var(--color-accent); padding: 2px 6px; border-radius: 4px; font-weight: 600;">v1.2 SPEC</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a id="docs-modal-external-link" href="docs.html" target="_blank" class="btn-action-sm" style="text-decoration: none; font-size: 11.5px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;" title="在新浏览器窗口中打开手册">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <span>新窗口打开</span>
+          </a>
+          <button type="button" class="close-modal-btn" id="close-docs-modal" title="关闭手册 (Esc)" aria-label="关闭">×</button>
+        </div>
+      </div>
+      <div class="modal-inner" style="flex: 1; padding: 0; overflow: hidden; background: #FAF6E9;">
+        <iframe id="docs-modal-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
       </div>
     </div>
   </div>

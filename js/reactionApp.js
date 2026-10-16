@@ -570,6 +570,67 @@ class ReactionApp {
       });
     }
 
+    // CCPL 语法手册内嵌弹窗与外部链接交互（全面适配网页端与 Tauri 桌面端）
+    const docsModal = document.getElementById('docs-modal');
+    const docsIframe = document.getElementById('docs-modal-iframe');
+    const headerDocsBtn = document.getElementById('header-docs-btn');
+    const closeDocsModal = document.getElementById('close-docs-modal');
+    const headerRepoBtn = document.getElementById('header-repo-btn');
+    const docsExternalLink = document.getElementById('docs-modal-external-link');
+
+    const openDocsModal = (e) => {
+      if (e) e.preventDefault();
+      if (docsModal && docsIframe) {
+        const lang = this.currentLang || 'zh';
+        const docUrl = lang === 'en' ? 'docs_en.html' : 'docs.html';
+        if (!docsIframe.src || !docsIframe.src.endsWith(docUrl)) {
+          docsIframe.src = docUrl;
+        }
+        if (docsExternalLink) docsExternalLink.href = docUrl;
+        docsModal.style.display = 'flex';
+      }
+    };
+
+    const closeDocsModalHandler = () => {
+      if (docsModal) docsModal.style.display = 'none';
+    };
+
+    headerDocsBtn?.addEventListener('click', openDocsModal);
+    closeDocsModal?.addEventListener('click', closeDocsModalHandler);
+    docsModal?.addEventListener('click', (e) => {
+      if (e.target === docsModal) closeDocsModalHandler();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && docsModal && docsModal.style.display !== 'none') {
+        closeDocsModalHandler();
+      }
+    });
+
+    // Tauri 桌面端调用原生浏览器打开外部 GitHub / 文档链接
+    const handleExternalUrl = (e, targetUrl) => {
+      if (window.__TAURI_INTERNALS__ || window.__TAURI__) {
+        e.preventDefault();
+        const invoke = window.__TAURI_INTERNALS__?.invoke || window.__TAURI__?.core?.invoke;
+        if (invoke) {
+          invoke('open_external_url', { url: targetUrl });
+        }
+      }
+    };
+
+    headerRepoBtn?.addEventListener('click', (e) => {
+      handleExternalUrl(e, 'https://github.com/XRJprogram/Chemiation');
+    });
+
+    docsExternalLink?.addEventListener('click', (e) => {
+      if (window.__TAURI_INTERNALS__ || window.__TAURI__) {
+        e.preventDefault();
+        const docUrl = (this.currentLang === 'en')
+          ? 'https://xrjprogram.github.io/Chemiation/docs_en.html'
+          : 'https://xrjprogram.github.io/Chemiation/docs.html';
+        handleExternalUrl(e, docUrl);
+      }
+    });
+
     // CCPL 脚本 IDE 编辑器交互（高亮、行号、Tab缩进与滚动同步）
     if (this.scriptEditor) {
       this.scriptEditor.addEventListener('input', () => {

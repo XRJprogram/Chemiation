@@ -21,13 +21,36 @@ fn app_close(window: tauri::Window) {
     let _ = window.close();
 }
 
+#[tauri::command]
+fn open_external_url(url: String) {
+    #[cfg(target_os = "windows")]
+    {
+        let _ = std::process::Command::new("cmd")
+            .args(["/c", "start", "", &url])
+            .spawn();
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open")
+            .arg(&url)
+            .spawn();
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let _ = std::process::Command::new("xdg-open")
+            .arg(&url)
+            .spawn();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             app_minimize,
             app_toggle_maximize,
-            app_close
+            app_close,
+            open_external_url
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

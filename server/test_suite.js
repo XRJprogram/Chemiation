@@ -285,7 +285,7 @@ bond C1 O1 double
       method: 'POST'
     }, {
       username: 'admin',
-      password: 'admin123'
+      password: 'chemiationadmin123'
     });
 
     assert.strictEqual(adminLoginRes.statusCode, 200, 'Admin login should succeed');

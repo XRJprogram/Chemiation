@@ -1548,10 +1548,13 @@ input[type="checkbox"]:focus {
 }
 
 .ide-highlight code {
-  display: block;
-  width: 100%;
+  display: inline-block;
+  min-width: 100%;
+  width: max-content;
   margin: 0;
   padding: 0;
+  padding-right: 32px;
+  box-sizing: border-box;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
