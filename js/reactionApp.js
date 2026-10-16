@@ -364,6 +364,17 @@ class ReactionApp {
     // 画布浮动状态胶囊
     this.canvasStepToast = document.getElementById('canvas-step-toast');
 
+    // 检测 Tauri 原生桌面运行环境并接入窗口控制
+    if (window.__TAURI_INTERNALS__ || window.__TAURI__) {
+      document.body.classList.add('tauri-app');
+      const invoke = window.__TAURI_INTERNALS__?.invoke || window.__TAURI__?.core?.invoke;
+      if (invoke) {
+        document.getElementById('win-btn-minimize')?.addEventListener('click', () => invoke('app_minimize'));
+        document.getElementById('win-btn-maximize')?.addEventListener('click', () => invoke('app_toggle_maximize'));
+        document.getElementById('win-btn-close')?.addEventListener('click', () => invoke('app_close'));
+      }
+    }
+
     // 初始化反应下拉列表
     this.populatePresetSelect();
   }
@@ -718,7 +729,7 @@ class ReactionApp {
         this.savePresetsToStorage();
 
         if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
-        if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
+        this.setReactionEquation(parsedReaction.equation);
         if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
 
         if (this.presetSelect && this.presetSelect.options[this.currentReactionIndex]) {
@@ -821,6 +832,20 @@ class ReactionApp {
     }, 360);
   }
 
+  setReactionEquation(equation) {
+    if (!this.reactionEquation) return;
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+    const text = format(equation || '');
+    this.reactionEquation.textContent = text;
+    const badge = this.reactionEquation.closest('.viewport-equation-display, #header-equation-display');
+    if (badge) {
+      badge.style.display = text ? 'inline-flex' : 'none';
+      badge.title = text ? `反应方程式: ${text}` : '';
+    }
+  }
+
   loadReaction(reactionIndex) {
     if (!this.presets[reactionIndex]) return;
 
@@ -842,7 +867,7 @@ class ReactionApp {
       : (s => s);
 
     if (this.reactionTitle) this.reactionTitle.textContent = format(reaction.name);
-    if (this.reactionEquation) this.reactionEquation.textContent = format(reaction.equation || '');
+    this.setReactionEquation(reaction.equation || '');
     if (this.reactionDesc) this.reactionDesc.textContent = format(reaction.summary || '');
 
     if (this.presetSelect) {
@@ -1119,7 +1144,7 @@ class ReactionApp {
       this.savePresetsToStorage();
 
       if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
-      if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
+      this.setReactionEquation(parsedReaction.equation);
       if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
 
       if (this.presetSelect && this.presetSelect.options[this.currentReactionIndex]) {
@@ -1166,7 +1191,7 @@ class ReactionApp {
       this.savePresetsToStorage();
 
       if (this.reactionTitle) this.reactionTitle.textContent = parsedReaction.name;
-      if (this.reactionEquation) this.reactionEquation.textContent = parsedReaction.equation || '';
+      this.setReactionEquation(parsedReaction.equation);
       if (this.reactionDesc) this.reactionDesc.textContent = parsedReaction.summary || '';
 
       if (this.presetSelect && this.presetSelect.options[this.currentReactionIndex]) {

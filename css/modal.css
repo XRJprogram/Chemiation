@@ -257,8 +257,6 @@
   box-sizing: border-box;
   box-shadow: 0 1px 3px rgba(94, 65, 47, 0.05);
   transition: all 0.16s ease;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(94, 65, 47, 0.25) transparent;
 }
 
 .form-textarea:hover {
@@ -284,8 +282,8 @@
 }
 
 .form-textarea::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 .form-textarea::-webkit-scrollbar-track {
@@ -293,8 +291,9 @@
 }
 
 .form-textarea::-webkit-scrollbar-thumb {
-  background: rgba(94, 65, 47, 0.22);
-  border-radius: 4px;
+  background: rgba(94, 65, 47, 0.32);
+  border-radius: 999px;
+  transition: background 0.2s ease;
 }
 
 .form-textarea::-webkit-scrollbar-thumb:hover {
@@ -989,8 +988,6 @@ input[type="checkbox"]:focus {
   padding: 10px 12px;
   box-sizing: border-box;
   outline: none;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(94, 65, 47, 0.25) transparent;
   transition: all 0.16s ease;
 }
 

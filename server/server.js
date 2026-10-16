@@ -268,12 +268,17 @@ function sendStreamFile(req, res, filePath, ext) {
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
       const etag = `W/"${stats.size}-${Math.floor(stats.mtimeMs)}"`;
 
+      // Cache-Control: HTML 不缓存以确保代码修改即刻生效；静态资产使用 no-cache 强制向服务器进行 ETag 差异校验
+      const cacheControl = ext === '.html'
+        ? 'no-cache, no-store, must-revalidate'
+        : 'no-cache';
+
       // Q3 Fix: ETag & 304 Not Modified
       if (req.headers['if-none-match'] === etag) {
         const security = getSecurityHeaders();
         res.writeHead(304, {
           'ETag': etag,
-          'Cache-Control': 'public, max-age=3600',
+          'Cache-Control': cacheControl,
           ...security
         });
         return res.end();
@@ -286,7 +291,7 @@ function sendStreamFile(req, res, filePath, ext) {
         ...cors,
         ...security,
         'ETag': etag,
-        'Cache-Control': 'public, max-age=3600'
+        'Cache-Control': cacheControl
       };
 
       // Q3 Fix: Gzip compression for text-based assets

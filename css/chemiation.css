@@ -44,6 +44,29 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 全局圆柱形滚动条（加粗至 10px，严禁声明 scrollbar-width 防止浏览器强退回 Windows 原生方形粗滚动条） */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(94, 65, 47, 0.32);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(184, 74, 40, 0.65);
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--color-accent);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html, body {
   width: 100%;
   height: 100%;
@@ -295,10 +318,63 @@ html, body {
   z-index: 10;
 }
 
-.canvas-step-toast {
+/* 视口右上角信息提示区容器 (方程式指示与步骤状态，纵向堆叠并自适应让位) */
+.viewport-top-right-group {
   position: absolute;
   top: 16px;
   right: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(580px, calc(100% - 240px));
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* 视口右上角：反应方程式指示卡片 (与全局英文字体对齐、支持自适应折行挤兑下方 Step 块、无省略号、无鼠标范围反馈) */
+.viewport-equation-display,
+#header-equation-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  min-height: 32px;
+  height: auto;
+  box-sizing: border-box;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent, #b84a28);
+  letter-spacing: 0.3px;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
+  text-overflow: clip;
+  max-width: 100%;
+  pointer-events: none;
+  user-select: none;
+  text-align: right;
+}
+
+.viewport-equation-display span,
+#header-equation-display span {
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
+  text-overflow: clip;
+  display: inline;
+}
+
+/* 步骤指示卡片 (自适应排列在反应方程式下方) */
+.canvas-step-toast {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -308,10 +384,11 @@ html, body {
   border-radius: 6px;
   background: var(--bg-card);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  z-index: 10;
   pointer-events: none;
+  user-select: none;
 }
 
 .toast-num {
@@ -539,13 +616,11 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(94, 65, 47, 0.22) transparent;
 }
 
 .workspace-content::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 10px;
+  height: 10px;
 }
 
 .workspace-content::-webkit-scrollbar-track {
@@ -553,13 +628,17 @@ html, body {
 }
 
 .workspace-content::-webkit-scrollbar-thumb {
-  background: rgba(94, 65, 47, 0.22);
+  background: rgba(94, 65, 47, 0.32);
   border-radius: 999px;
   transition: background 0.2s;
 }
 
 .workspace-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(94, 65, 47, 0.45);
+  background: rgba(184, 74, 40, 0.65);
+}
+
+.workspace-content::-webkit-scrollbar-thumb:active {
+  background: var(--color-accent);
 }
 
 /* 选项卡 1：机理与步骤列表 */
@@ -845,8 +924,6 @@ html, body {
   box-sizing: border-box;
   box-shadow: 0 1px 3px rgba(94, 65, 47, 0.05);
   transition: all 0.16s ease;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(94, 65, 47, 0.25) transparent;
 }
 
 .form-textarea:hover {
@@ -922,18 +999,15 @@ input[type="checkbox"]:focus {
   gap: 6px;
 }
 
-.overview-top-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-
 .overview-title {
   font-family: var(--font-serif);
   font-size: 14px;
   font-weight: 700;
   color: var(--color-dark-brown);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .overview-deltah {
@@ -1502,8 +1576,6 @@ input[type="checkbox"]:focus {
   resize: none;
   overflow: auto;
   z-index: 2;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 }
 
 .ide-input::selection {
@@ -1511,10 +1583,10 @@ input[type="checkbox"]:focus {
   color: transparent;
 }
 
-/* CCPL 极简线段式圆头细长方形滚动条 */
+/* CCPL 编辑器平滑圆柱形滚动条 */
 .ide-input::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 8px;
+  height: 8px;
 }
 
 .ide-input::-webkit-scrollbar-track {
@@ -1522,8 +1594,9 @@ input[type="checkbox"]:focus {
 }
 
 .ide-input::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 999px;
+  transition: background 0.2s ease;
 }
 
 .ide-input::-webkit-scrollbar-thumb:hover {
@@ -1914,14 +1987,25 @@ input[type="checkbox"]:focus {
     height: 30px !important;
   }
 
-  /* 步骤浮动胶囊调整至右上角 */
-  .canvas-step-toast {
+  /* 视口右上角信息提示区自适应缩放 */
+  .viewport-top-right-group {
     top: 8px !important;
     right: 8px !important;
-    bottom: auto !important;
-    left: auto !important;
-    padding: 4px 10px !important;
-    max-width: 52% !important;
+    gap: 6px !important;
+    max-width: calc(100% - 130px) !important;
+  }
+
+  .viewport-equation-display,
+  #header-equation-display {
+    min-height: 28px !important;
+    height: auto !important;
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .canvas-step-toast {
+    height: 28px !important;
+    padding: 3px 8px !important;
   }
 
   .toast-title {
@@ -2178,4 +2262,58 @@ body.server-connected div.header-right-actions {
 
 body.server-connected div.header-user-section {
   display: flex !important;
+}
+
+/* =========================================================================
+   Tauri Desktop Frameless Window Controls
+   Strictly hidden in browser; seamlessly activates inside Tauri desktop .exe
+   ========================================================================= */
+header.header-bar[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+header.header-bar a,
+header.header-bar button,
+header.header-bar input,
+header.header-bar select,
+header.header-bar .brand-section {
+  -webkit-app-region: no-drag;
+}
+
+.window-controls.tauri-only {
+  display: none !important;
+}
+
+body.tauri-app .window-controls.tauri-only {
+  display: flex !important;
+  align-items: center;
+  height: 100%;
+  margin-left: 14px;
+  -webkit-app-region: no-drag;
+}
+
+.win-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-mid-brown);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.win-control-btn:hover {
+  background: rgba(94, 65, 47, 0.12);
+  color: var(--color-dark-brown);
+}
+
+.win-control-btn.close:hover {
+  background: #E81123 !important;
+  color: #FFFFFF !important;
 }

@@ -197,13 +197,15 @@ const repoCtrl = {
 
       const authorName = item.authorName || 'Chemiation 研究员';
       const authorClean = authorName.replace(/\s*\(.*?\)/, '');
+      const formattedEquation = this.formatEquation(item.equation);
+      const escapedEquation = this.escapeHtml(formattedEquation);
 
       card.innerHTML = `
         <div>
           <div class="repo-card-head">
             <div class="repo-card-title" title="${this.escapeHtml(item.title || '未命名机理')}">${this.escapeHtml(item.title || '未命名机理')}</div>
           </div>
-          ${item.equation ? `<div class="repo-card-equation" title="${this.escapeHtml(item.equation)}">${this.escapeHtml(item.equation)}</div>` : ''}
+          ${item.equation ? `<div class="repo-card-equation" title="${escapedEquation}">${escapedEquation}</div>` : ''}
           ${item.summary ? `<div class="repo-card-desc" title="${this.escapeHtml(item.summary)}">${this.escapeHtml(item.summary)}</div>` : ''}
           ${tagHtml ? `<div class="repo-card-tags">${tagHtml}</div>` : ''}
         </div>
@@ -315,7 +317,7 @@ const repoCtrl = {
 
       // Preserve title/equation/summary if defined in repo item
       if (item.title) parsed.name = item.title;
-      if (item.equation) parsed.equation = item.equation;
+      if (item.equation) parsed.equation = this.formatEquation(item.equation);
       if (item.summary) parsed.summary = item.summary;
       parsed.id = item.id;
 
@@ -475,6 +477,15 @@ const repoCtrl = {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  },
+
+  formatEquation(eq) {
+    if (!eq) return '';
+    let text = String(eq);
+    if (window.ReactionScriptEngine && typeof window.ReactionScriptEngine.formatChemText === 'function') {
+      text = window.ReactionScriptEngine.formatChemText(text);
+    }
+    return text;
   },
 
   bindEvents() {

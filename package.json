@@ -9,7 +9,10 @@
     "server": "node server/server.js",
     "serve:static": "npx serve .",
     "test": "node test/test.js",
-    "test:server": "node server/test_suite.js"
+    "test:server": "node server/test_suite.js",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -42,7 +45,9 @@
     "docs_en.html",
     "server/",
     "server.bat",
-    "start-server.bat",
     "README.md"
-  ]
+  ],
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.3"
+  }
 }

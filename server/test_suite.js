@@ -16,6 +16,7 @@ if (!fs.existsSync(testDataDir)) {
   fs.mkdirSync(testDataDir, { recursive: true });
 }
 process.env.CHEMIATION_DATA_DIR = testDataDir;
+process.env.NODE_ENV = 'test';
 
 // Import server components after CHEMIATION_DATA_DIR is configured
 const auth = require('./auth.js');

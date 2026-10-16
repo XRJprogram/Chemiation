@@ -1,26 +1,26 @@
 [
   {
-    "id": "chem_repo_esterification",
-    "userId": "u_admin_root",
-    "title": "乙酸与乙醇费歇尔酯化反应",
-    "equation": "CH_3COOH + CH_3CH_2OH <=> CH_3COOCH_2CH_3 + H_2O",
-    "summary": "经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。",
-    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 乙酸与乙醇费歇尔酯化反应\n# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算\n# ============================================================\n\nreaction \"乙酸与乙醇费歇尔酯化反应\"\nequation \"CH_3COOH + CH_3CH_2OH <=> CH_3COOCH_2CH_3 + H_2O\"\nsummary \"经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。\"\n\nstep \"反应物底物靠近碰撞\" {\n  note \"乙酸 (CH_3COOH) 与乙醇 (CH_3CH_2OH) 受热碰撞靠近，全体系 10 个氢原子处于稳定共价键连。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C -3.60 -0.60 0.20\n  atom H11 H -4.40 -0.20 0.80\n  atom H12 H -3.50 -1.70 0.30\n  atom H13 H -3.80 -0.40 -0.80\n  atom C2 C -2.20 0.20 0.00\n  atom O1 O -2.00 1.50 -0.30\n  atom O2 O -1.20 -0.70 0.20\n  atom H1 H -0.30 -0.40 0.20\n  atom O3 O 1.60 0.40 -0.30\n  atom H2 H 1.40 1.30 -0.60\n  atom C3 C 2.80 -0.20 -0.10\n  atom H31 H 2.80 -1.10 -0.70\n  atom H32 H 2.70 -0.50 0.90\n  atom C4 C 4.10 0.60 0.30\n  atom H41 H 4.10 1.50 -0.30\n  atom H42 H 5.00 0.10 0.20\n  atom H43 H 4.10 0.90 1.30\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C1 H11 1\n  bond C1 H12 1\n  bond C1 H13 1\n  bond C2 O1 2\n  bond C2 O2 1\n  bond O2 H1 1\n  bond O3 H2 1\n  bond O3 C3 1\n  bond C3 H31 1\n  bond C3 H32 1\n  bond C3 C4 1\n  bond C4 H41 1\n  bond C4 H42 1\n  bond C4 H43 1\n}\n\nstep \"亲核加成与四面体中间体\" {\n  note \"乙醇 O3 进攻羰基碳形成 C2-O3 键，质子协同转移至离去氧原子生成水前体。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C -2.50 -1.20 0.60\n  atom H11 H -3.40 -1.00 1.10\n  atom H12 H -2.00 -2.00 1.00\n  atom H13 H -2.70 -1.40 -0.40\n  atom C2 C -1.10 -0.40 0.10\n  atom O1 O -1.40 1.10 -0.40 charge=-1\n  atom O2 O -1.00 -1.30 -1.10 charge=+1\n  atom H1 H -1.50 -2.10 -1.00\n  atom H2 H -0.30 -1.60 -1.40\n  atom O3 O 0.30 0.20 0.30\n  atom C3 C 1.60 -0.40 0.20\n  atom H31 H 1.60 -1.20 -0.50\n  atom H32 H 1.70 -0.80 1.20\n  atom C4 C 2.80 0.40 -0.20\n  atom H41 H 2.80 1.20 0.50\n  atom H42 H 3.70 -0.20 -0.20\n  atom H43 H 2.70 0.80 -1.20\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C1 H11 1\n  bond C1 H12 1\n  bond C1 H13 1\n  bond C2 O1 1\n  bond C2 O2 1\n  bond O2 H1 1\n  bond O2 H2 1\n  bond C2 O3 1\n  bond O3 C3 1\n  bond C3 H31 1\n  bond C3 H32 1\n  bond C3 C4 1\n  bond C4 H41 1\n  bond C4 H42 1\n  bond C4 H43 1\n}\n\nstep \"消除脱水产物生成\" {\n  note \"C2-O2 键断开消除脱水生成水分子 H_2O，C=O 双键重建生成乙酸乙酯 CH_3COOCH_2CH_3。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C -2.80 -0.70 0.40\n  atom H11 H -3.60 -0.30 1.00\n  atom H12 H -2.50 -1.70 0.70\n  atom H13 H -3.00 -0.70 -0.70\n  atom C2 C -1.40 0.10 0.00\n  atom O1 O -1.50 1.50 -0.30\n  atom O3 O -0.20 -0.60 0.20\n  atom C3 C 1.10 0.00 -0.10\n  atom H31 H 1.10 0.80 -0.80\n  atom H32 H 1.10 -0.60 0.80\n  atom C4 C 2.40 -0.70 -0.30\n  atom H41 H 2.40 -1.50 0.40\n  atom H42 H 3.30 -0.10 -0.30\n  atom H43 H 2.40 -1.10 -1.30\n  atom O2 O 0.50 -3.00 -1.60\n  atom H1 H -0.10 -3.60 -1.90\n  atom H2 H 1.30 -3.40 -1.40\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C1 H11 1\n  bond C1 H12 1\n  bond C1 H13 1\n  bond C2 O1 2\n  bond C2 O3 1\n  bond O3 C3 1\n  bond C3 H31 1\n  bond C3 H32 1\n  bond C3 C4 1\n  bond C4 H41 1\n  bond C4 H42 1\n  bond C4 H43 1\n  bond O2 H1 1\n  bond O2 H2 1\n}\n",
-    "category": "organic",
+    "id": "chem_repo_ethanol_dehydrogenation",
+    "userId": "u_boyle_robert",
+    "title": "乙醇催化脱氢氧化反应",
+    "equation": "CH3CH2OH + [Cu] -> CH3CHO + H2 + [Cu]",
+    "summary": "乙醇在过渡金属铜表面吸附解离，羟基氢与α-碳氢依次发生表面断键与配位消除，高选择性生成乙醛并脱附放出氢气。",
+    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 乙醇催化脱氢氧化反应\n# ============================================================\n\nreaction \"乙醇催化脱氢氧化反应\"\nequation \"CH3CH2OH + [Cu] -> CH3CHO + H2 + [Cu]\"\nsummary \"乙醇在过渡金属铜表面吸附解离，羟基氢与α-碳氢依次发生表面断键与配位消除，高选择性生成乙醛并脱附放出氢气。\"\n\nstep \"乙醇在铜催化剂表面化学吸附\" {\n  note \"乙醇氧原子孤对电子配位于活性铜位点，C-H键与O-H键发生拉伸活化\"\n  atom Cu1 Cu\n  atom O1 O\n  atom C1 C\n  atom C2 C\n  bond Cu1 O1 1\n  bond O1 C1 1\n  bond C1 C2 1\n}\n\nstep \"协同脱氢与双键重构\" {\n  note \"α-C-H键断裂，生成C=O双键与表面吸附氢物种\"\n  atom Cu1 Cu\n  atom O1 O\n  atom C1 C\n  atom C2 C\n  bond O1 C1 2\n  bond C1 C2 1\n}\n\nstep \"乙醛产物脱附与氢气逸出\" {\n  note \"乙醛分子脱离催化位点，活性表面复原完成催化循环\"\n  atom Cu1 Cu\n  atom O1 O\n  atom C1 C\n  atom C2 C\n  bond O1 C1 2\n  bond C1 C2 1\n}\n",
+    "category": "catalysis",
     "tags": [
-      "有机合成",
-      "亲核取代",
-      "酯化反应",
-      "酸催化"
+      "催化氧化",
+      "脱氢机理",
+      "表面化学",
+      "界面催化"
     ],
     "isPublic": true,
-    "stars": 48,
+    "stars": 27,
     "starredBy": [],
-    "forks": 12,
+    "forks": 5,
     "forkedFrom": null,
-    "views": 310,
-    "createdAt": "2026-08-31T15:43:54.154Z",
-    "updatedAt": "2026-08-31T15:43:54.154Z"
+    "views": 165,
+    "createdAt": "2026-09-17T15:43:54.154Z",
+    "updatedAt": "2026-09-17T15:43:54.154Z"
   },
   {
     "id": "chem_repo_co2_to_starch",
@@ -69,52 +69,6 @@
     "updatedAt": "2026-09-04T15:43:54.154Z"
   },
   {
-    "id": "chem_repo_haber_bosch",
-    "userId": "u_haber_fritz",
-    "title": "哈伯-博施法合成氨机理",
-    "equation": "N_2 + 3H_2 <=> 2NH_3",
-    "summary": "工业合成氨经典机理：N_2 (N≡N) 三键与 H_2 (H-H) 协同解离活化、金属表面加氢、最终生成 2 个三角锥 NH_3 氨分子。",
-    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 哈伯-博施法合成氨机理\n# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算\n# ============================================================\n\nreaction \"哈伯-博施法合成氨机理\"\nequation \"N_2 + 3H_2 <=> 2NH_3\"\nsummary \"工业合成氨经典机理：N_2 (N≡N) 三键与 H_2 (H-H) 协同解离活化、金属表面加氢、最终生成 2 个三角锥 NH_3 氨分子。\"\n\nstep \"反应物分子表面吸附基态\" {\n  note \"高键能 N_2 (N≡N) 分子与 3 个 H_2 (H-H) 氢分子吸附于铁催化剂表面晶格。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom N1 N -2.00 0.80 0.00\n  atom N2 N -0.60 0.80 0.00\n  atom H1 H 1.50 1.50 0.40\n  atom H2 H 2.50 1.50 -0.20\n  atom H4 H 1.50 0.00 -0.50\n  atom H5 H 2.50 0.00 0.20\n  atom H3 H 1.50 -1.50 0.30\n  atom H6 H 2.50 -1.50 -0.40\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond N1 N2 3\n  bond H1 H2 1\n  bond H4 H5 1\n  bond H3 H6 1\n}\n\nstep \"协同解离与加氢过渡态\" {\n  note \"催化剂反馈活化使 N_2 与 H_2 键解离，迁移形成对称的 NH_2* 表面活性基团与就位 H_2 分子。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom N1 N -2.00 0.20 0.00 radical\n  atom H1 H -3.10 0.80 0.30\n  atom H2 H -2.80 -0.80 -0.30\n  atom N2 N 2.00 0.20 0.00 radical\n  atom H4 H 3.10 0.80 -0.30\n  atom H5 H 2.80 -0.80 0.30\n  atom H3 H -0.55 -1.20 0.00\n  atom H6 H 0.55 -1.20 0.00\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond N1 H1 1\n  bond N1 H2 1\n  bond N2 H4 1\n  bond N2 H5 1\n  bond H3 H6 1\n}\n\nstep \"终步加氢完成生成氨气\" {\n  note \"全部氢原子与氮彻底键合，生成稳定闭壳构型的 2 个 NH_3 氨分子并脱附释放。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom N1 N -2.40 0.30 0.00\n  atom H1 H -2.40 -0.70 1.40\n  atom H2 H -1.20 -0.70 -0.70\n  atom H3 H -3.60 -0.70 -0.70\n  atom N2 N 2.40 0.30 0.00\n  atom H4 H 2.40 -0.70 1.40\n  atom H5 H 3.60 -0.70 -0.70\n  atom H6 H 1.20 -0.70 -0.70\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond N1 H1 1\n  bond N1 H2 1\n  bond N1 H3 1\n  bond N2 H4 1\n  bond N2 H5 1\n  bond N2 H6 1\n}\n",
-    "category": "catalysis",
-    "tags": [
-      "工业催化",
-      "哈伯法",
-      "无机化学",
-      "合成氨"
-    ],
-    "isPublic": true,
-    "stars": 47,
-    "starredBy": [],
-    "forks": 13,
-    "forkedFrom": null,
-    "views": 320,
-    "createdAt": "2026-09-07T15:43:54.154Z",
-    "updatedAt": "2026-09-07T15:43:54.154Z"
-  },
-  {
-    "id": "chem_repo_auto_layout_diels_alder",
-    "userId": "u_woodward_robert",
-    "title": "环戊二烯与乙烯狄尔斯-阿尔德加成",
-    "equation": "C_5H_6 + C_2H_4 -> C_7H_{10}",
-    "summary": "经典 [4+2] 环加成反应：共轭二烯体与亲双烯体协同发生电子转移，构筑具三维张力的双环[2.2.1]降冰片烯桥环构型。",
-    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 环戊二烯与乙烯狄尔斯-阿尔德加成\n# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算\n# ============================================================\n\nreaction \"环戊二烯与乙烯狄尔斯-阿尔德加成\"\nequation \"C_5H_6 + C_2H_4 -> C_7H_{10}\"\nsummary \"经典 [4+2] 环加成反应：共轭二烯体与亲双烯体协同发生电子转移，构筑具三维张力的双环[2.2.1]降冰片烯桥环构型。\"\n\nstep \"双烯体与亲双烯体空间配准\" {\n  note \"共轭环戊二烯 C_5H_6 与乙烯 C_2H_4 分子在空间彼此配准对齐，准备发生六电子协同转移加成。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C\n  atom C2 C\n  atom C3 C\n  atom C4 C\n  atom C5 C\n  atom H1 H\n  atom H2 H\n  atom H3 H\n  atom H4 H\n  atom H5A H\n  atom H5B H\n  atom C6 C\n  atom C7 C\n  atom H61 H\n  atom H62 H\n  atom H71 H\n  atom H72 H\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 2\n  bond C2 C3 1\n  bond C3 C4 2\n  bond C4 C5 1\n  bond C5 C1 1\n  bond C1 H1 1\n  bond C2 H2 1\n  bond C3 H3 1\n  bond C4 H4 1\n  bond C5 H5A 1\n  bond C5 H5B 1\n  bond C6 C7 2\n  bond C6 H61 1\n  bond C6 H62 1\n  bond C7 H71 1\n  bond C7 H72 1\n}\n\nstep \"协同环加成生成降冰片烯桥环产物\" {\n  note \"6 个 π 电子协同转移闭合，生成具张力的高对称双环[2.2.1]庚-2-烯 (降冰片烯 C_7H_{10}) 桥环拓扑构型。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C\n  atom C2 C\n  atom C3 C\n  atom C4 C\n  atom C5 C\n  atom C6 C\n  atom C7 C\n  atom H1 H\n  atom H2 H\n  atom H3 H\n  atom H4 H\n  atom H5A H\n  atom H5B H\n  atom H61 H\n  atom H62 H\n  atom H71 H\n  atom H72 H\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C2 C3 2\n  bond C3 C4 1\n  bond C4 C5 1\n  bond C5 C1 1\n  bond C1 C6 1\n  bond C4 C7 1\n  bond C6 C7 1\n  bond C1 H1 1\n  bond C2 H2 1\n  bond C3 H3 1\n  bond C4 H4 1\n  bond C5 H5A 1\n  bond C5 H5B 1\n  bond C6 H61 1\n  bond C6 H62 1\n  bond C7 H71 1\n  bond C7 H72 1\n}\n",
-    "category": "organic",
-    "tags": [
-      "协同反应",
-      "双环桥环",
-      "狄尔斯-阿尔德",
-      "环加成"
-    ],
-    "isPublic": true,
-    "stars": 55,
-    "starredBy": [],
-    "forks": 16,
-    "forkedFrom": null,
-    "views": 380,
-    "createdAt": "2026-09-09T15:43:54.154Z",
-    "updatedAt": "2026-09-09T15:43:54.154Z"
-  },
-  {
     "id": "chem_repo_electrophilic_aromatic_substitution",
     "userId": "u_boyle_robert",
     "title": "苯的亲电芳香取代硝化反应",
@@ -159,52 +113,6 @@
     "views": 285,
     "createdAt": "2026-09-12T15:43:54.154Z",
     "updatedAt": "2026-09-12T15:43:54.154Z"
-  },
-  {
-    "id": "chem_repo_aldol_condensation",
-    "userId": "u_curie_marie",
-    "title": "乙醛羟醛缩合反应",
-    "equation": "2 CH3CHO -> CH3CH=CHCHO + H2O",
-    "summary": "碱催化下乙醛脱质子生成烯醇负离子，进攻另一分子乙醛羰基碳，形成β-羟基丁醛中间体并经消除反应脱水生成巴豆醛。",
-    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 乙醛羟醛缩合反应\n# ============================================================\n\nreaction \"乙醛羟醛缩合反应\"\nequation \"2 CH3CHO -> CH3CH=CHCHO + H2O\"\nsummary \"碱催化下乙醛脱质子生成烯醇负离子，进攻另一分子乙醛羰基碳，形成β-羟基丁醛中间体并经消除反应脱水生成巴豆醛。\"\n\nstep \"烯醇负离子进攻第二分子乙醛\" {\n  note \"乙醛脱质子生成的碳负离子进攻第二分子乙醛羰基碳\"\n  atom C1 C\n  atom C2 C\n  atom O1 O\n  atom C3 C\n  atom C4 C\n  atom O2 O\n  bond C1 C2 1\n  bond C2 O1 2\n  bond C3 C4 1\n  bond C4 O2 1\n}\n\nstep \"生成β-羟基丁醛中间体\" {\n  note \"形成新的C-C单键，氧质子化生成醇羟基\"\n  atom C1 C\n  atom C2 C\n  atom O1 O\n  atom C3 C\n  atom C4 C\n  atom O2 O\n  bond C1 C2 1\n  bond C2 O1 1\n  bond C2 C3 1\n  bond C3 C4 1\n  bond C4 O2 2\n}\n\nstep \"脱水消除生成巴豆醛\" {\n  note \"羟基消除形成共轭碳碳双键并释放水分子\"\n  atom C1 C\n  atom C2 C\n  atom C3 C\n  atom C4 C\n  atom O2 O\n  atom O1 O\n  bond C1 C2 1\n  bond C2 C3 2\n  bond C3 C4 1\n  bond C4 O2 2\n}\n",
-    "category": "organic",
-    "tags": [
-      "羟醛缩合",
-      "碳负离子",
-      "烯醇化",
-      "有机反应"
-    ],
-    "isPublic": true,
-    "stars": 38,
-    "starredBy": [],
-    "forks": 8,
-    "forkedFrom": null,
-    "views": 230,
-    "createdAt": "2026-09-14T15:43:54.154Z",
-    "updatedAt": "2026-09-14T15:43:54.154Z"
-  },
-  {
-    "id": "chem_repo_ethanol_dehydrogenation",
-    "userId": "u_boyle_robert",
-    "title": "乙醇催化脱氢氧化反应",
-    "equation": "CH3CH2OH + [Cu] -> CH3CHO + H2 + [Cu]",
-    "summary": "乙醇在过渡金属铜表面吸附解离，羟基氢与α-碳氢依次发生表面断键与配位消除，高选择性生成乙醛并脱附放出氢气。",
-    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 乙醇催化脱氢氧化反应\n# ============================================================\n\nreaction \"乙醇催化脱氢氧化反应\"\nequation \"CH3CH2OH + [Cu] -> CH3CHO + H2 + [Cu]\"\nsummary \"乙醇在过渡金属铜表面吸附解离，羟基氢与α-碳氢依次发生表面断键与配位消除，高选择性生成乙醛并脱附放出氢气。\"\n\nstep \"乙醇在铜催化剂表面化学吸附\" {\n  note \"乙醇氧原子孤对电子配位于活性铜位点，C-H键与O-H键发生拉伸活化\"\n  atom Cu1 Cu\n  atom O1 O\n  atom C1 C\n  atom C2 C\n  bond Cu1 O1 1\n  bond O1 C1 1\n  bond C1 C2 1\n}\n\nstep \"协同脱氢与双键重构\" {\n  note \"α-C-H键断裂，生成C=O双键与表面吸附氢物种\"\n  atom Cu1 Cu\n  atom O1 O\n  atom C1 C\n  atom C2 C\n  bond O1 C1 2\n  bond C1 C2 1\n}\n\nstep \"乙醛产物脱附与氢气逸出\" {\n  note \"乙醛分子脱离催化位点，活性表面复原完成催化循环\"\n  atom Cu1 Cu\n  atom O1 O\n  atom C1 C\n  atom C2 C\n  bond O1 C1 2\n  bond C1 C2 1\n}\n",
-    "category": "catalysis",
-    "tags": [
-      "催化氧化",
-      "脱氢机理",
-      "表面化学",
-      "界面催化"
-    ],
-    "isPublic": true,
-    "stars": 27,
-    "starredBy": [],
-    "forks": 5,
-    "forkedFrom": null,
-    "views": 165,
-    "createdAt": "2026-09-17T15:43:54.154Z",
-    "updatedAt": "2026-09-17T15:43:54.154Z"
   },
   {
     "id": "chem_repo_peptide_condensation",
@@ -274,5 +182,97 @@
     "views": 180,
     "createdAt": "2026-09-21T15:43:54.154Z",
     "updatedAt": "2026-09-21T15:43:54.154Z"
+  },
+  {
+    "id": "chem_repo_esterification",
+    "userId": "u_admin_root",
+    "title": "乙酸与乙醇费歇尔酯化反应",
+    "equation": "CH_3COOH + CH_3CH_2OH <=> CH_3COOCH_2CH_3 + H_2O",
+    "summary": "经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。",
+    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 乙酸与乙醇费歇尔酯化反应\n# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算\n# ============================================================\n\nreaction \"乙酸与乙醇费歇尔酯化反应\"\nequation \"CH_3COOH + CH_3CH_2OH <=> CH_3COOCH_2CH_3 + H_2O\"\nsummary \"经典亲核酰基取代：底物靠近、亲核加成生成四面体中间体、脱水消除生成乙酸乙酯与水。\"\n\nstep \"反应物底物靠近碰撞\" {\n  note \"乙酸 (CH_3COOH) 与乙醇 (CH_3CH_2OH) 受热碰撞靠近，全体系 10 个氢原子处于稳定共价键连。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C -3.60 -0.60 0.20\n  atom H11 H -4.40 -0.20 0.80\n  atom H12 H -3.50 -1.70 0.30\n  atom H13 H -3.80 -0.40 -0.80\n  atom C2 C -2.20 0.20 0.00\n  atom O1 O -2.00 1.50 -0.30\n  atom O2 O -1.20 -0.70 0.20\n  atom H1 H -0.30 -0.40 0.20\n  atom O3 O 1.60 0.40 -0.30\n  atom H2 H 1.40 1.30 -0.60\n  atom C3 C 2.80 -0.20 -0.10\n  atom H31 H 2.80 -1.10 -0.70\n  atom H32 H 2.70 -0.50 0.90\n  atom C4 C 4.10 0.60 0.30\n  atom H41 H 4.10 1.50 -0.30\n  atom H42 H 5.00 0.10 0.20\n  atom H43 H 4.10 0.90 1.30\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C1 H11 1\n  bond C1 H12 1\n  bond C1 H13 1\n  bond C2 O1 2\n  bond C2 O2 1\n  bond O2 H1 1\n  bond O3 H2 1\n  bond O3 C3 1\n  bond C3 H31 1\n  bond C3 H32 1\n  bond C3 C4 1\n  bond C4 H41 1\n  bond C4 H42 1\n  bond C4 H43 1\n}\n\nstep \"亲核加成与四面体中间体\" {\n  note \"乙醇 O3 进攻羰基碳形成 C2-O3 键，质子协同转移至离去氧原子生成水前体。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C -2.50 -1.20 0.60\n  atom H11 H -3.40 -1.00 1.10\n  atom H12 H -2.00 -2.00 1.00\n  atom H13 H -2.70 -1.40 -0.40\n  atom C2 C -1.10 -0.40 0.10\n  atom O1 O -1.40 1.10 -0.40 charge=-1\n  atom O2 O -1.00 -1.30 -1.10 charge=+1\n  atom H1 H -1.50 -2.10 -1.00\n  atom H2 H -0.30 -1.60 -1.40\n  atom O3 O 0.30 0.20 0.30\n  atom C3 C 1.60 -0.40 0.20\n  atom H31 H 1.60 -1.20 -0.50\n  atom H32 H 1.70 -0.80 1.20\n  atom C4 C 2.80 0.40 -0.20\n  atom H41 H 2.80 1.20 0.50\n  atom H42 H 3.70 -0.20 -0.20\n  atom H43 H 2.70 0.80 -1.20\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C1 H11 1\n  bond C1 H12 1\n  bond C1 H13 1\n  bond C2 O1 1\n  bond C2 O2 1\n  bond O2 H1 1\n  bond O2 H2 1\n  bond C2 O3 1\n  bond O3 C3 1\n  bond C3 H31 1\n  bond C3 H32 1\n  bond C3 C4 1\n  bond C4 H41 1\n  bond C4 H42 1\n  bond C4 H43 1\n}\n\nstep \"消除脱水产物生成\" {\n  note \"C2-O2 键断开消除脱水生成水分子 H_2O，C=O 双键重建生成乙酸乙酯 CH_3COOCH_2CH_3。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C -2.80 -0.70 0.40\n  atom H11 H -3.60 -0.30 1.00\n  atom H12 H -2.50 -1.70 0.70\n  atom H13 H -3.00 -0.70 -0.70\n  atom C2 C -1.40 0.10 0.00\n  atom O1 O -1.50 1.50 -0.30\n  atom O3 O -0.20 -0.60 0.20\n  atom C3 C 1.10 0.00 -0.10\n  atom H31 H 1.10 0.80 -0.80\n  atom H32 H 1.10 -0.60 0.80\n  atom C4 C 2.40 -0.70 -0.30\n  atom H41 H 2.40 -1.50 0.40\n  atom H42 H 3.30 -0.10 -0.30\n  atom H43 H 2.40 -1.10 -1.30\n  atom O2 O 0.50 -3.00 -1.60\n  atom H1 H -0.10 -3.60 -1.90\n  atom H2 H 1.30 -3.40 -1.40\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C1 H11 1\n  bond C1 H12 1\n  bond C1 H13 1\n  bond C2 O1 2\n  bond C2 O3 1\n  bond O3 C3 1\n  bond C3 H31 1\n  bond C3 H32 1\n  bond C3 C4 1\n  bond C4 H41 1\n  bond C4 H42 1\n  bond C4 H43 1\n  bond O2 H1 1\n  bond O2 H2 1\n}\n",
+    "category": "organic",
+    "tags": [
+      "有机合成",
+      "亲核取代",
+      "酯化反应",
+      "酸催化"
+    ],
+    "isPublic": true,
+    "stars": 48,
+    "starredBy": [],
+    "forks": 12,
+    "forkedFrom": null,
+    "views": 310,
+    "createdAt": "2026-08-31T15:43:54.154Z",
+    "updatedAt": "2026-08-31T15:43:54.154Z"
+  },
+  {
+    "id": "chem_repo_haber_bosch",
+    "userId": "u_haber_fritz",
+    "title": "哈伯-博施法合成氨机理",
+    "equation": "N_2 + 3H_2 <=> 2NH_3",
+    "summary": "工业合成氨经典机理：N_2 (N≡N) 三键与 H_2 (H-H) 协同解离活化、金属表面加氢、最终生成 2 个三角锥 NH_3 氨分子。",
+    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 哈伯-博施法合成氨机理\n# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算\n# ============================================================\n\nreaction \"哈伯-博施法合成氨机理\"\nequation \"N_2 + 3H_2 <=> 2NH_3\"\nsummary \"工业合成氨经典机理：N_2 (N≡N) 三键与 H_2 (H-H) 协同解离活化、金属表面加氢、最终生成 2 个三角锥 NH_3 氨分子。\"\n\nstep \"反应物分子表面吸附基态\" {\n  note \"高键能 N_2 (N≡N) 分子与 3 个 H_2 (H-H) 氢分子吸附于铁催化剂表面晶格。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom N1 N -2.00 0.80 0.00\n  atom N2 N -0.60 0.80 0.00\n  atom H1 H 1.50 1.50 0.40\n  atom H2 H 2.50 1.50 -0.20\n  atom H4 H 1.50 0.00 -0.50\n  atom H5 H 2.50 0.00 0.20\n  atom H3 H 1.50 -1.50 0.30\n  atom H6 H 2.50 -1.50 -0.40\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond N1 N2 3\n  bond H1 H2 1\n  bond H4 H5 1\n  bond H3 H6 1\n}\n\nstep \"协同解离与加氢过渡态\" {\n  note \"催化剂反馈活化使 N_2 与 H_2 键解离，迁移形成对称的 NH_2* 表面活性基团与就位 H_2 分子。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom N1 N -2.00 0.20 0.00 radical\n  atom H1 H -3.10 0.80 0.30\n  atom H2 H -2.80 -0.80 -0.30\n  atom N2 N 2.00 0.20 0.00 radical\n  atom H4 H 3.10 0.80 -0.30\n  atom H5 H 2.80 -0.80 0.30\n  atom H3 H -0.55 -1.20 0.00\n  atom H6 H 0.55 -1.20 0.00\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond N1 H1 1\n  bond N1 H2 1\n  bond N2 H4 1\n  bond N2 H5 1\n  bond H3 H6 1\n}\n\nstep \"终步加氢完成生成氨气\" {\n  note \"全部氢原子与氮彻底键合，生成稳定闭壳构型的 2 个 NH_3 氨分子并脱附释放。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom N1 N -2.40 0.30 0.00\n  atom H1 H -2.40 -0.70 1.40\n  atom H2 H -1.20 -0.70 -0.70\n  atom H3 H -3.60 -0.70 -0.70\n  atom N2 N 2.40 0.30 0.00\n  atom H4 H 2.40 -0.70 1.40\n  atom H5 H 3.60 -0.70 -0.70\n  atom H6 H 1.20 -0.70 -0.70\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond N1 H1 1\n  bond N1 H2 1\n  bond N1 H3 1\n  bond N2 H4 1\n  bond N2 H5 1\n  bond N2 H6 1\n}\n",
+    "category": "catalysis",
+    "tags": [
+      "工业催化",
+      "哈伯法",
+      "无机化学",
+      "合成氨"
+    ],
+    "isPublic": true,
+    "stars": 47,
+    "starredBy": [],
+    "forks": 13,
+    "forkedFrom": null,
+    "views": 320,
+    "createdAt": "2026-09-07T15:43:54.154Z",
+    "updatedAt": "2026-09-07T15:43:54.154Z"
+  },
+  {
+    "id": "chem_repo_auto_layout_diels_alder",
+    "userId": "u_woodward_robert",
+    "title": "环戊二烯与乙烯狄尔斯-阿尔德加成",
+    "equation": "C_5H_6 + C_2H_4 -> C_7H_{10}",
+    "summary": "经典 [4+2] 环加成反应：共轭二烯体与亲双烯体协同发生电子转移，构筑具三维张力的双环[2.2.1]降冰片烯桥环构型。",
+    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 环戊二烯与乙烯狄尔斯-阿尔德加成\n# 语法极简：只需指定步骤名称、机理说明与原子键连，三维坐标自动解算\n# ============================================================\n\nreaction \"环戊二烯与乙烯狄尔斯-阿尔德加成\"\nequation \"C_5H_6 + C_2H_4 -> C_7H_{10}\"\nsummary \"经典 [4+2] 环加成反应：共轭二烯体与亲双烯体协同发生电子转移，构筑具三维张力的双环[2.2.1]降冰片烯桥环构型。\"\n\nstep \"双烯体与亲双烯体空间配准\" {\n  note \"共轭环戊二烯 C_5H_6 与乙烯 C_2H_4 分子在空间彼此配准对齐，准备发生六电子协同转移加成。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C\n  atom C2 C\n  atom C3 C\n  atom C4 C\n  atom C5 C\n  atom H1 H\n  atom H2 H\n  atom H3 H\n  atom H4 H\n  atom H5A H\n  atom H5B H\n  atom C6 C\n  atom C7 C\n  atom H61 H\n  atom H62 H\n  atom H71 H\n  atom H72 H\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 2\n  bond C2 C3 1\n  bond C3 C4 2\n  bond C4 C5 1\n  bond C5 C1 1\n  bond C1 H1 1\n  bond C2 H2 1\n  bond C3 H3 1\n  bond C4 H4 1\n  bond C5 H5A 1\n  bond C5 H5B 1\n  bond C6 C7 2\n  bond C6 H61 1\n  bond C6 H62 1\n  bond C7 H71 1\n  bond C7 H72 1\n}\n\nstep \"协同环加成生成降冰片烯桥环产物\" {\n  note \"6 个 π 电子协同转移闭合，生成具张力的高对称双环[2.2.1]庚-2-烯 (降冰片烯 C_7H_{10}) 桥环拓扑构型。\"\n\n  # 原子定义: atom <ID> <元素> [可选X Y Z坐标] [radical] [charge=+1/-1]\n  atom C1 C\n  atom C2 C\n  atom C3 C\n  atom C4 C\n  atom C5 C\n  atom C6 C\n  atom C7 C\n  atom H1 H\n  atom H2 H\n  atom H3 H\n  atom H4 H\n  atom H5A H\n  atom H5B H\n  atom H61 H\n  atom H62 H\n  atom H71 H\n  atom H72 H\n\n  # 化学键拓扑: bond <原子1> <原子2> [键级1/2/3]\n  bond C1 C2 1\n  bond C2 C3 2\n  bond C3 C4 1\n  bond C4 C5 1\n  bond C5 C1 1\n  bond C1 C6 1\n  bond C4 C7 1\n  bond C6 C7 1\n  bond C1 H1 1\n  bond C2 H2 1\n  bond C3 H3 1\n  bond C4 H4 1\n  bond C5 H5A 1\n  bond C5 H5B 1\n  bond C6 H61 1\n  bond C6 H62 1\n  bond C7 H71 1\n  bond C7 H72 1\n}\n",
+    "category": "organic",
+    "tags": [
+      "协同反应",
+      "双环桥环",
+      "狄尔斯-阿尔德",
+      "环加成"
+    ],
+    "isPublic": true,
+    "stars": 55,
+    "starredBy": [],
+    "forks": 16,
+    "forkedFrom": null,
+    "views": 380,
+    "createdAt": "2026-09-09T15:43:54.154Z",
+    "updatedAt": "2026-09-09T15:43:54.154Z"
+  },
+  {
+    "id": "chem_repo_aldol_condensation",
+    "userId": "u_curie_marie",
+    "title": "乙醛羟醛缩合反应",
+    "equation": "2 CH3CHO -> CH3CH=CHCHO + H2O",
+    "summary": "碱催化下乙醛脱质子生成烯醇负离子，进攻另一分子乙醛羰基碳，形成β-羟基丁醛中间体并经消除反应脱水生成巴豆醛。",
+    "script": "# ============================================================\n# Chemiation 反应机理推演脚本 (CCPL)\n# 反应名称: 乙醛羟醛缩合反应\n# ============================================================\n\nreaction \"乙醛羟醛缩合反应\"\nequation \"2 CH3CHO -> CH3CH=CHCHO + H2O\"\nsummary \"碱催化下乙醛脱质子生成烯醇负离子，进攻另一分子乙醛羰基碳，形成β-羟基丁醛中间体并经消除反应脱水生成巴豆醛。\"\n\nstep \"烯醇负离子进攻第二分子乙醛\" {\n  note \"乙醛脱质子生成的碳负离子进攻第二分子乙醛羰基碳\"\n  atom C1 C\n  atom C2 C\n  atom O1 O\n  atom C3 C\n  atom C4 C\n  atom O2 O\n  bond C1 C2 1\n  bond C2 O1 2\n  bond C3 C4 1\n  bond C4 O2 1\n}\n\nstep \"生成β-羟基丁醛中间体\" {\n  note \"形成新的C-C单键，氧质子化生成醇羟基\"\n  atom C1 C\n  atom C2 C\n  atom O1 O\n  atom C3 C\n  atom C4 C\n  atom O2 O\n  bond C1 C2 1\n  bond C2 O1 1\n  bond C2 C3 1\n  bond C3 C4 1\n  bond C4 O2 2\n}\n\nstep \"脱水消除生成巴豆醛\" {\n  note \"羟基消除形成共轭碳碳双键并释放水分子\"\n  atom C1 C\n  atom C2 C\n  atom C3 C\n  atom C4 C\n  atom O2 O\n  atom O1 O\n  bond C1 C2 1\n  bond C2 C3 2\n  bond C3 C4 1\n  bond C4 O2 2\n}\n",
+    "category": "organic",
+    "tags": [
+      "羟醛缩合",
+      "碳负离子",
+      "烯醇化",
+      "有机反应"
+    ],
+    "isPublic": true,
+    "stars": 38,
+    "starredBy": [],
+    "forks": 8,
+    "forkedFrom": null,
+    "views": 230,
+    "createdAt": "2026-09-14T15:43:54.154Z",
+    "updatedAt": "2026-09-14T15:43:54.154Z"
   }
 ]

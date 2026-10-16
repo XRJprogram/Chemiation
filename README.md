@@ -83,7 +83,7 @@ Chemiation adopts a unified architecture on the `main` branch with seamless stat
 
 - **Optional Fullstack Cloud Platform (`server/`)**:
   - The repository includes a lightweight, zero-dependency Node.js backend under [`server/`](server/) using native Node.js standard libraries (`http`, `crypto`, `fs`).
-  - When the server is started (`npm start` or double-clicking `server/start-server.bat`), the client dynamically detects connectivity via `/api/health` heartbeat.
+  - When the server is started (`npm start` or double-clicking `server.bat`), the client dynamically detects connectivity via `/api/health` heartbeat.
   - The UI automatically reveals the Cloud Mechanism Repository, User Authentication, Star/Fork community system, and Cloud Save buttons.
   - Includes PBKDF2 password hashing, HMAC-SHA256 session tokens, role-based access control (RBAC), community reaction repository, and an administrative inspection dashboard ([`server/admin.html`](server/admin.html)).
 
@@ -110,6 +110,7 @@ Chemiation adopts a unified architecture on the `main` branch with seamless stat
 | [`js/reactionApp.js`](js/reactionApp.js) | Main application orchestrator, event bus, timeline manager, and i18n controller |
 | [`server/`](server/) | Self-contained fullstack Node.js server, JSON database, REST API, test suite, and admin console |
 | [`server/admin.html`](server/admin.html) | Server administration dashboard for user management, reaction moderation, and audit inspection |
+| [`server.bat`](server.bat) | Windows one-click local server host launcher |
 
 ---
 
@@ -126,7 +127,7 @@ Chemiation supports both pure static usage and fullstack cloud capabilities:
      ```bash
      npm start
      # or: node server/server.js
-     # or double-click server/start-server.bat
+     # or double-click server.bat
      ```
    - Open `http://localhost:3000` in your browser.
    - Cloud repository, user accounts, and mechanism saving automatically activate.
@@ -205,7 +206,7 @@ Chemiation supports both pure static usage and fullstack cloud capabilities:
 
 - **可选全栈云端平台（`server/` 独立目录）**：
   - 所有服务端文件统一收敛至 [`server/`](server/) 目录，采用 Node.js 原生标准库（`http`、`crypto`、`fs`）开发，零第三方 npm 依赖。
-  - 启动服务端（`npm start` 或双击 `server/start-server.bat`）后，前端通过 `/api/health` 探针自动感知服务在线状态。
+  - 启动服务端（`npm start` 或双击 `server.bat`）后，前端通过 `/api/health` 探针自动感知服务在线状态。
   - 界面自动唤醒并展示云端机理社区仓库、用户注册登录、点赞收藏、在线复刻与云端保存功能。
   - 内置基于 PBKDF2 的加盐密码哈希、HMAC-SHA256 签名会话、角色权限控制（RBAC）、审计日志及独立运维管理后台（[`server/admin.html`](server/admin.html)）。
 
@@ -232,6 +233,7 @@ Chemiation supports both pure static usage and fullstack cloud capabilities:
 | [`js/reactionApp.js`](js/reactionApp.js) | 主控制器、交互事件与多语言中枢 |
 | [`server/`](server/) | 独立全栈 Node.js 服务端、原子 JSON 数据库、REST API、测试套件与运维后台 |
 | [`server/admin.html`](server/admin.html) | 服务端运维管理后台（用户管理、机理审核与审计日志） |
+| [`server.bat`](server.bat) | Windows 一键启动本地服务主机脚本 |
 
 ---
 
@@ -248,7 +250,7 @@ Chemiation supports both pure static usage and fullstack cloud capabilities:
      ```bash
      npm start
      # 或执行: node server/server.js
-     # 或双击 server/start-server.bat
+     # 或双击 server.bat
      ```
    - 在浏览器中访问 `http://localhost:3000`。
    - 云端作品仓库、用户系统与云端保存功能自动激活。

@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const upstashAdapter = require('./upstashAdapter');
 
 const DATA_DIR = process.env.CHEMIATION_DATA_DIR || path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -90,6 +91,38 @@ function initSeeds() {
 
 initSeeds();
 
+function shouldSyncCloud() {
+  return process.env.NODE_ENV !== 'test' && upstashAdapter.isConfigured();
+}
+
+async function initUpstashSync() {
+  if (!shouldSyncCloud()) return;
+  try {
+    const conn = await upstashAdapter.testConnection();
+    if (!conn.success) {
+      console.warn('[Upstash] Cloud connection test failed:', conn.error);
+      return;
+    }
+    console.log('[Upstash] Connected to Upstash Redis Cloud successfully!');
+    const cloudData = await upstashAdapter.loadAllData();
+    if (cloudData && (cloudData.users.length > 0 || cloudData.reactions.length > 0)) {
+      usersCache = cloudData.users;
+      reactionsCache = cloudData.reactions;
+      if (cloudData.logs.length > 0) logsCache = cloudData.logs;
+      safeWriteJSON(USERS_FILE, usersCache);
+      safeWriteJSON(REACTIONS_FILE, reactionsCache);
+      console.log(`[Upstash] Cloud sync complete (${usersCache.length} users, ${reactionsCache.length} mechanisms).`);
+    } else {
+      console.log('[Upstash] Cloud database is empty, migrating local data to Upstash...');
+      await upstashAdapter.seedInitialData(usersCache, reactionsCache);
+    }
+  } catch (err) {
+    console.warn('[Upstash] Cloud sync exception:', err.message);
+  }
+}
+
+initUpstashSync();
+
 const db = {
   // =========================================================================
   // USER OPERATIONS
@@ -142,6 +175,7 @@ const db = {
     };
     usersCache.push(user);
     safeWriteJSON(USERS_FILE, usersCache);
+    if (shouldSyncCloud()) upstashAdapter.saveUser(user).catch(() => {});
     return user;
   },
 
@@ -163,6 +197,7 @@ const db = {
     };
     usersCache[index] = updated;
     safeWriteJSON(USERS_FILE, usersCache);
+    if (shouldSyncCloud()) upstashAdapter.saveUser(updated).catch(() => {});
     return updated;
   },
 
@@ -172,6 +207,7 @@ const db = {
       user.lastLoginAt = new Date().toISOString();
       user.loginCount = (user.loginCount || 0) + 1;
       safeWriteJSON(USERS_FILE, usersCache);
+      if (shouldSyncCloud()) upstashAdapter.saveUser(user).catch(() => {});
     }
   },
 
@@ -184,6 +220,7 @@ const db = {
       // Clean up user's private reactions or reassign
       reactionsCache = reactionsCache.filter(r => r.userId !== id);
       safeWriteJSON(REACTIONS_FILE, reactionsCache);
+      if (shouldSyncCloud()) upstashAdapter.deleteUser(id).catch(() => {});
     }
     return deleted;
   },
@@ -272,6 +309,7 @@ const db = {
     };
     reactionsCache.unshift(newReaction);
     safeWriteJSON(REACTIONS_FILE, reactionsCache);
+    if (shouldSyncCloud()) upstashAdapter.saveReaction(newReaction).catch(() => {});
     return newReaction;
   },
 
@@ -299,6 +337,7 @@ const db = {
     };
     reactionsCache[index] = updated;
     safeWriteJSON(REACTIONS_FILE, reactionsCache);
+    if (shouldSyncCloud()) upstashAdapter.saveReaction(updated).catch(() => {});
     return updated;
   },
 
@@ -314,6 +353,7 @@ const db = {
 
     reactionsCache.splice(index, 1);
     safeWriteJSON(REACTIONS_FILE, reactionsCache);
+    if (shouldSyncCloud()) upstashAdapter.deleteReaction(id).catch(() => {});
     return true;
   },
 
@@ -342,6 +382,7 @@ const db = {
     }
 
     safeWriteJSON(REACTIONS_FILE, reactionsCache);
+    if (shouldSyncCloud()) upstashAdapter.saveReaction(item).catch(() => {});
     return { starred, stars: item.stars };
   },
 
@@ -380,6 +421,10 @@ const db = {
 
     reactionsCache.unshift(forked);
     safeWriteJSON(REACTIONS_FILE, reactionsCache);
+    if (shouldSyncCloud()) {
+      upstashAdapter.saveReaction(original).catch(() => {});
+      upstashAdapter.saveReaction(forked).catch(() => {});
+    }
     return forked;
   },
 
@@ -417,6 +462,9 @@ const db = {
 
     if (imported.length > 0) {
       safeWriteJSON(REACTIONS_FILE, reactionsCache);
+      if (shouldSyncCloud()) {
+        imported.forEach(r => upstashAdapter.saveReaction(r).catch(() => {}));
+      }
     }
     return imported;
   },
@@ -444,6 +492,7 @@ const db = {
       logsCache = logsCache.slice(0, 500);
     }
     safeWriteJSON(LOGS_FILE, logsCache);
+    if (shouldSyncCloud()) upstashAdapter.addLog(entry).catch(() => {});
     return entry;
   },
 

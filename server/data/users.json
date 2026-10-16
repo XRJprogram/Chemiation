@@ -1,35 +1,5 @@
 [
   {
-    "id": "u_admin_root",
-    "username": "admin",
-    "passwordHash": "3913c4eb0e790dc6bc9a4170195bafea69061dcb9e3b6a2d1ebdf282765920e493cd09253b2795324bd10c18b9cbebfba5b514dbf4ec89f4a5ec067d00ba4703",
-    "salt": "3bfe6906c61abea0c58d679d27c7dafc",
-    "role": "admin",
-    "nickname": "系统管理员 (Admin)",
-    "email": "admin@chemiation.local",
-    "avatar": "AD",
-    "bio": "Chemiation 反应机理平台内置超级管理员，拥有全局机理与用户审计权限。",
-    "createdAt": "2026-08-29T15:43:54.153Z",
-    "updatedAt": "2026-08-29T15:43:54.153Z",
-    "lastLoginAt": "2026-09-28T15:43:54.152Z",
-    "loginCount": 28
-  },
-  {
-    "id": "u_curie_marie",
-    "username": "curie_marie",
-    "passwordHash": "1ad628b8647bacf793e840604df2865d016af1e2637c2d32a4085a452c7db6718917da03a4a590629181e4ef8ea54dd7a73abdf0b8843926fed2529a8f993953",
-    "salt": "3bfe6906c61abea0c58d679d27c7dafc",
-    "role": "user",
-    "nickname": "玛丽·居里 (Marie Curie)",
-    "email": "m.curie@radium-lab.org",
-    "avatar": "MC",
-    "bio": "放射性与无机/有机物理化学研究先驱，致力于分子结构与反应机理深度解析。",
-    "createdAt": "2026-09-03T15:43:54.153Z",
-    "updatedAt": "2026-09-08T15:43:54.153Z",
-    "lastLoginAt": "2026-09-27T15:43:54.153Z",
-    "loginCount": 42
-  },
-  {
     "id": "u_victor_grignard",
     "username": "victor_grignard",
     "passwordHash": "1ad628b8647bacf793e840604df2865d016af1e2637c2d32a4085a452c7db6718917da03a4a590629181e4ef8ea54dd7a73abdf0b8843926fed2529a8f993953",
@@ -103,5 +73,35 @@
     "updatedAt": "2026-09-20T15:43:54.153Z",
     "lastLoginAt": "2026-09-27T15:43:54.153Z",
     "loginCount": 19
+  },
+  {
+    "id": "u_admin_root",
+    "username": "admin",
+    "passwordHash": "3913c4eb0e790dc6bc9a4170195bafea69061dcb9e3b6a2d1ebdf282765920e493cd09253b2795324bd10c18b9cbebfba5b514dbf4ec89f4a5ec067d00ba4703",
+    "salt": "3bfe6906c61abea0c58d679d27c7dafc",
+    "role": "admin",
+    "nickname": "系统管理员 (Admin)",
+    "email": "admin@chemiation.local",
+    "avatar": "AD",
+    "bio": "Chemiation 反应机理平台内置超级管理员，拥有全局机理与用户审计权限。",
+    "createdAt": "2026-08-29T15:43:54.153Z",
+    "updatedAt": "2026-08-29T15:43:54.153Z",
+    "lastLoginAt": "2026-10-16T08:11:17.404Z",
+    "loginCount": 29
+  },
+  {
+    "id": "u_curie_marie",
+    "username": "curie_marie",
+    "passwordHash": "1ad628b8647bacf793e840604df2865d016af1e2637c2d32a4085a452c7db6718917da03a4a590629181e4ef8ea54dd7a73abdf0b8843926fed2529a8f993953",
+    "salt": "3bfe6906c61abea0c58d679d27c7dafc",
+    "role": "user",
+    "nickname": "玛丽·居里 (Marie Curie)",
+    "email": "m.curie@radium-lab.org",
+    "avatar": "MC",
+    "bio": "放射性与无机/有机物理化学研究先驱，致力于分子结构与反应机理深度解析。",
+    "createdAt": "2026-09-03T15:43:54.153Z",
+    "updatedAt": "2026-09-08T15:43:54.153Z",
+    "lastLoginAt": "2026-09-27T15:43:54.153Z",
+    "loginCount": 42
   }
 ]

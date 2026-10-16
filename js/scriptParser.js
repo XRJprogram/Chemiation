@@ -69,19 +69,52 @@ const ReactionScriptEngine = {
   formatChemText(str) {
     if (!str || typeof str !== 'string') return str || '';
 
-    // 1. 显式大括号上下标: _{...} 与 ^{...}
-    let res = str.replace(/_\{([^}]+)\}/g, (_, inner) => {
-      return inner.split('').map(ch => CCPL_SUB_MAP[ch] || ch).join('');
+    let res = str.trim();
+
+    // 0. 去除外层 LaTeX 数学定界符 $...$, $$...$$, \(...\)
+    res = res.replace(/^(\$\$?|\\\()\s*/, '').replace(/\s*(\$\$?|\\\))$/, '');
+
+    // 1. 常见 LaTeX 宏包与定界处理 (\ce{}, \chemfig{}, \mathrm{}, \text{} 等)
+    res = res
+      .replace(/\\(ce|chemfig|chemformula|pu)\{([^}]+)\}/g, '$2')
+      .replace(/\\text\{([^}]+)\}/g, '$1')
+      .replace(/\\mathrm\{([^}]+)\}/g, '$1')
+      .replace(/\\mathbf\{([^}]+)\}/g, '$1');
+
+    // 2. 常见 LaTeX 反应箭头与符号
+    res = res
+      .replace(/\\xrightarrow\[(.*?)\]\{(.*?)\}/g, '—[$1][$2]→')
+      .replace(/\\xrightarrow\{(.*?)\}/g, '—[$1]→')
+      .replace(/\\xleftarrow\[(.*?)\]\{(.*?)\}/g, '←[$1][$2]—')
+      .replace(/\\xleftarrow\{(.*?)\}/g, '←[$1]—')
+      .replace(/\\(rightleftharpoons|leftharpoons)/g, '⇌')
+      .replace(/\\(longleftrightarrow|leftrightarrow)/g, '↔')
+      .replace(/\\(longrightarrow|rightarrow|xrightarrow|to)/g, '→')
+      .replace(/\\(longleftarrow|leftarrow|xleftarrow)/g, '←')
+      .replace(/\\(cdots|dots)/g, '···')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\oplus/g, '⊕')
+      .replace(/\\ominus/g, '⊖')
+      .replace(/\\Delta/g, 'Δ')
+      .replace(/\\times/g, '×')
+      .replace(/\\pm/g, '±')
+      .replace(/\\quad|\\qquad|\\,|\\;|\\!/g, ' ');
+
+    // 3. 显式大括号上下标: _{...} 与 ^{...}
+    res = res.replace(/_\{([^}]+)\}/g, (_, inner) => {
+      return inner.split('').map(ch => CCPL_SUB_MAP[ch.toLowerCase()] || ch).join('');
     });
     res = res.replace(/\^\{([^}]+)\}/g, (_, inner) => {
-      return inner.split('').map(ch => CCPL_SUP_MAP[ch] || ch).join('');
+      return inner.split('').map(ch => CCPL_SUP_MAP[ch.toLowerCase()] || ch).join('');
     });
 
-    // 2. 显式单字符上下标: _[0-9a-z+-] 与 ^[0-9+-]
+    // 4. 显式上下标 (支持电荷如 ^2+, ^3-, ^+, ^- 及单字符下标 _2, _n)
+    res = res.replace(/\^([0-9]+[+-]|[0-9a-z+-])/gi, (_, chars) => {
+      return chars.split('').map(ch => CCPL_SUP_MAP[ch.toLowerCase()] || ch).join('');
+    });
     res = res.replace(/_([0-9a-z+-])/gi, (_, ch) => CCPL_SUB_MAP[ch.toLowerCase()] || ('_' + ch));
-    res = res.replace(/\^([0-9+-])/g, (_, ch) => CCPL_SUP_MAP[ch] || ('^' + ch));
 
-    // 3. 常见反应平衡、共振与反应方向箭头简写
+    // 4. 常见反应平衡、共振与反应方向箭头简写
     res = res
       .replace(/<==>|<=>/g, '⇌')
       .replace(/==/g, '⇌')
@@ -89,10 +122,10 @@ const ReactionScriptEngine = {
       .replace(/-->|->/g, '→')
       .replace(/<--|<-/g, '←');
 
-    // 4. 聚合物末尾 ]n 自动转换为下标 ]ₙ
+    // 5. 聚合物末尾 ]n 自动转换为下标 ]ₙ
     res = res.replace(/\]n\b/g, ']ₙ');
 
-    // 5. 智能化学式下标：化学元素符号或闭括号/闭中括号后直接跟随的数字 (如 CO2, H2O, CH3COOH, C6H12O6, (NH4)2SO4)
+    // 6. 智能化学式下标：化学元素符号或闭括号/闭中括号后直接跟随的数字 (如 CO2, H2O, CH3COOH, C6H12O6, (NH4)2SO4)
     res = res.replace(/([A-Z][a-z]?|\)|\])(\d+)/g, (match, prefix, digits) => {
       const subDigits = digits.split('').map(d => CCPL_SUB_MAP[d] || d).join('');
       return prefix + subDigits;

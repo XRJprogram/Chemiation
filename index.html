@@ -9,13 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/chemiation.css">
-  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/chemiation.css?v=20261016c">
+  <link rel="stylesheet" href="css/modal.css?v=20261016c">
 </head>
 <body>
   <div class="app-container">
     <!-- 顶部独立品牌导航栏 -->
-    <header class="header-bar">
+    <header class="header-bar" data-tauri-drag-region>
       <div class="brand-section">
         <div class="brand-logo">
           <span>CHEMIATION</span>
@@ -33,17 +33,7 @@
           </svg>
           <span data-i18n="repoBtn">GitHub 仓库</span>
         </a>
-        <button id="header-ai-btn" class="header-lang-btn" style="color: var(--color-accent, #b84a28); border-color: rgba(184, 74, 40, 0.35); background: rgba(184, 74, 40, 0.08); display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;" title="AI 辅助推演与机理生成 (Alt+A)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-          </svg>
-          <span data-i18n="aiBtn">AI 助手</span>
-        </button>
         <button id="header-lang-btn" class="header-lang-btn" title="切换语言 / Switch Language">中文</button>
-      </div>
-
-      <div id="header-equation-display" class="header-status-equation">
-        <span id="reaction-equation">CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O</span>
       </div>
 
       <!-- 页眉最右侧：云端机理仓库与登录/注册操作区（仅当服务端启动连接时显示） -->
@@ -64,6 +54,19 @@
             <span data-i18n="authBtn">登录 / 注册</span>
           </button>
         </div>
+      </div>
+
+      <!-- 桌面客户端原生窗口控制条 (仅在 Tauri 运行环境下显示，无边框原生集成) -->
+      <div class="window-controls tauri-only" id="window-controls">
+        <button id="win-btn-minimize" class="win-control-btn" title="最小化" tabindex="-1">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="12" x2="20" y2="12"></line></svg>
+        </button>
+        <button id="win-btn-maximize" class="win-control-btn" title="最大化 / 还原" tabindex="-1">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
+        </button>
+        <button id="win-btn-close" class="win-control-btn close" title="关闭" tabindex="-1">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
+        </button>
       </div>
     </header>
 
@@ -104,10 +107,15 @@
           </button>
         </div>
 
-        <!-- 当前步骤状态悬浮胶囊 -->
-        <div id="canvas-step-toast" class="canvas-step-toast">
-          <span class="toast-num">1 / 4</span>
-          <span class="toast-title">步骤推演</span>
+        <!-- 画布右上角：信息指示区 (反应式在上，步骤状态在其下方自适应排列) -->
+        <div class="viewport-top-right-group">
+          <div id="header-equation-display" class="viewport-equation-display" title="反应方程式">
+            <span id="reaction-equation">CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O</span>
+          </div>
+          <div id="canvas-step-toast" class="canvas-step-toast">
+            <span class="toast-num">1 / 4</span>
+            <span class="toast-title">步骤推演</span>
+          </div>
         </div>
 
         <!-- 当工作区收起时显示的右侧唤醒按钮 (纯图标) -->
@@ -185,9 +193,7 @@
 
             <!-- 反应总览信息卡片 -->
             <div class="reaction-overview-card">
-              <div class="overview-top-row">
-                <h3 id="reaction-title" class="overview-title">载入中...</h3>
-              </div>
+              <h3 id="reaction-title" class="overview-title">载入中...</h3>
               <p id="reaction-desc" class="overview-desc">反应机理推演载入中...</p>
             </div>
 
@@ -218,9 +224,9 @@
                 </button>
                 <button id="btn-save-cloud" class="script-btn icon-only cloud-online-only" title="保存至云端仓库">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                    <polyline points="7 3 7 8 15 8"></polyline>
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    <polyline points="16 16 12 12 8 16"></polyline>
+                    <line x1="12" y1="12" x2="12" y2="21"></line>
                   </svg>
                   <span class="btn-label" data-i18n="btnSaveCloud">存到云端</span>
                 </button>
@@ -239,12 +245,11 @@
                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                   </svg>
                 </button>
-                <button id="btn-complete-hydrogens" class="script-btn" title="智能补全氢原子 (快捷键: Alt + H)">
+                <button id="btn-complete-hydrogens" class="script-btn icon-only" title="智能补全氢原子 (快捷键: Alt + H)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="9"></circle>
                     <path d="M9 8v8M15 8v8M9 12h6"></path>
                   </svg>
-                  <span data-i18n="btnCompleteH">补全 H</span>
                 </button>
                 <button id="btn-ai-assistant" class="script-btn ai-btn icon-only" title="AI 辅助推演与机理生成 (快捷键: Alt + A)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -671,14 +676,14 @@
   </div>
 
   <!-- 核心逻辑与引擎脚本加载 -->
-  <script src="js/reactionData.js"></script>
-  <script src="js/scriptParser.js"></script>
-  <script src="js/storageManager.js"></script>
-  <script src="js/pseudo3DRenderer.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/repo.js"></script>
-  <script src="js/aiAssistant.js"></script>
-  <script src="js/reactionApp.js"></script>
+  <script src="js/reactionData.js?v=20261016b"></script>
+  <script src="js/scriptParser.js?v=20261016b"></script>
+  <script src="js/storageManager.js?v=20261016b"></script>
+  <script src="js/pseudo3DRenderer.js?v=20261016b"></script>
+  <script src="js/api.js?v=20261016b"></script>
+  <script src="js/auth.js?v=20261016b"></script>
+  <script src="js/repo.js?v=20261016b"></script>
+  <script src="js/aiAssistant.js?v=20261016b"></script>
+  <script src="js/reactionApp.js?v=20261016b"></script>
 </body>
 </html>
