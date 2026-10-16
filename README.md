@@ -4,7 +4,7 @@
 ### 化学反应机理推演工坊
 
 <p align="center">
-  <a href="#-english-default"><b>English</b></a> &nbsp;|&nbsp; <a href="#-简体中文-chinese"><b>简体中文</b></a>
+  <a href="#english"><b>English</b></a> &nbsp;|&nbsp; <a href="#chinese"><b>简体中文</b></a>
 </p>
 
 <p align="center">
@@ -17,18 +17,17 @@
 
 </div>
 
-<details open id="english-default">
-<summary><h3>🌐 English Version (Default / Click to collapse)</h3></summary>
+<div id="english"></div>
 
-<br/>
+# English
 
-# Chemiation · Chemical Reaction Principle & Mechanism Studio
+## Overview
 
 > **Chemiation** is an interactive, lightweight chemical reaction mechanism simulation and dynamic visualization platform built on pure HTML5 Canvas. It renders elementary reaction dynamics in a pseudo-3D perspective—molecular approach, bond dissociation and coordination, transition state and reactive intermediate evolution, as well as polymer stereocenter backbone elongation.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 1. **Interactive 3D Mechanism Animations**:
    - Free 360° orbital rotation, smooth zooming, pan controls, and instant viewpoint reset.
@@ -62,7 +61,7 @@
 
 ---
 
-## 🧪 Built-in Reaction Mechanisms
+## Built-in Reaction Mechanisms
 
 - **Fischer Esterification (Acetic Acid & Ethanol)**: Nucleophilic acyl addition, tetrahedral intermediate, and water elimination.
 - **Artificial Synthesis of Starch from CO₂ (ASAP Mechanism)**: Catalytic hydrogenation, C-C bond coupling, triose isomerization, and glycosidic condensation.
@@ -73,7 +72,7 @@
 
 ---
 
-## 🌿 Branch Architecture
+## Branch Architecture
 
 This repository maintains a clean, decoupled dual-branch architecture:
 
@@ -90,7 +89,7 @@ This repository maintains a clean, decoupled dual-branch architecture:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 | File | Description |
 | :--- | :--- |
@@ -109,7 +108,7 @@ This repository maintains a clean, decoupled dual-branch architecture:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 Chemiation can be run directly or managed via npm:
 
@@ -125,24 +124,19 @@ Chemiation can be run directly or managed via npm:
    ```
 4. **Deployment**: Host effortlessly on GitHub Pages, Cloudflare Pages, Vercel, or any static hosting service.
 
-<br/>
+---
 
-</details>
+<div id="chinese"></div>
 
-<br/>
+# 简体中文
 
-<details id="chinese-version">
-<summary><h3>🇨🇳 简体中文版本 (点击展开 / Click to expand)</h3></summary>
-
-<br/>
-
-# Chemiation · 化学反应机理推演工坊
+## 概述
 
 > **Chemiation** 是一个基于原生 Canvas 的化学反应机理推演与动态可视化工具，通过三维视角直观呈现分子靠近、化学键断裂与重组、中间体演化及高分子聚合的全流程。
 
 ---
 
-## 🌟 核心特性
+## 核心特性
 
 1. **三维机理动画**：
    - 支持 360° 自由旋转、平滑缩放与视角复位，直观展现断键、成键与原子迁移过程。
@@ -175,7 +169,7 @@ Chemiation can be run directly or managed via npm:
 
 ---
 
-## 🧪 内置反应机理
+## 内置反应机理
 
 - **乙酸与乙醇费歇尔酯化反应**：亲核加成、四面体中间体与脱水消除
 - **二氧化碳人工合成淀粉 (ASAP机理)**：还原加氢、C-C 偶联、三碳糖异构、成环至糖苷键缩聚
@@ -186,7 +180,7 @@ Chemiation can be run directly or managed via npm:
 
 ---
 
-## 🌿 双分支架构说明
+## 双分支架构说明
 
 本项目采用清晰解耦的双分支管理策略：
 
@@ -203,7 +197,7 @@ Chemiation can be run directly or managed via npm:
 
 ---
 
-## 📂 项目结构
+## 项目结构
 
 | 文件 | 说明 |
 | :--- | :--- |
@@ -222,7 +216,7 @@ Chemiation can be run directly or managed via npm:
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
 本项目既可直接静态运行，也可通过 npm 进行管理与调试：
 
@@ -237,7 +231,3 @@ Chemiation can be run directly or managed via npm:
    python -m http.server 8080
    ```
 4. **部署**：可直接托管于 GitHub Pages 等任意静态站点服务。
-
-<br/>
-
-</details>
