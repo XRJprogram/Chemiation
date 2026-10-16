@@ -28,6 +28,9 @@ const authCtrl = {
     if (window.repoCtrl && typeof window.repoCtrl.onUserChanged === 'function') {
       window.repoCtrl.onUserChanged(user);
     }
+    if (window.aiAssistant && typeof window.aiAssistant.onUserChanged === 'function') {
+      window.aiAssistant.onUserChanged();
+    }
   },
 
   escapeHtml(str) {
