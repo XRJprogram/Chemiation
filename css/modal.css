@@ -1154,3 +1154,35 @@ input[type="checkbox"]:focus {
   color: var(--color-accent, #b84a28);
 }
 
+/* ==========================================================================
+   视频导出配置弹窗卡片与信息展示
+   ========================================================================== */
+.video-export-preview-card {
+  background: rgba(94, 65, 47, 0.05);
+  border: 1px solid rgba(94, 65, 47, 0.16);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.video-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.video-info-label {
+  color: var(--color-mid-brown, #5e412f);
+  font-weight: 500;
+}
+
+.video-info-value {
+  color: var(--color-dark-brown, #24140b);
+  font-weight: 700;
+  font-family: var(--font-sans);
+}
+
+

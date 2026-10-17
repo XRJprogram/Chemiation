@@ -2320,3 +2320,96 @@ body.tauri-app .window-controls.tauri-only {
   background: #E81123 !important;
   color: #FFFFFF !important;
 }
+
+/* ==========================================================================
+   视频导出与推演录制组件样式
+   ========================================================================== */
+.export-video-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: rgba(184, 74, 40, 0.08);
+  border-color: rgba(184, 74, 40, 0.35);
+  color: var(--color-accent);
+  font-weight: 700;
+  transition: all 0.18s ease;
+}
+
+.export-video-btn:hover {
+  background: var(--color-accent);
+  color: #FFFFFF;
+  border-color: var(--color-accent);
+}
+
+.export-video-btn:hover svg {
+  stroke: #FFFFFF;
+}
+
+.export-video-btn span {
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+/* 画布悬浮录制指示卡片 (与视口工具栏完全一致的浅色学术风，无红色呼吸灯) */
+.canvas-recording-indicator {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: rgba(250, 246, 233, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--color-dark-brown);
+  font-size: 12.5px;
+  font-family: var(--font-sans);
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  pointer-events: auto;
+  animation: fadeIn 0.2s ease;
+}
+
+.canvas-recording-indicator .recording-icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.canvas-recording-indicator .recording-text {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.canvas-recording-indicator .recording-cancel-btn {
+  background: rgba(94, 65, 47, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--color-deep-brown);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.canvas-recording-indicator .recording-cancel-btn:hover {
+  background: rgba(184, 74, 40, 0.12);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* 录制推演视频期间：隐去视口内原生 DOM 浮动标签与工具条，彻底消除与 Canvas 内部视频画幅标签的重合 */
+body.recording-in-progress .viewport-top-right-group,
+body.recording-in-progress .viewport-floating-toolbar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+

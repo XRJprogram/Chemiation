@@ -61,6 +61,7 @@ class Pseudo3DRenderer {
 
     this.animationFrameId = null;
     this.lastFrameTime = performance.now();
+    this.videoExportOverlay = null;
 
     this.initEvents();
     this.resize();
@@ -72,8 +73,9 @@ class Pseudo3DRenderer {
     this.width = rect.width;
     this.height = rect.height;
 
-    this.canvas.width = Math.round(this.width * dpr);
-    this.canvas.height = Math.round(this.height * dpr);
+    // 确保画布物理像素尺寸严格为偶数，彻底杜绝视频编码器 (H.264/AVC) 出现色度抽样偏移与锯齿拉伸
+    this.canvas.width = Math.floor(Math.round(this.width * dpr) / 2) * 2;
+    this.canvas.height = Math.floor(Math.round(this.height * dpr) / 2) * 2;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
@@ -770,9 +772,146 @@ class Pseudo3DRenderer {
     if (this.hoveredAtom) {
       this.renderHoverTooltip(ctx, this.hoveredAtom);
     }
+
+    // 绘制推演视频导出专用叠加标签 (如果处于录制中且开启了画面标签)
+    if (this.videoExportOverlay) {
+      this.renderVideoExportOverlay(ctx, width, height, this.videoExportOverlay);
+    }
+  }
+
+  /**
+   * 绘制推演视频导出叠加标签 (Reaction & Step Watermark Overlay)
+   */
+  renderVideoExportOverlay(ctx, width, height, overlay) {
+    if (!overlay) return;
+    ctx.save();
+
+    const format = typeof ReactionScriptEngine !== 'undefined' && ReactionScriptEngine.formatChemText
+      ? ReactionScriptEngine.formatChemText
+      : (s => s);
+
+    // 1. 左上方：反应名称与方程式卡片
+    if (overlay.title) {
+      const formattedTitle = format(overlay.title);
+      const formattedEq = overlay.equation ? format(overlay.equation) : '';
+      const padX = 14;
+      const padY = 9;
+      const titleFont = 'bold 14px "Century Gothic", CenturyGothic, sans-serif';
+      const eqFont = '12px "Century Gothic", CenturyGothic, sans-serif';
+
+      ctx.font = titleFont;
+      const titleW = ctx.measureText(formattedTitle).width;
+      ctx.font = eqFont;
+      const eqW = formattedEq ? ctx.measureText(formattedEq).width : 0;
+      const cardW = Math.max(titleW, eqW) + padX * 2;
+      const cardH = formattedEq ? 46 : 30;
+      const cardX = 18;
+      const cardY = 18;
+
+      // 宣纸色半透明毛玻璃底板
+      ctx.fillStyle = 'rgba(250, 246, 233, 0.94)';
+      ctx.strokeStyle = 'rgba(94, 65, 47, 0.22)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(cardX, cardY, cardW, cardH, 7);
+      } else {
+        ctx.rect(cardX, cardY, cardW, cardH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      // 标题文本
+      ctx.fillStyle = '#24140B';
+      ctx.font = titleFont;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(formattedTitle, cardX + padX, cardY + padY);
+
+      // 方程式文本
+      if (formattedEq) {
+        ctx.fillStyle = '#5E412F';
+        ctx.font = eqFont;
+        ctx.fillText(formattedEq, cardX + padX, cardY + padY + 18);
+      }
+    }
+
+    // 2. 右上方：步骤指示胶囊
+    if (overlay.stepTitle !== undefined) {
+      const cleanStepTitle = format(overlay.stepTitle.replace(/^\d+\.\s*/, ''));
+      const stepBadgeText = `步骤 ${overlay.stepIndex + 1} / ${overlay.totalSteps} · ${cleanStepTitle}`;
+      const badgeFont = 'bold 12.5px "Century Gothic", CenturyGothic, sans-serif';
+      ctx.font = badgeFont;
+      const badgeW = ctx.measureText(stepBadgeText).width + 24;
+      const badgeH = 30;
+      const badgeX = width - badgeW - 18;
+      const badgeY = 18;
+
+      ctx.fillStyle = 'rgba(184, 74, 40, 0.12)';
+      ctx.strokeStyle = 'rgba(184, 74, 40, 0.45)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 15);
+      } else {
+        ctx.rect(badgeX, badgeY, badgeW, badgeH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#B84A28';
+      ctx.font = badgeFont;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(stepBadgeText, badgeX + badgeW * 0.5, badgeY + badgeH * 0.5);
+    }
+
+    // 3. 底部中央：当前步骤机理说明
+    if (overlay.stepNote && overlay.stepNote.trim()) {
+      const formattedNote = format(overlay.stepNote.trim());
+      const noteFont = '12.5px "Century Gothic", CenturyGothic, sans-serif';
+      ctx.font = noteFont;
+      const maxTextW = Math.min(width - 50, 720);
+      const measuredW = ctx.measureText(formattedNote).width;
+      const noteW = Math.min(measuredW + 28, maxTextW);
+      const noteH = 32;
+      const noteX = (width - noteW) * 0.5;
+      const noteY = height - noteH - 20;
+
+      ctx.fillStyle = 'rgba(250, 246, 233, 0.94)';
+      ctx.strokeStyle = 'rgba(94, 65, 47, 0.22)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(noteX, noteY, noteW, noteH, 7);
+      } else {
+        ctx.rect(noteX, noteY, noteW, noteH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#382215';
+      ctx.font = noteFont;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(formattedNote, width * 0.5, noteY + noteH * 0.5);
+    }
+
+    // 4. 右下角：Chemiation 学术水印
+    const watermarkText = 'Chemiation · 反应机理推演';
+    ctx.font = '11px "Century Gothic", CenturyGothic, sans-serif';
+    ctx.fillStyle = 'rgba(94, 65, 47, 0.45)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(watermarkText, width - 18, height - 12);
+
+    ctx.restore();
   }
 
   renderGrid(ctx, width, height) {
+    // 导出视频期间不绘制高频细网格线，彻底根除 H.264/VP9 空间混叠造成的摩尔纹 (Moiré Artifacts)
+    if (this.videoExportOverlay) return;
+
     const step = 48;
     ctx.save();
     ctx.strokeStyle = this.palette.bgGrid;
@@ -783,12 +922,14 @@ class Pseudo3DRenderer {
 
     ctx.beginPath();
     for (let x = offsetX; x < width; x += step) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
+      const px = Math.floor(x) + 0.5;
+      ctx.moveTo(px, 0);
+      ctx.lineTo(px, height);
     }
     for (let y = offsetY; y < height; y += step) {
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
+      const py = Math.floor(y) + 0.5;
+      ctx.moveTo(0, py);
+      ctx.lineTo(width, py);
     }
     ctx.stroke();
     ctx.restore();
