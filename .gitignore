@@ -7,6 +7,7 @@ server/data/session.secret
 server/data/audit_logs.json
 server/data/logs.json
 server/data/revoked_tokens.json
+server/data/studio/
 src-tauri/target/
 src-tauri/gen/
 .env

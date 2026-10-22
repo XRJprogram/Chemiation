@@ -12,6 +12,8 @@ const fs = require('fs');
 const zlib = require('zlib');
 const db = require('./db');
 const auth = require('./auth');
+const studioStore = require('./studioStore');
+const studioCore = require('../js/aiStudioCore');
 
 const PORT = process.env.PORT || 3000;
 const ROOT_DIR = path.resolve(__dirname, '..');
@@ -342,6 +344,43 @@ async function handleRequest(req, res) {
   const clientIp = getClientIp(req);
 
   try {
+    // Conversation routes use the existing account and Redis connection; never accept owner IDs from a client.
+    if (method === 'GET' && pathname === '/api/studio/matches') {
+      res.setHeader('Cache-Control', 'no-store');
+      if (!checkRateLimit(clientIp, 90, 60000)) return sendJson(res, 429, { error: '检索过于频繁，请稍后再试' });
+      const user = auth.authenticateRequest(req, db);
+      const visible = db.getAllReactions().filter(r => r.isPublic || r.userId === user?.id);
+      const query = (searchParams.get('q') || '').slice(0, 2000);
+      const previous = user ? await studioStore.findMechanisms(user.id, query).catch(() => []) : [];
+      const items = studioCore.match(query, [...visible, ...previous]).map(r => ({
+        id: r.id, title: r.title, equation: r.equation, script: r.script,
+        source: r.source || (r.isPublic ? '公开机理仓库' : '我的机理仓库'), reviewStatus: r.reviewStatus || 'unreviewed',
+        exact: r.exact, reason: r.reason
+      }));
+      return sendJson(res, 200, { items });
+    }
+    if (pathname === '/api/studio/sessions' || /^\/api\/studio\/sessions\/[a-zA-Z0-9_-]{1,100}$/.test(pathname)) {
+      res.setHeader('Cache-Control', 'no-store');
+      const user = auth.authenticateRequest(req, db);
+      if (!user) return sendJson(res, 401, { error: '请登录后同步聊天记录' });
+      const id = pathname.split('/')[4];
+      try {
+        if (!id && method === 'GET') return sendJson(res, 200, await studioStore.list(user.id, searchParams.get('offset'), searchParams.get('limit'), searchParams.has('projectId') ? searchParams.get('projectId') : undefined));
+        if (id && method === 'GET') {
+          const session = await studioStore.get(user.id, id);
+          return sendJson(res, session ? 200 : 404, session ? { session } : { error: '未找到此账号的会话' });
+        }
+        if (id && method === 'PUT') {
+          const body = await parseJsonBody(req);
+          return sendJson(res, 200, { session: await studioStore.save(user.id, id, body.session, body.expectedRevision) });
+        }
+        if (id && method === 'DELETE') { await studioStore.remove(user.id, id); return sendJson(res, 200, { success: true }); }
+        return sendJson(res, 405, { error: '不支持的会话操作' });
+      } catch (err) {
+        if (err.statusCode) throw err;
+        return sendJson(res, 503, { error: '会话存储暂时不可用，请保留本地副本并稍后重试' });
+      }
+    }
     // =========================================================================
     // 0. HEALTH CHECK
     // =========================================================================
