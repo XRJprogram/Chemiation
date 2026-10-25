@@ -1,45 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const vm = require('node:vm');
 const { ReactionScriptEngine } = require('../index.js');
-
-const VALID = 'reaction "AI fixture"\nstep "state" {\nhydrogens none\natom C1 C 0 0 0\n}';
-const DRAFT = 'reaction "Original draft"\nstep "original" {\nhydrogens none\natom C1 C 0 0 0\n}';
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-function response(content = VALID, finishReason = 'stop') {
-  return { ok: true, json: async () => ({ choices: [{ message: { content }, finish_reason: finishReason }], usage: { completion_tokens: 12 } }) };
-}
-function fixture(options = {}) {
-  const elements = new Map();
-  for (const id of ['ai-prompt-input', 'script-editor', 'ai-preview-code', 'ai-preview-section', 'ai-generation-status', 'ai-btn-generate', 'ai-btn-cancel', 'ai-btn-apply', 'ai-btn-run', 'ai-btn-copy', 'ai-btn-restore-draft', 'btn-ai-restore-draft', 'ai-modal', 'ai-test-result', 'ai-btn-test-conn']) {
-    elements.set(id, { value: '', textContent: '', disabled: false, style: {}, classList: { toggle() {} }, dispatchEvent() {}, addEventListener() {} });
-  }
-  elements.get('ai-prompt-input').value = 'Create a fixture';
-  elements.get('script-editor').value = DRAFT;
-  const values = new Map();
-  const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
-  const app = { currentReactionIndex: 0, presets: [{ id: 'original-id', name: 'Original draft' }], switchTab() {}, runCustomScript() { this.runs = (this.runs || 0) + 1; } };
-  const context = {
-    module: { exports: {} }, console, AbortController, TextDecoder, setTimeout, clearTimeout, performance,
-    document: { getElementById: id => elements.get(id) || null, querySelectorAll: () => [] },
-    localStorage: storage, window: { reactionApp: app }, Event: class { constructor(type) { this.type = type; } },
-    fetch: options.fetch || (async () => response())
-  };
-  if (options.engine !== false) context.ReactionScriptEngine = ReactionScriptEngine;
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/aiStream.js'), 'utf8'), context);
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/aiTaskSafety.js'), 'utf8'), context);
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/aiEditingTools.js'), 'utf8'), context);
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/aiHistory.js'), 'utf8'), context);
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/aiHistoryPanel.js'), 'utf8'), context);
-  context.module = { exports: {} };
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../js/aiAssistant.js'), 'utf8'), context);
-  const ai = context.module.exports.aiAssistant;
-  ai.getConfig = () => ({ provider: 'mock', baseUrl: 'https://offline.invalid/v1', apiKey: 'fixture', model: 'mock', timeoutMs: options.timeoutMs || 1000 });
-  ai.showToast = (message, error) => { ai.toast = { message, error }; };
-  return { ai, context, elements, storage, values, app, editor: elements.get('script-editor'), status: elements.get('ai-generation-status') };
-}
+const { fixture, response, VALID, DRAFT, delay } = require('./aiFixture.cjs');
 
 test('syntax failures cannot replace the current draft or run', async () => {
   const f = fixture({ fetch: async () => response('invalid CCPL') });
@@ -245,6 +207,40 @@ test('connection testing has a bounded timeout', async () => {
   await f.ai.testConnection();
   assert.match(f.elements.get('ai-test-result').textContent, /超时/);
   assert.equal(f.elements.get('ai-btn-test-conn').disabled, false);
+});
+
+test('connection test uses the current unsaved fields and does not save a replacement key', async () => {
+  let captured;
+  const f = fixture({ fetch: async (url, options) => { captured = { url, ...options }; return response('hi'); } });
+  f.storage.setItem(f.ai.KEYS.API_KEY, 'saved-test-key');
+  for (const [id, value] of Object.entries({ 'ai-provider-select': 'custom', 'ai-base-url': ' https://current.invalid/v1/ ', 'ai-api-key': ' current-test-key ', 'ai-model-name': 'current-model' })) f.elements.set(id, { value });
+  await f.ai.testConnection();
+  assert.equal(captured.url, 'https://current.invalid/v1/chat/completions');
+  assert.equal(captured.headers.Authorization, 'Bearer current-test-key');
+  assert.equal(JSON.parse(captured.body).model, 'current-model');
+  assert.equal(f.storage.getItem(f.ai.KEYS.API_KEY), 'saved-test-key');
+  assert.match(f.elements.get('ai-test-result').textContent, /当前输入.*成功/);
+});
+
+test('cleared keys and pasted authorization prefixes fail before making any request', async () => {
+  let requests = 0;
+  const f = fixture({ fetch: async () => { requests++; return response(); } });
+  for (const key of ['', 'Bearer sample-test-key', '"sample-test-key"']) {
+    f.elements.set('ai-api-key', { value: key });
+    await f.ai.testConnection();
+    assert.match(f.elements.get('ai-test-result').textContent, /输入框为空|密钥本身/);
+    assert.equal(f.elements.get('ai-btn-test-conn').disabled, false);
+  }
+  assert.equal(requests, 0);
+});
+
+test('real authentication rejection stays distinct and does not expose provider response bodies', async () => {
+  const f = fixture({ fetch: async () => ({ ok: false, status: 401, json: async () => ({ error: { message: 'private-provider-body' } }) }) });
+  f.elements.set('ai-api-key', { value: 'current-test-key' });
+  await f.ai.testConnection();
+  assert.match(f.elements.get('ai-test-result').textContent, /HTTP 401.*当前输入/);
+  assert.equal(f.elements.get('ai-test-result').textContent.includes('private-provider-body'), false);
+  assert.equal(f.elements.get('ai-test-result').textContent.includes('current-test-key'), false);
 });
 
 test('refine request contains the original script in a proper code block', async () => {

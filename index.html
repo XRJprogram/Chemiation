@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/chemiation.css?v=1.2.1">
   <link rel="stylesheet" href="css/modal.css?v=1.2.1-ai6">
+  <link rel="stylesheet" href="css/ai-studio.css?v=20261025-rename">
 </head>
 <body>
   <div class="app-container">
@@ -70,7 +71,7 @@
       </div>
     </header>
 
-    <!-- 主工作区：左侧 Canvas 伪3D视口 + 右侧反应推演工作区 -->
+    <!-- 主工作区：左侧反应动画，右侧模块切换 -->
     <div class="main-workspace">
       <!-- 左侧 / 中央：纯 2D Canvas 拟态空间伪 3D 视口 (纯推演渲染器) -->
       <main class="viewport-wrapper">
@@ -132,6 +133,10 @@
             <span class="toast-num">1 / 4</span>
             <span class="toast-title">步骤推演</span>
           </div>
+          <div id="studio-canvas-status" class="studio-canvas-status" role="status" hidden>
+            <span class="studio-canvas-indicator" aria-hidden="true"></span>
+            <div><strong id="studio-canvas-title"></strong><small id="studio-canvas-note"></small></div>
+          </div>
         </div>
 
         <!-- 当工作区收起时显示的右侧唤醒按钮 (纯图标) -->
@@ -142,7 +147,7 @@
         </button>
       </main>
 
-      <!-- 右侧：反应推演工作区 -->
+      <!-- 右侧：机理步骤、CCPL 脚本、AI 对话共用工作区 -->
       <aside id="workspace-sidebar" class="workspace-sidebar">
         <!-- 边缘调节宽度把手 -->
         <div id="resize-handle" class="resize-handle" title="左右拖拽调整工作区宽度"></div>
@@ -180,10 +185,85 @@
             </svg>
             <span data-i18n="tabScript">CCPL 脚本</span>
           </button>
+          <button id="tab-btn-chat" class="tab-btn" title="AI 对话" aria-controls="tab-pane-chat">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-3 3V11.5A8.5 8.5 0 0 1 9.5 3h3a8.5 8.5 0 0 1 8.5 8.5Z"/></svg>
+            <span>AI 对话</span>
+          </button>
+          <div class="studio-menu-wrap">
+            <button id="studio-more" class="studio-more" type="button" title="查看聊天和脚本版本、配置模型或收起工作区" aria-label="历史与设置" aria-expanded="false" aria-controls="studio-tools-menu"><span>历史与设置</span><svg class="studio-more-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div id="studio-tools-menu" class="studio-tools-menu" aria-label="对话工具" hidden>
+              <button id="studio-rename" type="button">重命名当前对话 <span>✎</span></button>
+              <button id="studio-history" type="button">聊天与脚本版本 <span>↗</span></button>
+              <button id="studio-settings" type="button">模型设置 <span>⚙</span></button>
+              <button id="studio-collapse" type="button">收起工作区 <span>→</span></button>
+            </div>
+          </div>
         </div>
 
         <!-- 工作区滚动内容区 -->
         <div class="workspace-content">
+          <section id="tab-pane-chat" class="studio" aria-label="AI 机理对话" style="display:none">
+            <div class="studio-projectbar">
+              <button id="studio-project-toggle" class="studio-breadcrumb" type="button" aria-expanded="false" aria-controls="studio-project-panel" title="切换机理项目或项目对话"><span id="studio-project-name"></span><span class="studio-breadcrumb-slash" aria-hidden="true">/</span><span id="studio-session-name"></span><span aria-hidden="true">⌄</span></button>
+              <button id="studio-new" type="button" title="在当前机理项目中新建对话" aria-label="新建对话">＋</button>
+              <div id="studio-project-panel" class="studio-project-panel" aria-label="切换项目与对话" hidden>
+                <div class="studio-panel-heading"><strong>项目与对话</strong><button id="studio-close-project" type="button" aria-label="关闭项目切换">×</button></div>
+                <label class="studio-project-field" for="studio-project-select"><span>机理项目</span><select id="studio-project-select" aria-label="选择机理项目"></select></label>
+                <label class="studio-project-field" for="studio-session-select"><span>项目对话 <small id="studio-project-count"></small></span><select id="studio-session-select" aria-label="切换本项目的对话"></select></label>
+                <button id="studio-open-rename" class="studio-open-rename" type="button">重命名当前对话 ✎</button>
+                <form id="studio-rename-form" class="studio-rename-form" hidden>
+                  <label for="studio-rename-input">对话名称</label>
+                  <input id="studio-rename-input" type="text" maxlength="100" required autocomplete="off" placeholder="为这段对话起个名字…">
+                  <div><button id="studio-rename-cancel" type="button">取消</button><button id="studio-rename-save" class="studio-primary" type="submit">保存名称</button></div>
+                </form>
+                <p>每个机理有独立的对话和脚本版本。点右上角 ＋ 新建对话。</p>
+              </div>
+            </div>
+            <div id="studio-library" class="studio-library" hidden>
+              <div class="studio-library-top"><strong>本项目的聊天与版本</strong><button id="studio-close-library" aria-label="关闭历史">×</button></div>
+              <div class="studio-library-actions"><button id="studio-export">导出当前会话</button><button id="studio-retry-sync">重新同步</button></div>
+              <label class="studio-sr-only" for="studio-history-search">搜索本项目的对话名称</label>
+              <input id="studio-history-search" class="studio-history-search" type="search" maxlength="100" placeholder="搜索本项目的对话名称…">
+              <p id="studio-library-status" class="studio-muted"></p>
+              <div id="studio-sessions"></div>
+              <h4>当前对话的脚本版本</h4>
+              <div id="studio-versions"></div>
+              <section id="studio-legacy-section" hidden><h4>未归属的旧对话</h4><p class="studio-muted">确认内容属于当前机理后，可复制进本项目。原记录保留。</p><div id="studio-legacy-sessions"></div></section>
+            </div>
+            <div id="studio-messages" class="studio-messages" role="log" aria-label="聊天消息" aria-relevant="additions">
+              <div id="studio-welcome" class="studio-welcome">
+                <div class="studio-orbit" aria-hidden="true"><span>C</span><i>O</i><b>H</b></div>
+                <p class="studio-eyebrow">THINK IN REACTIONS</p>
+                <h2>让机理，<br>在对话中发生。</h2>
+                <p>描述一个反应，或从眼前这一步开始。<br>每次调整，都能在左侧看见。</p>
+                <div class="studio-starters">
+                  <button data-studio-prompt="展示乙酸与乙醇费歇尔酯化反应">从已有机理开始 <span>↗</span></button>
+                  <button data-studio-current="true">完善当前步骤的说明 <span>↗</span></button>
+                  <button data-studio-prompt="我想演示一个取代反应，需要提供哪些信息？">帮我梳理反应条件 <span>↗</span></button>
+                </div>
+              </div>
+            </div>
+            <div id="studio-live" class="studio-live" hidden>
+              <div><i></i><span id="studio-progress" role="status"></span><button id="studio-cancel">■ 停止生成</button></div>
+              <details><summary>生成详情 <span id="studio-stream-count"></span></summary><p id="studio-live-preview" class="studio-live-preview">← 完整步骤生成后会自动显示在左侧</p><pre id="studio-stream-code"></pre></details>
+            </div>
+            <div id="studio-candidate" class="studio-candidate" hidden>
+              <div><span class="studio-preview-dot"></span><strong id="studio-candidate-title">左侧正在预览新版本</strong><button id="studio-discard" title="回到原稿" aria-label="回到原稿">撤回</button></div>
+              <p id="studio-candidate-note">基础结构检查通过，原稿尚未改动。</p>
+              <div class="studio-candidate-actions"><button id="studio-before">对比原稿</button><button id="studio-keep" class="studio-primary">保留此版本 ↗</button></div>
+            </div>
+            <p id="studio-notice" class="studio-notice" role="status" hidden></p>
+            <div id="studio-context" class="studio-context"><span>当前步骤</span><strong id="studio-context-name"></strong><button id="studio-refine-step" title="通过对话只修改当前步骤">只完善本步 ↗</button></div>
+            <div id="studio-scope-tag" class="studio-scope-tag" hidden><span id="studio-scope-label"></span><button type="button" id="studio-clear-scope" aria-label="取消指定步骤">×</button></div>
+            <button id="studio-write-message" class="studio-compose-toggle" type="button" aria-controls="studio-form" aria-expanded="false" hidden>想换个要求？直接发消息 ↗</button>
+            <form id="studio-form" class="studio-composer">
+              <label class="studio-sr-only" for="studio-input">描述反应或修改要求</label>
+              <textarea id="studio-input" rows="2" maxlength="4000" placeholder="描述反应，或说说你想怎样完善…"></textarea>
+              <div class="studio-composer-bottom"><span id="studio-save-state">自动保存在本机</span><button id="studio-send" type="submit" title="发送（Enter）；换行（Shift + Enter）" aria-label="发送消息">发送 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 7-7 7 7M12 5v15"/></svg></button></div>
+            </form>
+            <p class="studio-footnote">自动检查与纠错已开启 · 机理解释仍需专业核对</p>
+          </section>
+
           <!-- 选项卡 1: 机理与步骤列表 (纯推演模式) -->
           <div id="tab-pane-steps" class="tab-pane-steps">
             <!-- 反应库管理操作栏 -->
@@ -300,6 +380,7 @@
           </div>
         </div>
 
+
         <!-- 工作区底部：推演进度与时序控制器 -->
         <footer class="workspace-footer">
           <!-- 步骤时序轨道 (Timeline Track) -->
@@ -331,6 +412,8 @@
           </div>
         </footer>
       </aside>
+
+
     </div>
   </div>
 
@@ -790,6 +873,7 @@
           <button type="button" id="ai-btn-clear-key" class="btn-secondary" style="padding: 6px 12px; color: #b84a28;">清空本地密钥</button>
         </div>
 
+        <p class="ai-help" style="margin-top: 8px;">测试连接使用上方当前填写的内容；连接成功后，请保存配置再生成。</p>
         <div id="ai-test-result" class="ai-test-result" style="display: none;"></div>
 
         <p style="font-size: 11px; color: var(--color-text-muted, #7e6351); margin-top: 14px; line-height: 1.5;">
@@ -866,19 +950,23 @@
 
   <!-- 核心逻辑与引擎脚本加载 -->
   <script src="js/reactionData.js?v=20261016b"></script>
-  <script src="js/scriptParser.js?v=20261016b"></script>
+  <script src="js/scriptParser.js?v=20261020"></script>
   <script src="js/storageManager.js?v=20261016b"></script>
-  <script src="js/pseudo3DRenderer.js?v=20261016b"></script>
+  <script src="js/pseudo3DRenderer.js?v=20261020"></script>
   <script src="js/api.js?v=20261016b"></script>
   <script src="js/auth.js?v=20261016-ai6"></script>
   <script src="js/repo.js?v=20261016-ai6"></script>
   <script src="js/aiStream.js?v=20261016-ai6"></script>
-  <script src="js/aiTaskSafety.js?v=20261016-ai6"></script>
+  <script src="js/aiTaskSafety.js?v=20261020"></script>
   <script src="js/aiEditingTools.js?v=20261016-ai6"></script>
   <script src="js/aiHistory.js?v=20261016-ai6"></script>
   <script src="js/aiHistoryPanel.js?v=20261016-ai6"></script>
-  <script src="js/aiAssistant.js?v=20261016-ai6"></script>
+  <script src="js/aiWorkflow.js?v=20261025-layout-intent"></script>
+  <script src="js/aiStudioCore.js?v=20261025-workflow"></script>
+  <script src="js/aiStudioStore.js?v=20261021-projects"></script>
+  <script src="js/aiAssistant.js?v=20261025-workflow"></script>
+  <script src="js/aiStudio.js?v=20261025-rename"></script>
   <script src="js/videoMetadataPatcher.js?v=20261016c"></script>
-  <script src="js/reactionApp.js?v=20261016-ai6-v121"></script>
+  <script src="js/reactionApp.js?v=20261025-compact"></script>
 </body>
 </html>

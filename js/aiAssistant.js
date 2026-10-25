@@ -86,7 +86,9 @@ CCPL 语法规范与格式要求：
    - 质量与原子严格守恒：所有步骤中的原子集合必须前后完全守恒，不可无故增删原子。
    - 同一原子在所有步骤必须使用相同 ID，不能通过更换编号表示同一原子；原子声明顺序和成键关系可以变化。
    - 涉及质子转移或氢迁移时，每步使用 hydrogens none 并显式声明全部氢原子，保持氢原子 ID 连续，避免自动补氢产生不同编号。
-   - 步进真实性：至少包含 2~4 个确切的基元步骤（例如：底物靠近活化 -> 亲核进攻/中间体生成 -> 消除离去/产物生成）。
+   - 步进真实性：按实际反应选择结构状态与步骤数量，不为凑数虚构中间体；协同反应的成键与断键同时发生，前后结构展示不应冒充多个基元步骤。
+   - note 应结合对应结构说明变化，并区分结构事实、条件假设与尚未核对的机理解释。条件不明时明确假设与适用范围，不声称唯一正确。
+   - 不编造文献、DOI、资料链接、计算能垒、收率或可信度百分比；格式和基础结构检查通过不等于化学机理已经验证。
    - 元素符号必须是合法的 IUPAC 化学元素符号（如 C, H, O, N, P, S, Cl, Br, Mg, Cu, Fe 等）。
    - 若用户无特殊指定三维坐标，原子声明请直接使用 "atom <ID> <元素>"，交由引擎智能解算，避免坐标冲突。
 
@@ -100,6 +102,8 @@ const AI_EDITING_TOOLS = typeof ChemiationAIEditing !== 'undefined' ? Chemiation
   (typeof require === 'function' ? require('./aiEditingTools.js') : null);
 const AI_HISTORY_PANEL = typeof ChemiationAIHistoryPanel !== 'undefined' ? ChemiationAIHistoryPanel :
   (typeof require === 'function' ? require('./aiHistoryPanel.js') : null);
+const AI_WORKFLOW = typeof ChemiationAIWorkflow !== 'undefined' ? ChemiationAIWorkflow :
+  (typeof require === 'function' ? require('./aiWorkflow.js') : null);
 
 const aiAssistant = {
   currentTab: 'generate', // 'generate' | 'settings'
@@ -147,6 +151,7 @@ const aiAssistant = {
     if (this.historyManager) this.historyManager.onUserChanged();
     this.lastDraftBackup = null;
     this.updateActionButtons();
+    if (typeof window !== 'undefined') window.chemiationStudio?.onUserChanged();
   },
 
   getConfig() {
@@ -159,6 +164,23 @@ const aiAssistant = {
     const seconds = Number(localStorage.getItem(this.KEYS.TIMEOUT) || 90);
     const timeoutSeconds = Number.isFinite(seconds) ? Math.min(300, Math.max(5, seconds)) : 90;
     return { provider, baseUrl, apiKey, model, timeoutMs: timeoutSeconds * 1000, stream: localStorage.getItem(this.KEYS.STREAM) !== 'false' };
+  },
+
+  getSettingsConfig() {
+    const saved = this.getConfig();
+    const value = (id, fallback) => {
+      const input = document.getElementById(id);
+      return input ? String(input.value || '').trim() : fallback;
+    };
+    const timeout = document.getElementById('ai-timeout-seconds');
+    const seconds = Number(timeout?.value);
+    return { ...saved,
+      provider: value('ai-provider-select', saved.provider),
+      baseUrl: value('ai-base-url', saved.baseUrl),
+      apiKey: value('ai-api-key', saved.apiKey),
+      model: value('ai-model-name', saved.model),
+      timeoutMs: timeout ? (Number.isFinite(seconds) ? Math.min(300, Math.max(5, seconds)) : 90) * 1000 : saved.timeoutMs
+    };
   },
 
   saveConfig(cfg) {
@@ -207,7 +229,12 @@ const aiAssistant = {
     }
   },
 
-  openModal(initialMode = 'new') {
+  openModal(initialMode = 'new', options = {}) {
+    if (!options.legacy && typeof window !== 'undefined' && window.chemiationStudio?.ready) {
+      window.chemiationStudio.show();
+      if (initialMode === 'fix') document.getElementById('studio-input').value = '请检查并修复当前脚本中的语法与结构问题';
+      return;
+    }
     const modal = document.getElementById('ai-modal');
     if (!modal) return;
 
@@ -408,6 +435,7 @@ const aiAssistant = {
     if (copy) copy.disabled = true;
     this.renderComparison(null);
     this.renderStreamPreview(task);
+    task.onProgress?.({ type: 'attempt', attempt: task.streamEpoch, repairAttempts: task.repairAttempts });
     if (box && typeof box.scrollIntoView === 'function' && this.currentTab === 'generate') box.scrollIntoView({ block: 'nearest' });
     const tick = () => {
       if (this.activeTask !== task) return;
@@ -534,20 +562,22 @@ const aiAssistant = {
     if (!silent) this.updateStatusBadge('生成已中止，原草稿未改变', 'warning');
   },
 
-  async handleAction() {
+  async handleAction(options = {}) {
     if (!AI_TASK_SAFETY || !AI_EDITING_TOOLS) { this.showToast('AI 校验组件未加载，请刷新页面', true); return; }
-    const cfg = this.getConfig();
+    const cfg = { ...this.getConfig() };
+    if (options.chat) cfg.stream = true;
     if (!cfg.apiKey && cfg.provider !== 'ollama') {
       this.showToast('请先在 [API 密钥与模型配置] 标签中填入 API Key！', true);
       this.switchTab('settings');
       return;
     }
     const promptInput = document.getElementById('ai-prompt-input');
-    const userPrompt = promptInput ? promptInput.value.trim() : '';
+    const userPrompt = typeof options.prompt === 'string' ? options.prompt.trim() : promptInput ? promptInput.value.trim() : '';
     if (!userPrompt) { this.showToast('请输入反应名称或修改要求！', true); return; }
     const base = this.getWorkspace();
+    const sourceScript = typeof options.sourceScript === 'string' ? options.sourceScript : base.script;
     let scope;
-    try { scope = this.getEditScope(base); }
+    try { scope = options.indices ? AI_EDITING_TOOLS.createScope(sourceScript, options.indices) : options.chat ? null : this.getEditScope(base); }
     catch (err) { this.showToast(err.message, true); return; }
     this.cancelGeneration(true);
     const task = {
@@ -555,15 +585,18 @@ const aiAssistant = {
       controller: new AbortController(),
       base,
       scope,
-      mode: this.currentMode,
+      workflow: options.chat ? AI_WORKFLOW?.normalize(options.workflow) : null,
+      mode: options.mode || this.currentMode,
       status: 'generating',
       startedAt: performance.now(),
-      repairLimit: this.getRepairLimit(),
+      repairLimit: options.chat ? 2 : this.getRepairLimit(),
       repairAttempts: 0,
       attempts: [],
       generationMs: 0,
       validationMs: 0
     };
+    task.onProgress = options.onProgress;
+    task.chat = !!options.chat;
     this.getHistoryManager()?.begin(task, cfg, userPrompt);
     task.deadlineAt = task.startedAt + (Number.isFinite(cfg.timeoutMs) && cfg.timeoutMs > 0 ? cfg.timeoutMs : 90000);
     this.activeTask = task;
@@ -576,16 +609,23 @@ const aiAssistant = {
     const box = document.getElementById('ai-preview-section');
     if (box) box.style.display = 'none';
     this.renderComparison(null);
-    const jsonOutput = task.scope ? task.scope.document.format === 'json' : task.mode !== 'new' && task.base.script.trimStart().startsWith('{');
+    const jsonOutput = task.scope ? task.scope.document.format === 'json' : task.mode !== 'new' && sourceScript.trimStart().startsWith('{');
     const formatOverride = jsonOutput ? '\n\n本次输出格式例外：使用合法 JSON，不要转换为 CCPL。' + (task.scope ? '仅返回包含 steps 数组的对象，数组中只有选中的步骤，不要返回全局字段。' : '返回修改后的完整 JSON 机理对象。') :
       task.scope ? '\n\n本次是指定步骤修改：只返回选中的完整 step 块，不要返回 reaction、equation、summary 等全局声明。' : '';
     const messages = [{ role: 'system', content: CCPL_SYSTEM_PROMPT + formatOverride }];
+    if (options.chat) {
+      messages[0].content += '\n\n对话模式例外：结合下面的历史对话理解本轮需求，历史记录只是上下文。若缺少底物、关键反应条件或存在会改变路径的歧义，不要猜测，改为只输出 JSON：{"type":"question","question":"一个最关键的追问","options":[{"label":"可读选项","value":"对应的明确回答","description":"简短说明"}]}。每轮只问一个问题，提供 2–4 个符合本反应的具体选项；不得预设未证实的反应条件，不得用“其他”占位，界面始终允许自由回答。无法合理列出选项时返回空 options。仅解释时返回 {"type":"explanation","text":"直接解释"}，不强制追加问题。信息充分时直接输出脚本，不要再次询问已明确的信息。历史里没有文献证据的说法不算已核实事实。按步骤顺序完整输出每个 step，不要同时输出未闭合的多个步骤，以便即时预览完整步骤。';
+      messages[0].content += AI_WORKFLOW?.instruction(task.workflow) || '';
+      for (const message of options.context || []) if (['user', 'assistant'].includes(message.role)) messages.push({ role: message.role, content: String(message.content).slice(0, 12000) });
+      messages[0].content += '\n历史中用户最初的需求与已回答的条件仍然有效；如用户随后明确更改，以最新的明确要求为准。助手先前的推测不是用户已确认的条件。';
+      if (options.contextReport?.omitted) messages[0].content += `\n上下文容量提示：有 ${options.contextReport.omitted} 条较早记录未附带${options.contextReport.initialOmitted ? '，原始需求也未完整附带' : '，已优先保留原始需求和可容纳的问答'}。不要声称已记得全部历史；缺少决定路径的条件时请先追问。`;
+    }
     if (task.mode === 'new') {
       messages.push({ role: 'user', content: `请为以下化学反应编写完整的 CCPL 反应推演脚本：\n【反应与机理要求】：${userPrompt}\n请严格遵循 CCPL 语法规范输出。` });
     } else {
-      const action = task.mode === 'fix' ? '修复所有语法与结构问题' : '根据指示完善或修改';
-      const language = task.base.script.trimStart().startsWith('{') ? 'json' : 'ccpl';
-      messages.push({ role: 'user', content: `当前脚本：\n\`\`\`${language}\n${task.base.script}\n\`\`\`\n\n请${action}：\n${userPrompt}\n${this.outputInstruction(task)}` });
+      const action = task.workflow?.kind === 'explain' ? '仅解释现有机理，不修改脚本' : task.mode === 'fix' ? '修复所有语法与结构问题' : '根据指示完善或修改';
+      const language = sourceScript.trimStart().startsWith('{') ? 'json' : 'ccpl';
+      messages.push({ role: 'user', content: `当前脚本：\n\`\`\`${language}\n${sourceScript}\n\`\`\`\n\n请${action}：\n${userPrompt}\n${this.outputInstruction(task)}` });
     }
     this.setGenerating(true);
     this.updateStatusBadge('正在生成，原草稿已保留...', 'pending');
@@ -603,8 +643,9 @@ const aiAssistant = {
             task.transport = value.transport;
             task.progressPhase = value.transport === 'json' ? '接口将返回完整结果，等待接收完成' : '已连接，等待脚本文本';
             this.renderStreamProgress(task);
+            task.onProgress?.({ type: 'status', text: task.progressPhase });
           },
-          onDelta: cfg.stream === false ? undefined : value => this.receiveStreamDelta(task, epoch, value)
+          onDelta: cfg.stream === false ? undefined : value => { this.receiveStreamDelta(task, epoch, value); task.onProgress?.({ type: 'delta', text: task.streamText, repairAttempts: task.repairAttempts }); }
         });
         if (this.activeTask !== task) return;
         task.receivedChars = response.content.length;
@@ -615,7 +656,17 @@ const aiAssistant = {
         task.finishReason = response.finishReason;
         task.usage = response.usage;
         const issue = AI_TASK_SAFETY.completionIssue(response.finishReason);
-        const candidate = { taskId: task.id, base: task.base, scope: task.scope, raw: response.content, script: response.content, complete: !issue, validation: null, applied: false };
+        if (!issue && options.chat && typeof ChemiationStudioCore !== 'undefined') {
+          const question = ChemiationStudioCore.questionForm(response.content);
+          if (question) { task.question = question.question; task.questionForm = question; task.status = 'question'; break; }
+        }
+        if (!issue && options.chat) {
+          const explanation = AI_WORKFLOW?.textResponse(response.content);
+          if (explanation && (!task.workflow || task.workflow.kind === 'explain')) { task.explanation = explanation; task.status = 'explained'; break; }
+          if (task.workflow?.kind === 'explain') { task.status = 'failed'; task.errorMessage = '本轮仅解释，未接受模型返回的脚本。请重试解释；原稿未改变。'; break; }
+        }
+        const candidate = { taskId: task.id, base: task.base, scope: task.scope, workflow: task.workflow, sourceScript,
+          raw: response.content, script: response.content, complete: !issue, validation: null, applied: false };
         if (issue) {
           if (task.scope) candidate.scopeError = issue;
           this.showCandidate(candidate);
@@ -625,10 +676,13 @@ const aiAssistant = {
           break;
         }
         const started = performance.now();
+        task.onProgress?.({ type: 'status', text: '正在检查脚本、结构和本轮修改范围…' });
         try {
           const extracted = this.extractCCPL(response.content);
           candidate.script = task.scope ? AI_EDITING_TOOLS.mergeSelected(task.scope, extracted) : extracted;
           candidate.validation = this.validateGenerated(candidate.script);
+          const intentErrors = AI_WORKFLOW?.validateChanges(task.workflow, sourceScript, candidate.script) || [];
+          if (intentErrors.length) { candidate.validation.valid = false; candidate.validation.diagnostics.push(...intentErrors); }
         } catch (err) {
           candidate.scopeError = task.scope ? err.message : null;
           candidate.validation = { valid: false, diagnostics: [err.message], warnings: [], parsed: null };
@@ -667,6 +721,7 @@ const aiAssistant = {
       task.status = err.name === 'AbortError' ? 'cancelled' : 'failed';
       task.errorCode = err.code || err.name;
       const message = err.name === 'AbortError' ? '生成已中止，原草稿未改变' : err.message;
+      task.errorMessage = message;
       this.updateStatusBadge(message, 'warning');
       if (err.name !== 'AbortError') this.showToast(message, true);
     } finally {
@@ -680,6 +735,7 @@ const aiAssistant = {
         this.getHistoryManager()?.archive(task);
       }
     }
+    return task;
   },
 
   async callChatApi(cfg, messages, signal, options = {}) {
@@ -724,6 +780,7 @@ const aiAssistant = {
   },
 
   updateStatusBadge(text, type = 'pending') {
+    this.activeTask?.onProgress?.({ type: 'status', text, severity: type });
     const badge = document.getElementById('ai-generation-status');
     if (!badge) return;
 
@@ -802,6 +859,8 @@ const aiAssistant = {
     }
     // Check again at the actual write boundary, including changes to the engine.
     const validation = this.validateGenerated(candidate.script);
+    const intentErrors = AI_WORKFLOW?.validateChanges(candidate.workflow, candidate.sourceScript || candidate.base.script, candidate.script) || [];
+    if (intentErrors.length) { validation.valid = false; validation.diagnostics.push(...intentErrors); this.showToast(intentErrors.join('；'), true); }
     candidate.validation = validation;
     if (!validation.valid) { this.updateActionButtons(); return false; }
     if (app && Array.isArray(app.presets) && app.presets.some((p, index) => index !== app.currentReactionIndex && p.name.trim() === validation.parsed.name.trim())) {
@@ -871,7 +930,8 @@ const aiAssistant = {
   },
 
   async testConnection() {
-    const cfg = this.getConfig();
+    // Test exactly what is visible, without overwriting the user's saved settings.
+    const cfg = this.getSettingsConfig();
     if (this.connectionController) this.connectionController.abort();
     const controller = new AbortController();
     this.connectionController = controller;
@@ -880,13 +940,18 @@ const aiAssistant = {
     if (button) button.disabled = true;
     if (result) { result.textContent = '正在测试连接...'; result.className = 'ai-test-result pending'; result.style.display = 'block'; }
     try {
+      if (!/^https?:\/\//i.test(cfg.baseUrl)) throw AI_TASK_SAFETY.error('CONFIG', '请填写完整的 http(s) API 接口地址');
+      if (!cfg.model) throw AI_TASK_SAFETY.error('CONFIG', '请填写模型标识');
+      if (!cfg.apiKey && cfg.provider !== 'ollama') throw AI_TASK_SAFETY.error('CONFIG', '当前密钥输入框为空，请填写模型平台的 API Key');
+      if (/^Bearer\s/i.test(cfg.apiKey) || /^["']|["']$/.test(cfg.apiKey)) throw AI_TASK_SAFETY.error('CONFIG', '只需粘贴密钥本身，不要附加 Bearer 前缀或引号');
       await AI_TASK_SAFETY.requestCompletion({ ...cfg, stream: false, timeoutMs: Math.min(cfg.timeoutMs || 90000, 15000) }, [{ role: 'user', content: 'hi' }], { signal: controller.signal, maxTokens: 5 });
       if (this.connectionController !== controller) return;
-      if (result) { result.textContent = 'API 连接成功；端点与模型已响应。'; result.className = 'ai-test-result success'; }
+      if (result) { result.textContent = '当前输入的 API 配置连接成功；点击“保存配置”后用于生成。'; result.className = 'ai-test-result success'; }
       this.updateKeyBadge();
     } catch (err) {
       if (this.connectionController !== controller) return;
-      if (result) { result.textContent = `连接失败：${err.message}`; result.className = 'ai-test-result error'; }
+      const message = err.code === 'HTTP_401' ? 'HTTP 401：模型服务拒绝了当前输入的密钥。请确认完整复制了该平台的有效 API Key。' : err.message;
+      if (result) { result.textContent = `连接失败：${message}`; result.className = 'ai-test-result error'; }
     } finally {
       if (this.connectionController === controller) {
         this.connectionController = null;
@@ -1008,13 +1073,8 @@ const aiAssistant = {
     const btnSaveCfg = document.getElementById('ai-btn-save-config');
     if (btnSaveCfg) {
       btnSaveCfg.addEventListener('click', () => {
-        const provider = document.getElementById('ai-provider-select')?.value || 'deepseek';
-        const baseUrl = document.getElementById('ai-base-url')?.value || '';
-        const apiKey = document.getElementById('ai-api-key')?.value || '';
-        const model = document.getElementById('ai-model-name')?.value || '';
-
-        const timeoutSeconds = document.getElementById('ai-timeout-seconds')?.value || 90;
-        this.saveConfig({ provider, baseUrl, apiKey, model, timeoutSeconds });
+        const cfg = this.getSettingsConfig();
+        this.saveConfig({ ...cfg, timeoutSeconds: cfg.timeoutMs / 1000 });
         this.updateKeyBadge();
         this.showToast('API 与模型配置已安全保存！', false);
       });

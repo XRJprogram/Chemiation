@@ -351,6 +351,9 @@ class ReactionApp {
     this.tabBtnScript = document.getElementById('tab-btn-script');
     this.tabPaneSteps = document.getElementById('tab-pane-steps');
     this.tabPaneScript = document.getElementById('tab-pane-script');
+    this.tabBtnChat = document.getElementById('tab-btn-chat');
+    this.tabPaneChat = document.getElementById('tab-pane-chat');
+    this.tabBtnChat?.addEventListener('click', () => this.switchTab('chat'));
 
     // 机理步骤卡片列表
     this.stepsListContainer = document.getElementById('steps-list-container');
@@ -501,7 +504,8 @@ class ReactionApp {
     const onMouseMove = (e) => {
       if (!isResizing) return;
       const dx = startX - e.clientX;
-      const newWidth = Math.max(320, Math.min(760, startWidth + dx));
+      const maxWidth = Math.min(760, window.innerWidth - 320);
+      const newWidth = Math.max(320, Math.min(maxWidth, startWidth + dx));
       this.workspaceSidebar.style.setProperty('--sidebar-width', `${newWidth}px`);
       this.workspaceSidebar.style.width = 'var(--sidebar-width)';
       this.renderer.resize();
@@ -517,6 +521,7 @@ class ReactionApp {
       window.removeEventListener('mouseup', onMouseUp);
       this.renderer.resize();
       this.renderer.render();
+      window.chemiationStudio?.fitCanvas();
     };
 
     this.resizeHandle.addEventListener('mousedown', onMouseDown);
@@ -868,12 +873,14 @@ class ReactionApp {
   }
 
   switchTab(tabName) {
+    window.chemiationStudio?.closePanels();
     if (tabName === 'steps' && this.isScriptDirty && this.scriptEditor) {
       try {
         const text = this.scriptEditor.value;
         const parsedReaction = ReactionScriptEngine.parse(text);
         this.hideScriptError();
 
+        parsedReaction.id = this.presets[this.currentReactionIndex]?.id || parsedReaction.id;
         this.presets[this.currentReactionIndex] = parsedReaction;
         this.savePresetsToStorage();
 
@@ -888,6 +895,8 @@ class ReactionApp {
         this.buildStepsList(parsedReaction.steps);
         this.buildTimelineTrack(parsedReaction.steps);
         this.markScriptDirty(false, '已同步');
+        this.pause();
+        this.goToStep(Math.min(this.currentStepIndex, parsedReaction.steps.length - 1), false);
       } catch (err) {
         // 脚本存在语法错误：严格拦截！不更新且不渲染推演内容，提示报错并保留在编辑区
         this.showScriptError(err.message);
@@ -901,13 +910,17 @@ class ReactionApp {
     }
 
     this.activeTab = tabName;
+    if (this.renderer) this.renderer.studioLabelScale = this.renderer.studioSavedLabelScale || 1;
+    this.tabBtnChat?.classList.toggle('active', tabName === 'chat');
+    if (this.tabPaneChat) this.tabPaneChat.style.display = tabName === 'chat' ? 'flex' : 'none';
+    this.workspaceSidebar?.classList.toggle('studio-active', tabName === 'chat');
     if (this.tabBtnSteps) this.tabBtnSteps.classList.toggle('active', tabName === 'steps');
     if (this.tabBtnScript) this.tabBtnScript.classList.toggle('active', tabName === 'script');
     if (this.tabPaneSteps) this.tabPaneSteps.style.display = tabName === 'steps' ? 'flex' : 'none';
     if (this.tabPaneScript) this.tabPaneScript.style.display = tabName === 'script' ? 'flex' : 'none';
 
     if (this.workspaceContent) {
-      this.workspaceContent.style.overflowY = tabName === 'script' ? 'hidden' : 'auto';
+      this.workspaceContent.style.overflowY = tabName === 'script' || tabName === 'chat' ? 'hidden' : 'auto';
       if (tabName === 'script') {
         this.workspaceContent.scrollTop = 0;
       }
@@ -998,6 +1011,7 @@ class ReactionApp {
 
   loadReaction(reactionIndex) {
     if (!this.presets[reactionIndex]) return;
+    this.studioPreview = null;
 
     this.pause();
     this.currentReactionIndex = reactionIndex;
@@ -1038,6 +1052,7 @@ class ReactionApp {
     this.hideScriptError();
 
     this.renderer.resetCamera();
+    this.markScriptDirty(false, this.t('statusSynced'));
     this.goToStep(0, false);
   }
 
@@ -1093,8 +1108,32 @@ class ReactionApp {
     });
   }
 
+  previewStudioReaction(reaction, stepIndex = 0, animate = false) {
+    this.pause();
+    if (!this.studioPreview) this.studioPreview = { originalStep: this.currentStepIndex };
+    this.studioPreview.reaction = reaction;
+    this.showStudioReaction(reaction, stepIndex, animate);
+  }
+
+  endStudioPreview() {
+    if (!this.studioPreview) return;
+    const step = this.studioPreview.originalStep;
+    this.studioPreview = null;
+    this.pause();
+    this.showStudioReaction(this.presets[this.currentReactionIndex], step);
+  }
+
+  showStudioReaction(reaction, step, animate = false) {
+    if (this.reactionTitle) this.reactionTitle.textContent = reaction.name;
+    this.setReactionEquation(reaction.equation || '');
+    if (this.reactionDesc) this.reactionDesc.textContent = reaction.summary || '';
+    this.buildStepsList(reaction.steps);
+    this.buildTimelineTrack(reaction.steps);
+    this.goToStep(Math.min(step, reaction.steps.length - 1), animate);
+  }
+
   goToStep(stepIndex, animate = true) {
-    const reaction = this.presets[this.currentReactionIndex];
+    const reaction = this.studioPreview?.reaction || this.presets[this.currentReactionIndex];
     if (!reaction || !reaction.steps[stepIndex]) return;
 
     this.currentStepIndex = stepIndex;
@@ -1103,6 +1142,7 @@ class ReactionApp {
 
     // 渲染器更新
     this.renderer.setStep(step, animate);
+    if (typeof CustomEvent !== 'undefined' && typeof window.dispatchEvent === 'function') window.dispatchEvent(new CustomEvent('chemiation:step', { detail: { index: stepIndex, preview: !!this.studioPreview } }));
 
     // 更新右侧计数
     if (this.stepCounterText) {
@@ -1188,7 +1228,7 @@ class ReactionApp {
   }
 
   nextStep() {
-    const reaction = this.presets[this.currentReactionIndex];
+    const reaction = this.studioPreview?.reaction || this.presets[this.currentReactionIndex];
     if (this.currentStepIndex < reaction.steps.length - 1) {
       this.goToStep(this.currentStepIndex + 1, true);
       return true;
@@ -1205,7 +1245,7 @@ class ReactionApp {
   }
 
   play() {
-    const reaction = this.presets[this.currentReactionIndex];
+    const reaction = this.studioPreview?.reaction || this.presets[this.currentReactionIndex];
     if (!reaction || !reaction.steps || reaction.steps.length <= 1) return;
 
     this.isPlaying = true;
@@ -1290,6 +1330,7 @@ class ReactionApp {
 
       this.hideScriptError();
 
+      parsedReaction.id = this.presets[this.currentReactionIndex]?.id || parsedReaction.id;
       this.presets[this.currentReactionIndex] = parsedReaction;
       this.savePresetsToStorage();
 
@@ -1337,6 +1378,7 @@ class ReactionApp {
         return;
       }
 
+      parsedReaction.id = this.presets[this.currentReactionIndex]?.id || parsedReaction.id;
       this.presets[this.currentReactionIndex] = parsedReaction;
       this.savePresetsToStorage();
 
@@ -1762,6 +1804,10 @@ class ReactionApp {
 
   openVideoExportModal() {
     if (!this.videoExportModal) return;
+    if (this.studioPreview) {
+      window.chemiationStudio?.notice('请先保留当前预览版本，再导出它的动画。当前导出使用已保存的原稿。');
+      this.endStudioPreview();
+    }
     const reaction = this.presets[this.currentReactionIndex];
     if (!reaction) return;
 
@@ -2104,6 +2150,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.app = new ReactionApp();
   window.reactionApp = window.app;
 
+  // The workspace is interactive before authentication or repository network requests finish.
+  try {
+    if (window.aiAssistant) window.aiAssistant.init();
+    if (window.chemiationStudio) await window.chemiationStudio.init();
+  } catch (err) {
+    console.warn('[Chemiation] 初始化 AI 工作台异常:', err);
+  }
+
   // 初始化用户认证控制器 (无论是否启动 server，调用 init 都会初始化基础状态并进行安全鉴权)
   if (window.authCtrl && typeof window.authCtrl.init === 'function') {
     try {
@@ -2119,15 +2173,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.repoCtrl.init();
     } catch (err) {
       console.warn('[Chemiation] 初始化云端仓库控制器异常:', err);
-    }
-  }
-
-  // 初始化 AI 辅助机理推演控制器
-  if (window.aiAssistant && typeof window.aiAssistant.init === 'function') {
-    try {
-      window.aiAssistant.init();
-    } catch (err) {
-      console.warn('[Chemiation] 初始化 AI 辅助模块异常:', err);
     }
   }
 

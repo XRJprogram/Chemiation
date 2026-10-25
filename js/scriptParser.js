@@ -156,6 +156,10 @@ const ReactionScriptEngine = {
       const cleanName = (step.name || `步骤 ${idx + 1}`).replace(/^\s*(?:(?:第\s*)?\d+\s*(?:步|节)?|[一二三四五六七八九十]+)[\.、:\s-]\s*/i, '').trim() || (step.name || `步骤 ${idx + 1}`);
       lines.push(`step "${cleanName}" {`);
       if (step.note) lines.push(`  note "${step.note.replace(/"/g, '\\"')}"`);
+      // Preserve explicit-H scenes when saving/restoring; otherwise parsing the
+      // serialized script could silently add atoms and invalidate step identities.
+      if (step.hydrogensMode === 'none' || step.hydrogensMode === 'explicit') lines.push('  hydrogens none');
+      else if (step.hydrogensMode === 'auto') lines.push('  hydrogens auto');
       if (step.polymer) {
         const p = typeof step.polymer === 'object' ? step.polymer : { label: String(step.polymer) };
         const labelStr = p.label || 'n';

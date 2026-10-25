@@ -10,6 +10,7 @@
 
   const ELEMENTS = new Set(('H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og R X M').split(' '));
   const BACKUP_KEY = 'chemiation_ai_draft_backup_v1';
+  const ORDINARY_COVALENT_NEIGHBORS = new Set(['H', 'B', 'C', 'N', 'O', 'F', 'Si', 'P', 'S', 'Cl', 'Se', 'Br', 'I', 'R', 'X']);
   function error(code, message) {
     const result = new Error(message);
     result.code = code;
@@ -94,15 +95,10 @@
     return block[1].trim();
   }
 
-  function validateScript(script, engine) {
+  function validateParsed(parsed) {
     const diagnostics = [];
     const warnings = [];
-    let parsed = null;
-    if (!engine || typeof engine.parse !== 'function') return { valid: false, parsed, diagnostics: ['校验器未加载，无法确认脚本有效性'], warnings, repairable: false };
-    if (typeof script !== 'string' || !script.trim()) return { valid: false, parsed, diagnostics: ['脚本为空'], warnings };
-    if (script.length > 200000) return { valid: false, parsed, diagnostics: ['脚本过长，请分步生成（最多 200000 字符）'], warnings, repairable: false };
     try {
-      parsed = engine.parse(script);
       if (!parsed || !Array.isArray(parsed.steps) || !parsed.steps.length) throw new Error('缺少有效反应步骤');
       const identities = new Map();
       let baseline;
@@ -120,15 +116,48 @@
           if (identities.has(atom.id) && identities.get(atom.id) !== atom.element) throw new Error(`${prefix}原子 ${atom.id} 的元素发生变化`);
           identities.set(atom.id, atom.element);
           if (!['x', 'y', 'z'].every(key => Number.isFinite(atom[key]))) throw new Error(`${prefix}原子 ${atom.id} 坐标无效`);
-          if (!Number.isInteger(atom.charge || 0)) throw new Error(`${prefix}原子 ${atom.id} 的形式电荷无效`);
-          charge += atom.charge || 0;
+          const atomCharge = atom.charge === undefined ? 0 : atom.charge;
+          if (!Number.isInteger(atomCharge)) throw new Error(`${prefix}原子 ${atom.id} 的形式电荷无效`);
+          charge += atomCharge;
           counts.set(atom.element, (counts.get(atom.element) || 0) + 1);
           if (['R', 'X', 'M'].includes(atom.element)) placeholders = true;
         }
+        const bondPairs = new Set();
+        const neighbors = new Map(step.atoms.map(atom => [atom.id, []]));
         for (const bond of step.bonds) {
           if (!ids.has(bond.atom1Id) || !ids.has(bond.atom2Id) || bond.atom1Id === bond.atom2Id) throw new Error(`${prefix}化学键原子引用无效`);
           if (![1, 1.5, 2, 3].includes(bond.order === undefined ? 1 : bond.order)) throw new Error(`${prefix}化学键键级无效`);
+          const pair = JSON.stringify([bond.atom1Id, bond.atom2Id].sort());
+          if (bondPairs.has(pair)) throw new Error(`${prefix}存在重复化学键`);
+          bondPairs.add(pair);
+          const order = bond.order === undefined ? 1 : bond.order;
+          neighbors.get(bond.atom1Id).push({ id: bond.atom2Id, order });
+          neighbors.get(bond.atom2Id).push({ id: bond.atom1Id, order });
         }
+        // Conservative checks for ordinary localized covalent structures. Do not
+        // infer missing bonds, charges, hydrogens or transition states to pass.
+        const atoms = new Map(step.atoms.map(atom => [atom.id, atom]));
+        let unchecked = false;
+        for (const atom of step.atoms) {
+          const bonds = neighbors.get(atom.id), q = atom.charge || 0;
+          const sum = bonds.reduce((total, b) => total + b.order, 0);
+          const aromatic = bonds.filter(b => b.order === 1.5).length;
+          let max = atom.element === 'H' ? 1 : atom.element === 'C' ? 4 :
+            atom.element === 'N' ? ({ '-1': 2, '0': 3, '1': 4 })[q] :
+            atom.element === 'O' ? ({ '-1': 1, '0': 2, '1': 3 })[q] :
+            atom.element === 'F' && !q ? 1 : undefined;
+          // Coordination, bridging H and aromatic heteroatoms require a richer
+          // bond model. Leave these for review instead of treating them as errors.
+          if (bonds.some(b => !ORDINARY_COVALENT_NEIGHBORS.has(atoms.get(b.id).element)) ||
+              (atom.element === 'H' && bonds.some(b => atoms.get(b.id).element === 'B')) ||
+              (aromatic && ['N', 'O'].includes(atom.element))) max = undefined;
+          // Three aromatic neighbors at a fused carbon may sum to 4.5 in this
+          // DSL; do not mistake that encoding for five localized carbon bonds.
+          if (atom.element === 'C' && aromatic === 3 && bonds.length === 3 && max !== undefined) max = 4.5;
+          if (max === undefined) { if (bonds.length && !['R', 'X'].includes(atom.element)) unchecked = true; continue; }
+          if (sum > max) throw new Error(`${prefix}原子 ${atom.id}（${atom.element}${q ? `，电荷 ${q > 0 ? '+' : ''}${q}` : ''}）的键级总和为 ${sum}，超过当前普通共价结构规则上限 ${max}；请核对成键、形式电荷及反应步骤，不要为通过检查任意补删原子`);
+        }
+        if (unchecked && !warnings.includes('部分芳香杂原子、配位或特殊价态未做完整价态检查，需专业审核')) warnings.push('部分芳香杂原子、配位或特殊价态未做完整价态检查，需专业审核');
         if (baseline) {
           const elements = new Set([...baseline.counts.keys(), ...counts.keys()]);
           const changed = [...elements].filter(el => (baseline.counts.get(el) || 0) !== (counts.get(el) || 0));
@@ -149,6 +178,14 @@
     return { valid: diagnostics.length === 0, parsed, diagnostics, warnings };
   }
 
+  function validateScript(script, engine) {
+    if (!engine || typeof engine.parse !== 'function') return { valid: false, parsed: null, diagnostics: ['校验器未加载，无法确认脚本有效性'], warnings: [], repairable: false };
+    if (typeof script !== 'string' || !script.trim()) return { valid: false, parsed: null, diagnostics: ['脚本为空'], warnings: [] };
+    if (script.length > 200000) return { valid: false, parsed: null, diagnostics: ['脚本过长，请分步生成（最多 200000 字符）'], warnings: [], repairable: false };
+    try { return validateParsed(engine.parse(script)); }
+    catch (err) { return { valid: false, parsed: null, diagnostics: [err.message || '脚本校验失败'], warnings: [] }; }
+  }
+
   function workspace(editor, app) {
     const index = app && Number.isInteger(app.currentReactionIndex) ? app.currentReactionIndex : null;
     const reaction = index !== null && app.presets ? app.presets[index] : null;
@@ -157,5 +194,5 @@
   function sameTarget(a, b) { return a.reactionIndex === b.reactionIndex && a.reactionId === b.reactionId; }
   function sameWorkspace(a, b) { return sameTarget(a, b) && a.script === b.script; }
 
-  return { BACKUP_KEY, error, requestCompletion, completionIssue, extractScript, validateScript, workspace, sameTarget, sameWorkspace };
+  return { BACKUP_KEY, error, requestCompletion, completionIssue, extractScript, validateScript, validateParsed, workspace, sameTarget, sameWorkspace };
 });

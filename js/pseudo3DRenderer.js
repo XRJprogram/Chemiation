@@ -646,7 +646,8 @@ class Pseudo3DRenderer {
       atom.depthFactor = depthFactor;
 
       const baseFontSize = 18 + depthFactor * 16;
-      atom.fontSize = Math.max(12, Math.round(baseFontSize * (atom.scale || 1)));
+      const labelScale = this.studioLabelScale || 1;
+      atom.fontSize = Math.max(12 * labelScale, Math.round(baseFontSize * (atom.scale || 1) * labelScale));
 
       const r = Math.round(this.palette.atomBack.r + (this.palette.atomFront.r - this.palette.atomBack.r) * depthFactor);
       const g = Math.round(this.palette.atomBack.g + (this.palette.atomFront.g - this.palette.atomBack.g) * depthFactor);
@@ -655,7 +656,7 @@ class Pseudo3DRenderer {
       atom.opacity = atomOpacity;
       atom.color = `rgba(${r}, ${g}, ${b}, ${atomOpacity})`;
       atom.rgb = { r, g, b };
-      atom.clipRadius = Math.max(7, atom.fontSize * 0.44);
+      atom.clipRadius = Math.max(7 * labelScale, atom.fontSize * 0.44);
 
       atomMap.set(atom.id, atom);
     });
