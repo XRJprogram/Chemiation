@@ -27,7 +27,7 @@ function copyRecursive(src, dest) {
   }
 }
 
-const assets = ['index.html', 'docs.html', 'docs_en.html', 'css', 'js'];
+const assets = ['index.html', 'docs.html', 'docs_en.html', 'css', 'js', 'favicon.png'];
 for (const item of assets) {
   const srcPath = path.join(rootDir, item);
   const destPath = path.join(distDir, item);

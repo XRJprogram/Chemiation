@@ -9,7 +9,7 @@ $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQuality
 
 $g.Clear([System.Drawing.Color]::Transparent)
 
-# Rounded rectangle
+# Rounded rectangle geometry
 $margin = 32
 $w = $size - ($margin * 2)
 $h = $size - ($margin * 2)
@@ -23,35 +23,55 @@ $path.AddArc(($rect.Right - $radius), ($rect.Bottom - $radius), $radius, $radius
 $path.AddArc($rect.X, ($rect.Bottom - $radius), $radius, $radius, 90, 90)
 $path.CloseFigure()
 
-# Background color: warm beige
-$c1 = [System.Drawing.Color]::FromArgb(255, 255, 252, 245)
-$c2 = [System.Drawing.Color]::FromArgb(255, 243, 233, 215)
-$pt1 = New-Object System.Drawing.Point 0, 0
-$pt2 = New-Object System.Drawing.Point 0, 1024
-$brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush -ArgumentList $pt1, $pt2, $c1, $c2
-$g.FillPath($brush, $path)
+# 1. 完全扁平化纯色底色 (Solid Flat Background #FAF6E9 无任何渐变)
+$flatBg = [System.Drawing.Color]::FromArgb(255, 250, 246, 233)
+$bgBrush = New-Object System.Drawing.SolidBrush -ArgumentList $flatBg
+$g.FillPath($bgBrush, $path)
 
-# Border: subtle warm tone
-$borderColor = [System.Drawing.Color]::FromArgb(255, 222, 209, 186)
-$pen = New-Object System.Drawing.Pen -ArgumentList $borderColor, 18
-$g.DrawPath($pen, $path)
+# 2. 裁切于圆角矩形内绘制加粗网格 (Thickened Coordinate Grid)
+$g.SetClip($path)
 
+# 加粗网格：线条宽度 8px，间距 80px，颜色为清晰可见的枣红暖色系 (~24% 不透明度)
+$gridColor = [System.Drawing.Color]::FromArgb(62, 184, 74, 40)
+$gridPen = New-Object System.Drawing.Pen -ArgumentList $gridColor, 7.5
+
+$step = 80
+for ($x = $margin + $step; $x -lt ($margin + $w); $x += $step) {
+    $g.DrawLine($gridPen, $x, 0, $x, $size)
+}
+for ($y = $margin + $step; $y -lt ($margin + $h); $y += $step) {
+    $g.DrawLine($gridPen, 0, $y, $size, $y)
+}
+
+$g.ResetClip()
+
+# 3. 加粗外边框 (Thickened Flat Border: 36px)
+$borderColor = [System.Drawing.Color]::FromArgb(255, 214, 194, 164)
+$borderPen = New-Object System.Drawing.Pen -ArgumentList $borderColor, 36
+$g.DrawPath($borderPen, $path)
+
+# 4. 枣红色 Century Gothic 字母 C (Jujube Red #B84A28, 同款 index 强调色)
 $style = [System.Drawing.FontStyle]::Bold
 $unit = [System.Drawing.GraphicsUnit]::Pixel
-$font = New-Object System.Drawing.Font "Century Gothic", 580.0, $style, $unit
-$brownColor = [System.Drawing.Color]::FromArgb(255, 90, 51, 25)
-$textBrush = New-Object System.Drawing.SolidBrush -ArgumentList $brownColor
+$font = New-Object System.Drawing.Font "Century Gothic", 590.0, $style, $unit
+$jujubeColor = [System.Drawing.Color]::FromArgb(255, 184, 74, 40)
+$textBrush = New-Object System.Drawing.SolidBrush -ArgumentList $jujubeColor
 
 $sf = New-Object System.Drawing.StringFormat
 $sf.Alignment = [System.Drawing.StringAlignment]::Center
 $sf.LineAlignment = [System.Drawing.StringAlignment]::Center
 
-$layoutRect = New-Object System.Drawing.RectangleF 0, 20, 1024, 1024
+$layoutRect = New-Object System.Drawing.RectangleF 0, 22, 1024, 1024
 $g.DrawString("C", $font, $textBrush, $layoutRect, $sf)
 
 $outputPng = Join-Path $PSScriptRoot "app-icon.png"
 $bmp.Save($outputPng, [System.Drawing.Imaging.ImageFormat]::Png)
 
+$gridPen.Dispose()
+$borderPen.Dispose()
+$bgBrush.Dispose()
+$textBrush.Dispose()
+$font.Dispose()
 $g.Dispose()
 $bmp.Dispose()
 Write-Host "Success: Generated $outputPng"

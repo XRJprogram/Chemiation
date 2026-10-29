@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="css/chemiation.css?v=1.2.1">
   <link rel="stylesheet" href="css/modal.css?v=1.2.1-ai6">
   <link rel="stylesheet" href="css/ai-studio.css?v=20261025-rename">
@@ -192,9 +193,9 @@
           <div class="studio-menu-wrap">
             <button id="studio-more" class="studio-more" type="button" title="查看聊天和脚本版本、配置模型或收起工作区" aria-label="历史与设置" aria-expanded="false" aria-controls="studio-tools-menu"><span>历史与设置</span><svg class="studio-more-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
             <div id="studio-tools-menu" class="studio-tools-menu" aria-label="对话工具" hidden>
-              <button id="studio-rename" type="button">重命名当前对话 <span>✎</span></button>
+              <button id="studio-rename" type="button">重命名当前对话 <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></span></button>
               <button id="studio-history" type="button">聊天与脚本版本 <span>↗</span></button>
-              <button id="studio-settings" type="button">模型设置 <span>⚙</span></button>
+              <button id="studio-settings" type="button">模型设置 <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span></button>
               <button id="studio-collapse" type="button">收起工作区 <span>→</span></button>
             </div>
           </div>
@@ -210,7 +211,7 @@
                 <div class="studio-panel-heading"><strong>项目与对话</strong><button id="studio-close-project" type="button" aria-label="关闭项目切换">×</button></div>
                 <label class="studio-project-field" for="studio-project-select"><span>机理项目</span><select id="studio-project-select" aria-label="选择机理项目"></select></label>
                 <label class="studio-project-field" for="studio-session-select"><span>项目对话 <small id="studio-project-count"></small></span><select id="studio-session-select" aria-label="切换本项目的对话"></select></label>
-                <button id="studio-open-rename" class="studio-open-rename" type="button">重命名当前对话 ✎</button>
+                <button id="studio-open-rename" class="studio-open-rename" type="button">重命名当前对话</button>
                 <form id="studio-rename-form" class="studio-rename-form" hidden>
                   <label for="studio-rename-input">对话名称</label>
                   <input id="studio-rename-input" type="text" maxlength="100" required autocomplete="off" placeholder="为这段对话起个名字…">

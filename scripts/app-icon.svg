@@ -1,12 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
-    <radialGradient id="bgGrad" cx="50%" cy="38%" r="65%">
-      <stop offset="0%" stop-color="#FFFDF8"/>
-      <stop offset="100%" stop-color="#F2E6D0"/>
-    </radialGradient>
+    <!-- Rounded Rectangle Badge Clip -->
+    <clipPath id="badgeClip">
+      <rect x="32" y="32" width="960" height="960" rx="224" ry="224"/>
+    </clipPath>
+
+    <!-- Thickened Chemical Coordinate Grid (加粗网格: 80px 间距, 7.5px 线宽, 24% 枣红) -->
+    <pattern id="thickGrid" width="80" height="80" patternUnits="userSpaceOnUse" x="32" y="32">
+      <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#B84A28" stroke-opacity="0.24" stroke-width="7.5"/>
+    </pattern>
   </defs>
-  <!-- Rounded Rectangle Badge -->
-  <rect x="32" y="32" width="960" height="960" rx="224" ry="224" fill="url(#bgGrad)" stroke="#DFD1B8" stroke-width="20"/>
-  <!-- Century Gothic C Letter -->
-  <text x="512" y="695" font-family="'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Segoe UI', sans-serif" font-size="640" font-weight="700" fill="#5A3319" text-anchor="middle">C</text>
+
+  <!-- 1. 完全扁平化纯色底色 (Solid Flat Background #FAF6E9 无任何渐变) -->
+  <rect x="32" y="32" width="960" height="960" rx="224" ry="224" fill="#FAF6E9"/>
+
+  <!-- 2. 加粗网格，裁切于圆角徽章内 -->
+  <rect x="32" y="32" width="960" height="960" fill="url(#thickGrid)" clip-path="url(#badgeClip)"/>
+
+  <!-- 3. 加粗外边框 (36px, #D6C2A4) -->
+  <rect x="32" y="32" width="960" height="960" rx="224" ry="224" fill="none" stroke="#D6C2A4" stroke-width="36"/>
+
+  <!-- 4. 枣红色 Century Gothic 字母 C (Jujube Red #B84A28, 同款 index 强调色) -->
+  <text x="512" y="705" font-family="'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Segoe UI', sans-serif" font-size="640" font-weight="700" fill="#B84A28" text-anchor="middle">C</text>
 </svg>
