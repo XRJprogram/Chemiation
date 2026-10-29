@@ -8,12 +8,16 @@
     "dev": "node server/server.js",
     "server": "node server/server.js",
     "serve:static": "npx serve .",
-    "test": "node test/test.js",
-    "test:server": "node server/test_suite.js",
+    "preview:studio": "node scripts/preview_ai_studio.cjs",
+    "test": "node test/test.js && node --test test/aiAssistant.test.js test/aiEditingTools.test.js test/aiStream.test.js test/aiHistory.test.js test/renderSafety.test.js test/aiStudio.test.js",
+    "test:server": "node server/test_suite.js && node --test server/studioStore.test.js",
+    "test:studio": "node --test server/studioStore.test.js",
     "build": "node scripts/build_dist.js",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "test:ai": "node --test test/aiAssistant.test.js test/aiEditingTools.test.js test/aiStream.test.js test/aiHistory.test.js test/renderSafety.test.js test/aiStudio.test.js",
+    "test:studio:browser": "node test/aiStudio.browser.cjs"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

@@ -334,7 +334,7 @@ const repoCtrl = {
       // Show toast
       const toast = document.getElementById('canvas-step-toast');
       if (toast) {
-        toast.innerHTML = `<span class="toast-num">已载入</span><span class="toast-title">${parsed.name}</span>`;
+        toast.innerHTML = `<span class="toast-num">已载入</span><span class="toast-title">${this.escapeHtml(parsed.name)}</span>`;
       }
     } catch (err) {
       alert(`载入推演失败: ${err.message}`);

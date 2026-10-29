@@ -84,7 +84,11 @@ CCPL 语法规范与格式要求：
 
 3. 化学严谨性与约束：
    - 质量与原子严格守恒：所有步骤中的原子集合必须前后完全守恒，不可无故增删原子。
-   - 步进真实性：至少包含 2~4 个确切的基元步骤（例如：底物靠近活化 -> 亲核进攻/中间体生成 -> 消除离去/产物生成）。
+   - 同一原子在所有步骤必须使用相同 ID，不能通过更换编号表示同一原子；原子声明顺序和成键关系可以变化。
+   - 涉及质子转移或氢迁移时，每步使用 hydrogens none 并显式声明全部氢原子，保持氢原子 ID 连续，避免自动补氢产生不同编号。
+   - 步进真实性：按实际反应选择结构状态与步骤数量，不为凑数虚构中间体；协同反应的成键与断键同时发生，前后结构展示不应冒充多个基元步骤。
+   - note 应结合对应结构说明变化，并区分结构事实、条件假设与尚未核对的机理解释。条件不明时明确假设与适用范围，不声称唯一正确。
+   - 不编造文献、DOI、资料链接、计算能垒、收率或可信度百分比；格式和基础结构检查通过不等于化学机理已经验证。
    - 元素符号必须是合法的 IUPAC 化学元素符号（如 C, H, O, N, P, S, Cl, Br, Mg, Cu, Fe 等）。
    - 若用户无特殊指定三维坐标，原子声明请直接使用 "atom <ID> <元素>"，交由引擎智能解算，避免坐标冲突。
 
@@ -92,24 +96,62 @@ CCPL 语法规范与格式要求：
    - 只输出纯净合法的 CCPL 脚本文本，严禁输出任何寒暄、前言或总结废话。
    - 若使用 Markdown 代码块，必须使用 \`\`\`ccpl ... \`\`\`。`;
 
+const AI_TASK_SAFETY = typeof ChemiationAISafety !== 'undefined' ? ChemiationAISafety :
+  (typeof require === 'function' ? require('./aiTaskSafety.js') : null);
+const AI_EDITING_TOOLS = typeof ChemiationAIEditing !== 'undefined' ? ChemiationAIEditing :
+  (typeof require === 'function' ? require('./aiEditingTools.js') : null);
+const AI_HISTORY_PANEL = typeof ChemiationAIHistoryPanel !== 'undefined' ? ChemiationAIHistoryPanel :
+  (typeof require === 'function' ? require('./aiHistoryPanel.js') : null);
+const AI_WORKFLOW = typeof ChemiationAIWorkflow !== 'undefined' ? ChemiationAIWorkflow :
+  (typeof require === 'function' ? require('./aiWorkflow.js') : null);
+
 const aiAssistant = {
   currentTab: 'generate', // 'generate' | 'settings'
   currentMode: 'new', // 'new' | 'refine' | 'fix'
   abortController: null,
   isGenerating: false,
   lastGeneratedScript: '',
+  candidate: null,
+  activeTask: null,
+  lastTask: null,
+  taskSequence: 0,
+  lastDraftBackup: null,
+  connectionController: null,
+  scopeSourceText: null,
+  historyManager: null,
+  lastDraftBackupOwner: null,
 
   // Storage keys
   KEYS: {
     PROVIDER: 'chemiation_ai_provider',
     BASE_URL: 'chemiation_ai_base_url',
     API_KEY: 'chemiation_ai_api_key',
-    MODEL: 'chemiation_ai_model'
+    MODEL: 'chemiation_ai_model',
+    TIMEOUT: 'chemiation_ai_timeout_seconds',
+    STREAM: 'chemiation_ai_stream_enabled'
   },
 
   init() {
     this.bindEvents();
     this.loadConfig();
+    this.updateActionButtons();
+    this.getHistoryManager()?.bind();
+  },
+
+  currentHistoryOwner() {
+    return window.currentUser && window.currentUser.id ? 'user:' + window.currentUser.id : 'guest';
+  },
+
+  getHistoryManager() {
+    if (!this.historyManager && AI_HISTORY_PANEL) this.historyManager = AI_HISTORY_PANEL.create(this);
+    return this.historyManager;
+  },
+
+  onUserChanged() {
+    if (this.historyManager) this.historyManager.onUserChanged();
+    this.lastDraftBackup = null;
+    this.updateActionButtons();
+    if (typeof window !== 'undefined') window.chemiationStudio?.onUserChanged();
   },
 
   getConfig() {
@@ -119,14 +161,38 @@ const aiAssistant = {
     const apiKey = localStorage.getItem(this.KEYS.API_KEY) || '';
     const model = localStorage.getItem(this.KEYS.MODEL) || preset.defaultModel;
 
-    return { provider, baseUrl, apiKey, model };
+    const seconds = Number(localStorage.getItem(this.KEYS.TIMEOUT) || 90);
+    const timeoutSeconds = Number.isFinite(seconds) ? Math.min(300, Math.max(5, seconds)) : 90;
+    return { provider, baseUrl, apiKey, model, timeoutMs: timeoutSeconds * 1000, stream: localStorage.getItem(this.KEYS.STREAM) !== 'false' };
+  },
+
+  getSettingsConfig() {
+    const saved = this.getConfig();
+    const value = (id, fallback) => {
+      const input = document.getElementById(id);
+      return input ? String(input.value || '').trim() : fallback;
+    };
+    const timeout = document.getElementById('ai-timeout-seconds');
+    const seconds = Number(timeout?.value);
+    return { ...saved,
+      provider: value('ai-provider-select', saved.provider),
+      baseUrl: value('ai-base-url', saved.baseUrl),
+      apiKey: value('ai-api-key', saved.apiKey),
+      model: value('ai-model-name', saved.model),
+      timeoutMs: timeout ? (Number.isFinite(seconds) ? Math.min(300, Math.max(5, seconds)) : 90) * 1000 : saved.timeoutMs
+    };
   },
 
   saveConfig(cfg) {
+    if (cfg.stream !== undefined) localStorage.setItem(this.KEYS.STREAM, String(!!cfg.stream));
     if (cfg.provider) localStorage.setItem(this.KEYS.PROVIDER, cfg.provider);
     if (cfg.baseUrl !== undefined) localStorage.setItem(this.KEYS.BASE_URL, cfg.baseUrl.trim());
     if (cfg.apiKey !== undefined) localStorage.setItem(this.KEYS.API_KEY, cfg.apiKey.trim());
     if (cfg.model !== undefined) localStorage.setItem(this.KEYS.MODEL, cfg.model.trim());
+    if (cfg.timeoutSeconds !== undefined) {
+      const seconds = Number(cfg.timeoutSeconds);
+      localStorage.setItem(this.KEYS.TIMEOUT, String(Number.isFinite(seconds) ? Math.min(300, Math.max(5, seconds)) : 90));
+    }
   },
 
   loadConfig() {
@@ -140,8 +206,13 @@ const aiAssistant = {
     if (baseUrlInput) baseUrlInput.value = cfg.baseUrl;
     if (apiKeyInput) apiKeyInput.value = cfg.apiKey;
     if (modelInput) modelInput.value = cfg.model;
+    const timeoutInput = document.getElementById('ai-timeout-seconds');
+    if (timeoutInput) timeoutInput.value = cfg.timeoutMs / 1000;
+    const streamInput = document.getElementById('ai-stream-enabled');
+    if (streamInput) streamInput.checked = cfg.stream;
 
     this.updateKeyBadge();
+    this.updateAutomationSummary();
   },
 
   updateKeyBadge() {
@@ -158,7 +229,12 @@ const aiAssistant = {
     }
   },
 
-  openModal(initialMode = 'new') {
+  openModal(initialMode = 'new', options = {}) {
+    if (!options.legacy && typeof window !== 'undefined' && window.chemiationStudio?.ready) {
+      window.chemiationStudio.show();
+      if (initialMode === 'fix') document.getElementById('studio-input').value = '请检查并修复当前脚本中的语法与结构问题';
+      return;
+    }
     const modal = document.getElementById('ai-modal');
     if (!modal) return;
 
@@ -183,13 +259,12 @@ const aiAssistant = {
       }
     }
 
+    this.updateActionButtons();
     modal.style.display = 'flex';
   },
 
   closeModal() {
-    if (this.isGenerating && this.abortController) {
-      this.abortController.abort();
-    }
+    if (this.isGenerating) this.cancelGeneration();
     const modal = document.getElementById('ai-modal');
     if (modal) modal.style.display = 'none';
   },
@@ -205,6 +280,11 @@ const aiAssistant = {
     if (tabSet) tabSet.classList.toggle('active', tab === 'settings');
     if (paneGen) paneGen.style.display = tab === 'generate' ? 'block' : 'none';
     if (paneSet) paneSet.style.display = tab === 'settings' ? 'block' : 'none';
+    const tabHistory = document.getElementById('ai-tab-history');
+    const paneHistory = document.getElementById('ai-pane-history');
+    if (tabHistory) tabHistory.classList.toggle('active', tab === 'history');
+    if (paneHistory) paneHistory.style.display = tab === 'history' ? 'block' : 'none';
+    if (tab === 'history') this.getHistoryManager()?.load();
   },
 
   setMode(mode) {
@@ -231,148 +311,476 @@ const aiAssistant = {
         if (promptInput) promptInput.placeholder = '输入脚本报错信息或需要纠正的错误结构...';
       }
     }
+    this.updateScopeControls();
   },
 
-  async handleAction() {
-    const cfg = this.getConfig();
+  updateScopeControls() {
+    const section = document.getElementById('ai-edit-scope');
+    if (!section) return;
+    section.style.display = this.currentMode === 'new' ? 'none' : 'block';
+    const selected = document.getElementById('ai-scope-selected');
+    const picker = document.getElementById('ai-step-picker');
+    if (picker) picker.style.display = selected && selected.checked ? 'block' : 'none';
+    if (this.currentMode !== 'new') this.refreshStepChoices();
+    const limit = document.getElementById('ai-repair-limit');
+    const auto = document.getElementById('ai-auto-repair');
+    if (limit) limit.disabled = this.isGenerating || !auto || !auto.checked;
+    this.updateAutomationSummary();
+  },
+
+  updateAutomationSummary() {
+    const summary = document.getElementById('ai-automation-summary');
+    if (!summary) return;
+    const stream = document.getElementById('ai-stream-enabled');
+    const display = !stream || stream.checked ? '自动显示生成过程' : '收到完整结果后再显示';
+    const repairs = this.getRepairLimit();
+    summary.textContent = `${display}；${repairs ? `检查失败时最多自动修正 ${repairs} 次` : '自动纠错已关闭，检查失败后可手动排错'}。`;
+  },
+
+  refreshStepChoices() {
+    const container = document.getElementById('ai-step-options');
+    const help = document.getElementById('ai-scope-help');
+    if (!container || !AI_EDITING_TOOLS) return;
+    const script = this.getWorkspace().script;
+    if (this.scopeSourceText === script && container.childElementCount) return;
+    this.scopeSourceText = script;
+    container.replaceChildren();
+    try {
+      const source = AI_EDITING_TOOLS.documentOf(script);
+      const current = window.reactionApp ? window.reactionApp.currentStepIndex : 0;
+      for (const step of source.steps) {
+        const label = document.createElement('label');
+        label.className = 'ai-step-choice';
+        const input = document.createElement('input');
+        input.type = 'checkbox'; input.value = String(step.index);
+        input.checked = step.index === (Number.isInteger(current) && current < source.steps.length ? current : 0);
+        input.disabled = this.isGenerating;
+        const text = document.createElement('span');
+        text.textContent = `第 ${step.index + 1} 步：${step.name}`;
+        label.append(input, text); container.appendChild(label);
+      }
+      if (help) help.textContent = '未选中的步骤、反应名称和其他全局信息会保持原样；此模式不能增删步骤。';
+    } catch (err) {
+      if (help) help.textContent = err.message;
+    }
+  },
+
+  getEditScope(base) {
+    const selected = document.getElementById('ai-scope-selected');
+    if (this.currentMode === 'new' || !selected || !selected.checked) return null;
+    if (this.scopeSourceText !== null && this.scopeSourceText !== base.script) {
+      this.refreshStepChoices();
+      throw new Error('原稿已变化，请重新确认要修改的步骤后再生成');
+    }
+    const indices = [...document.querySelectorAll('#ai-step-options input:checked')].map(input => Number(input.value));
+    return AI_EDITING_TOOLS.createScope(base.script, indices);
+  },
+
+  getRepairLimit() {
+    const checkbox = document.getElementById('ai-auto-repair');
+    if (!checkbox || !checkbox.checked) return 0;
+    const select = document.getElementById('ai-repair-limit');
+    const value = Number(select ? select.value : 2);
+    return Number.isFinite(value) ? Math.max(0, Math.min(2, Math.floor(value))) : 2;
+  },
+
+  outputInstruction(task) {
+    if (!task.scope) return task.mode !== 'new' && task.base.script.trimStart().startsWith('{') ? '请输出修改后的完整 JSON 脚本，保持未涉及的原子编号与步骤。' : '请输出完整 CCPL 脚本，保持未涉及的原子编号与步骤。';
+    const names = task.scope.indices.map(index => `第 ${index + 1} 步（${task.scope.document.steps[index].name}）`).join('、');
+    const format = task.scope.document.format === 'json' ? '仅输出 {"steps":[选中步骤对象...]}，不要输出其他根字段' : '仅输出选中的完整 step 块，不要输出 reaction、equation、summary 等全局指令';
+    return `严格只修改 ${names}，按它们在原稿中的顺序返回，共 ${task.scope.indices.length} 步。${format}。不要增删步骤。程序将保持未选中的内容逐字不变，并将这些步骤合并回原稿。合并后的全部步骤仍需满足原子编号、元素计数和总电荷约束。`;
+  },
+
+  showCandidate(candidate) {
+    this.candidate = candidate;
+    this.lastGeneratedScript = candidate.script;
+    const preview = document.getElementById('ai-preview-code');
+    if (preview) preview.value = candidate.script;
+    const box = document.getElementById('ai-preview-section');
+    if (box) box.style.display = 'block';
+    const title = document.getElementById('ai-preview-title');
+    if (title) title.textContent = candidate.complete ? '生成脚本预览' : '未完成的生成片段';
+    const note = document.getElementById('ai-stream-note');
+    if (note) {
+      note.style.display = candidate.complete ? 'none' : 'block';
+      note.textContent = '生成未完整完成，以下片段仅供查看或复制，不能载入或推演。';
+    }
+    this.renderComparison(candidate.complete ? candidate : null);
+  },
+
+  startStreamAttempt(task) {
+    this.stopStreamAttempt(task);
+    task.streamEpoch = (task.streamEpoch || 0) + 1;
+    task.previousCandidate = this.candidate && this.candidate.taskId === task.id ? this.candidate : null;
+    task.streamText = '';
+    task.receivedChars = 0;
+    task.transport = null;
+    task.progressPhase = task.repairAttempts ? `自动纠错 ${task.repairAttempts}/${task.repairLimit}，等待返回` : '等待模型返回脚本';
+    this.candidate = null;
+    this.lastGeneratedScript = '';
+    const title = document.getElementById('ai-preview-title');
+    if (title) title.textContent = task.repairAttempts ? `自动纠错 ${task.repairAttempts} · 临时预览` : '正在生成 · 临时预览';
+    const note = document.getElementById('ai-stream-note');
+    if (note) {
+      note.style.display = 'block';
+      note.textContent = task.scope ? '先逐步显示选中步骤的片段，接收完成后再合并原稿并检查。' : '正在接收的内容尚未检查，完成后才能载入；原稿保持不变。';
+    }
+    const progress = document.getElementById('ai-stream-progress');
+    if (progress) { progress.style.display = 'flex'; progress.classList.toggle('is-receiving', true); }
+    const preview = document.getElementById('ai-preview-code');
+    if (preview) { preview.value = ''; preview.scrollTop = 0; }
+    const box = document.getElementById('ai-preview-section');
+    if (box) box.style.display = 'block';
+    const copy = document.getElementById('ai-btn-copy');
+    if (copy) copy.disabled = true;
+    this.renderComparison(null);
+    this.renderStreamPreview(task);
+    task.onProgress?.({ type: 'attempt', attempt: task.streamEpoch, repairAttempts: task.repairAttempts });
+    if (box && typeof box.scrollIntoView === 'function' && this.currentTab === 'generate') box.scrollIntoView({ block: 'nearest' });
+    const tick = () => {
+      if (this.activeTask !== task) return;
+      this.renderStreamProgress(task);
+      task.clockTimer = setTimeout(tick, 1000);
+    };
+    if (progress) task.clockTimer = setTimeout(tick, 1000);
+    return task.streamEpoch;
+  },
+
+  receiveStreamDelta(task, epoch, value) {
+    if (this.activeTask !== task || task.streamEpoch !== epoch || task.controller.signal.aborted || !value.delta) return;
+    const first = !task.streamText;
+    task.streamText += value.delta;
+    task.receivedChars = task.streamText.length;
+    if (task.firstContentMs === undefined) task.firstContentMs = performance.now() - task.startedAt;
+    task.progressPhase = task.repairAttempts ? `正在接收纠错结果 ${task.repairAttempts}/${task.repairLimit}` : '正在接收脚本';
+    if (first) this.renderStreamPreview(task);
+    else if (!task.previewTimer) task.previewTimer = setTimeout(() => {
+      task.previewTimer = null;
+      if (task.streamEpoch === epoch) this.renderStreamPreview(task);
+    }, 80);
+  },
+
+  renderStreamProgress(task) {
+    if (this.activeTask !== task) return;
+    const progress = document.getElementById('ai-stream-progress-text');
+    if (progress) progress.textContent = `${task.progressPhase} · 已用 ${Math.floor((performance.now() - task.startedAt) / 1000)} 秒 · 已收到 ${task.receivedChars || 0} 字符`;
+  },
+
+  renderStreamPreview(task) {
+    if (this.activeTask !== task) return;
+    const preview = document.getElementById('ai-preview-code');
+    const follow = document.getElementById('ai-stream-follow');
+    if (preview && preview.value !== task.streamText) {
+      const previousScroll = preview.scrollTop;
+      preview.value = task.streamText || '';
+      preview.scrollTop = !follow || follow.checked ? preview.scrollHeight : previousScroll;
+    }
+    this.lastGeneratedScript = task.streamText || '';
+    const copy = document.getElementById('ai-btn-copy');
+    if (copy) copy.disabled = !this.lastGeneratedScript;
+    this.renderStreamProgress(task);
+  },
+
+  stopStreamAttempt(task, phase) {
+    clearTimeout(task.previewTimer); clearTimeout(task.clockTimer);
+    task.previewTimer = null; task.clockTimer = null;
+    if (phase) task.progressPhase = phase;
+    if (this.activeTask === task && task.streamText !== undefined) this.renderStreamPreview(task);
+  },
+
+  preserveStreamDraft(task) {
+    if (task.streamText) this.showCandidate({ taskId: task.id, base: task.base, scope: task.scope, raw: task.streamText, script: task.streamText, complete: false, validation: null, applied: false });
+    else if (task.previousCandidate) this.showCandidate(task.previousCandidate);
+  },
+
+  finishStreamProgress(task, phase) {
+    task.progressPhase = phase;
+    this.renderStreamProgress(task);
+    const progress = document.getElementById('ai-stream-progress');
+    if (progress) progress.classList.toggle('is-receiving', false);
+    if (!task.streamText && !this.candidate && task.status !== 'ready') {
+      const title = document.getElementById('ai-preview-title');
+      if (title) title.textContent = '暂无生成内容';
+      const note = document.getElementById('ai-stream-note');
+      if (note) note.textContent = '本次没有收到可显示的脚本文本；原稿保持不变。';
+    }
+  },
+
+  renderComparison(candidate) {
+    const section = document.getElementById('ai-comparison-section');
+    if (!section || !AI_EDITING_TOOLS) return;
+    section.style.display = candidate ? 'block' : 'none';
+    if (!candidate) return;
+    const before = document.getElementById('ai-compare-before');
+    const after = document.getElementById('ai-compare-after');
+    const summary = document.getElementById('ai-change-summary');
+    const rows = document.getElementById('ai-diff-lines');
+    if (before) before.value = candidate.base.script;
+    if (after) after.value = candidate.script;
+    if (rows) rows.replaceChildren();
+    if (candidate.scopeError) {
+      if (summary) summary.textContent = `回复尚未合并到原稿：${candidate.scopeError}。右侧仅显示本次回复，不能载入。`;
+      return;
+    }
+    const diff = AI_EDITING_TOOLS.compare(candidate.base.script, candidate.script);
+    candidate.comparison = diff;
+    if (diff.unavailable) {
+      if (summary) summary.textContent = '文本过长，未计算逐行变化；完整内容可在两侧查看。';
+      return;
+    }
+    const changed = diff.changedSteps.map(step => `第 ${step.index + 1} 步`).join('、');
+    const scope = candidate.scope ? `仅修改选中的 ${candidate.scope.indices.length} 个步骤；` : '';
+    if (summary) summary.textContent = diff.identical ? '候选结果与生成开始时的草稿相同。' :
+      `${scope}新增 ${diff.added} 行，删除 ${diff.removed} 行${changed ? `；变化步骤：${changed}` : ''}${diff.globalChanged ? '；全局信息有变化' : ''}${diff.lineEndingsOnly ? '；仅换行方式变化' : ''}${diff.approximate ? '；长文本按整段替换比较' : ''}${diff.truncated ? '；下方仅展示部分变化，完整内容见两侧文本' : ''}。`;
+    if (rows) for (const row of diff.rows) {
+      const line = document.createElement('div');
+      line.className = `ai-diff-line ai-diff-${row.type}`;
+      const prefix = row.type === 'add' ? '+' : row.type === 'remove' ? '−' : ' ';
+      line.textContent = row.type === 'gap' ? row.text : `${prefix} ${row.oldLine || '·'} / ${row.newLine || '·'}  ${row.text.slice(0, 1200)}${row.text.length > 1200 ? '…' : ''}`;
+      rows.appendChild(line);
+    }
+  },
+
+  getWorkspace() {
+    return AI_TASK_SAFETY.workspace(document.getElementById('script-editor'), window.reactionApp);
+  },
+
+  cancelGeneration(silent = false) {
+    const task = this.activeTask;
+    if (!task) return;
+    this.stopStreamAttempt(task, '已中止，片段已保留');
+    this.preserveStreamDraft(task);
+    this.finishStreamProgress(task, '已中止，片段已保留');
+    this.activeTask = null;
+    task.status = 'cancelled';
+    const history = this.getHistoryManager();
+    if (task.streamText) history?.capture(task, this.candidate, true);
+    history?.archive(task);
+    task.controller.abort();
+    this.abortController = null;
+    this.setGenerating(false);
+    if (!silent) this.updateStatusBadge('生成已中止，原草稿未改变', 'warning');
+  },
+
+  async handleAction(options = {}) {
+    if (!AI_TASK_SAFETY || !AI_EDITING_TOOLS) { this.showToast('AI 校验组件未加载，请刷新页面', true); return; }
+    const cfg = { ...this.getConfig() };
+    if (options.chat) cfg.stream = true;
     if (!cfg.apiKey && cfg.provider !== 'ollama') {
       this.showToast('请先在 [API 密钥与模型配置] 标签中填入 API Key！', true);
       this.switchTab('settings');
       return;
     }
-
     const promptInput = document.getElementById('ai-prompt-input');
-    const userPrompt = promptInput ? promptInput.value.trim() : '';
-    if (!userPrompt) {
-      this.showToast('请输入反应名称或修改要求！', true);
-      return;
+    const userPrompt = typeof options.prompt === 'string' ? options.prompt.trim() : promptInput ? promptInput.value.trim() : '';
+    if (!userPrompt) { this.showToast('请输入反应名称或修改要求！', true); return; }
+    const base = this.getWorkspace();
+    const sourceScript = typeof options.sourceScript === 'string' ? options.sourceScript : base.script;
+    let scope;
+    try { scope = options.indices ? AI_EDITING_TOOLS.createScope(sourceScript, options.indices) : options.chat ? null : this.getEditScope(base); }
+    catch (err) { this.showToast(err.message, true); return; }
+    this.cancelGeneration(true);
+    const task = {
+      id: ++this.taskSequence,
+      controller: new AbortController(),
+      base,
+      scope,
+      workflow: options.chat ? AI_WORKFLOW?.normalize(options.workflow) : null,
+      mode: options.mode || this.currentMode,
+      status: 'generating',
+      startedAt: performance.now(),
+      repairLimit: options.chat ? 2 : this.getRepairLimit(),
+      repairAttempts: 0,
+      attempts: [],
+      generationMs: 0,
+      validationMs: 0
+    };
+    task.onProgress = options.onProgress;
+    task.chat = !!options.chat;
+    this.getHistoryManager()?.begin(task, cfg, userPrompt);
+    task.deadlineAt = task.startedAt + (Number.isFinite(cfg.timeoutMs) && cfg.timeoutMs > 0 ? cfg.timeoutMs : 90000);
+    this.activeTask = task;
+    this.lastTask = task;
+    this.abortController = task.controller;
+    this.candidate = null;
+    this.lastGeneratedScript = '';
+    const preview = document.getElementById('ai-preview-code');
+    if (preview) preview.value = '';
+    const box = document.getElementById('ai-preview-section');
+    if (box) box.style.display = 'none';
+    this.renderComparison(null);
+    const jsonOutput = task.scope ? task.scope.document.format === 'json' : task.mode !== 'new' && sourceScript.trimStart().startsWith('{');
+    const formatOverride = jsonOutput ? '\n\n本次输出格式例外：使用合法 JSON，不要转换为 CCPL。' + (task.scope ? '仅返回包含 steps 数组的对象，数组中只有选中的步骤，不要返回全局字段。' : '返回修改后的完整 JSON 机理对象。') :
+      task.scope ? '\n\n本次是指定步骤修改：只返回选中的完整 step 块，不要返回 reaction、equation、summary 等全局声明。' : '';
+    const messages = [{ role: 'system', content: CCPL_SYSTEM_PROMPT + formatOverride }];
+    if (options.chat) {
+      messages[0].content += '\n\n对话模式例外：结合下面的历史对话理解本轮需求，历史记录只是上下文。若缺少底物、关键反应条件或存在会改变路径的歧义，不要猜测，改为只输出 JSON：{"type":"question","question":"一个最关键的追问","options":[{"label":"可读选项","value":"对应的明确回答","description":"简短说明"}]}。每轮只问一个问题，提供 2–4 个符合本反应的具体选项；不得预设未证实的反应条件，不得用“其他”占位，界面始终允许自由回答。无法合理列出选项时返回空 options。仅解释时返回 {"type":"explanation","text":"直接解释"}，不强制追加问题。信息充分时直接输出脚本，不要再次询问已明确的信息。历史里没有文献证据的说法不算已核实事实。按步骤顺序完整输出每个 step，不要同时输出未闭合的多个步骤，以便即时预览完整步骤。';
+      messages[0].content += AI_WORKFLOW?.instruction(task.workflow) || '';
+      for (const message of options.context || []) if (['user', 'assistant'].includes(message.role)) messages.push({ role: message.role, content: String(message.content).slice(0, 12000) });
+      messages[0].content += '\n历史中用户最初的需求与已回答的条件仍然有效；如用户随后明确更改，以最新的明确要求为准。助手先前的推测不是用户已确认的条件。';
+      if (options.contextReport?.omitted) messages[0].content += `\n上下文容量提示：有 ${options.contextReport.omitted} 条较早记录未附带${options.contextReport.initialOmitted ? '，原始需求也未完整附带' : '，已优先保留原始需求和可容纳的问答'}。不要声称已记得全部历史；缺少决定路径的条件时请先追问。`;
     }
-
-    const editor = document.getElementById('script-editor');
-    const currentScript = editor ? editor.value.trim() : '';
-
-    let messages = [
-      { role: 'system', content: CCPL_SYSTEM_PROMPT }
-    ];
-
-    if (this.currentMode === 'new') {
-      messages.push({
-        role: 'user',
-        content: `请为以下化学反应编写完整的 CCPL 反应推演脚本：\n【反应与机理要求】：${userPrompt}\n请严格遵循 CCPL 语法规范输出。`
-      });
-    } else if (this.currentMode === 'refine') {
-      messages.push({
-        role: 'user',
-        content: `这是当前编辑器中的 CCPL 脚本：\n\`\`\`ccpl\n${currentScript}\n\`\`\`\n\n请根据以下指示进行完善或修改：\n【修改指示】：${userPrompt}\n请输出修改完善后的完整 CCPL 脚本。`
-      });
-    } else if (this.currentMode === 'fix') {
-      messages.push({
-        role: 'user',
-        content: `这是当前存在语法或结构错误的 CCPL 脚本：\n\`\`\`ccpl\n${currentScript}\n\`\`\`\n\n错误或排错要求：\n${userPrompt}\n\n请修复所有语法与结构问题，输出修正后的完整 CCPL 脚本。`
-      });
+    if (task.mode === 'new') {
+      messages.push({ role: 'user', content: `请为以下化学反应编写完整的 CCPL 反应推演脚本：\n【反应与机理要求】：${userPrompt}\n请严格遵循 CCPL 语法规范输出。` });
+    } else {
+      const action = task.workflow?.kind === 'explain' ? '仅解释现有机理，不修改脚本' : task.mode === 'fix' ? '修复所有语法与结构问题' : '根据指示完善或修改';
+      const language = sourceScript.trimStart().startsWith('{') ? 'json' : 'ccpl';
+      messages.push({ role: 'user', content: `当前脚本：\n\`\`\`${language}\n${sourceScript}\n\`\`\`\n\n请${action}：\n${userPrompt}\n${this.outputInstruction(task)}` });
     }
-
     this.setGenerating(true);
-    this.updateStatusBadge('正在请求大模型生成推演脚本...', 'pending');
-
+    this.updateStatusBadge('正在生成，原草稿已保留...', 'pending');
     try {
-      this.abortController = new AbortController();
-      const rawResult = await this.callChatApi(cfg, messages, this.abortController.signal);
-      const cleanScript = this.extractCCPL(rawResult);
-
-      this.lastGeneratedScript = cleanScript;
-      const previewEl = document.getElementById('ai-preview-code');
-      if (previewEl) previewEl.value = cleanScript;
-
-      const previewBox = document.getElementById('ai-preview-section');
-      if (previewBox) previewBox.style.display = 'block';
-
-      // Validate with engine
-      this.validateGenerated(cleanScript);
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        this.updateStatusBadge('生成已由用户中止', 'warning');
-      } else {
-        this.updateStatusBadge(`生成失败: ${err.message}`, 'error');
-        this.showToast(`AI 生成错误: ${err.message}`, true);
+      let requestMessages = messages;
+      const failures = new Set();
+      for (;;) {
+        const remaining = task.deadlineAt - performance.now();
+        if (remaining <= 0) throw AI_TASK_SAFETY.error('TIMEOUT', '任务超时，已停止自动纠错；原草稿未改变');
+        const requestedAt = performance.now();
+        const epoch = this.startStreamAttempt(task);
+        const response = await this.callChatApi({ ...cfg, timeoutMs: remaining }, requestMessages, task.controller.signal, {
+          onResponse: value => {
+            if (this.activeTask !== task || task.streamEpoch !== epoch) return;
+            task.transport = value.transport;
+            task.progressPhase = value.transport === 'json' ? '接口将返回完整结果，等待接收完成' : '已连接，等待脚本文本';
+            this.renderStreamProgress(task);
+            task.onProgress?.({ type: 'status', text: task.progressPhase });
+          },
+          onDelta: cfg.stream === false ? undefined : value => { this.receiveStreamDelta(task, epoch, value); task.onProgress?.({ type: 'delta', text: task.streamText, repairAttempts: task.repairAttempts }); }
+        });
+        if (this.activeTask !== task) return;
+        task.receivedChars = response.content.length;
+        this.stopStreamAttempt(task, '接收完成，正在检查');
+        const attempt = { generationMs: performance.now() - requestedAt, finishReason: response.finishReason, usage: response.usage, transport: response.transport };
+        task.attempts.push(attempt);
+        task.generationMs += attempt.generationMs;
+        task.finishReason = response.finishReason;
+        task.usage = response.usage;
+        const issue = AI_TASK_SAFETY.completionIssue(response.finishReason);
+        if (!issue && options.chat && typeof ChemiationStudioCore !== 'undefined') {
+          const question = ChemiationStudioCore.questionForm(response.content);
+          if (question) { task.question = question.question; task.questionForm = question; task.status = 'question'; break; }
+        }
+        if (!issue && options.chat) {
+          const explanation = AI_WORKFLOW?.textResponse(response.content);
+          if (explanation && (!task.workflow || task.workflow.kind === 'explain')) { task.explanation = explanation; task.status = 'explained'; break; }
+          if (task.workflow?.kind === 'explain') { task.status = 'failed'; task.errorMessage = '本轮仅解释，未接受模型返回的脚本。请重试解释；原稿未改变。'; break; }
+        }
+        const candidate = { taskId: task.id, base: task.base, scope: task.scope, workflow: task.workflow, sourceScript,
+          raw: response.content, script: response.content, complete: !issue, validation: null, applied: false };
+        if (issue) {
+          if (task.scope) candidate.scopeError = issue;
+          this.showCandidate(candidate);
+          this.getHistoryManager()?.capture(task, candidate);
+          task.status = 'incomplete';
+          this.updateStatusBadge(issue, 'warning');
+          break;
+        }
+        const started = performance.now();
+        task.onProgress?.({ type: 'status', text: '正在检查脚本、结构和本轮修改范围…' });
+        try {
+          const extracted = this.extractCCPL(response.content);
+          candidate.script = task.scope ? AI_EDITING_TOOLS.mergeSelected(task.scope, extracted) : extracted;
+          candidate.validation = this.validateGenerated(candidate.script);
+          const intentErrors = AI_WORKFLOW?.validateChanges(task.workflow, sourceScript, candidate.script) || [];
+          if (intentErrors.length) { candidate.validation.valid = false; candidate.validation.diagnostics.push(...intentErrors); }
+        } catch (err) {
+          candidate.scopeError = task.scope ? err.message : null;
+          candidate.validation = { valid: false, diagnostics: [err.message], warnings: [], parsed: null };
+        }
+        task.validationMs += performance.now() - started;
+        attempt.diagnostics = candidate.validation.diagnostics;
+        this.showCandidate(candidate);
+        this.getHistoryManager()?.capture(task, candidate);
+        if (candidate.validation.valid) {
+          task.status = 'ready';
+          if (task.repairAttempts) this.updateStatusBadge(`自动纠错 ${task.repairAttempts} 次后脚本检查通过；化学机理仍需专业审核`, 'success');
+          break;
+        }
+        task.status = 'invalid';
+        const diagnostics = candidate.validation.diagnostics.join('；');
+        const fingerprint = candidate.script + '\n' + diagnostics;
+        let stop = '';
+        if (candidate.validation.repairable === false) stop = '当前检查无法自动修复';
+        else if (!AI_TASK_SAFETY.sameWorkspace(task.base, this.getWorkspace())) stop = '当前草稿或机理已变化，已停止自动纠错';
+        else if (failures.has(fingerprint)) stop = '模型重复返回相同错误，已停止自动纠错';
+        else if (task.repairAttempts >= task.repairLimit) stop = task.repairLimit ? '自动纠错次数已用完' : '校验未通过';
+        if (stop) { this.updateStatusBadge(`${stop}：${diagnostics}`, 'warning'); break; }
+        failures.add(fingerprint);
+        task.repairAttempts++;
+        this.updateStatusBadge(`检测到错误，正在自动纠错 ${task.repairAttempts}/${task.repairLimit}；原草稿未改变`, 'pending');
+        requestMessages = [...messages,
+          { role: 'assistant', content: response.content.slice(0, 200000) },
+          { role: 'user', content: `上次输出未通过本地工具检查：\n${diagnostics}\n请根据这些诊断修复结果，保持原始需求。${this.outputInstruction(task)}\n只输出修复结果，不要解释。` }
+        ];
       }
+    } catch (err) {
+      if (this.activeTask !== task) return;
+      this.stopStreamAttempt(task, '生成中断，片段已保留');
+      this.preserveStreamDraft(task);
+      if (task.streamText) this.getHistoryManager()?.capture(task, this.candidate, true);
+      task.status = err.name === 'AbortError' ? 'cancelled' : 'failed';
+      task.errorCode = err.code || err.name;
+      const message = err.name === 'AbortError' ? '生成已中止，原草稿未改变' : err.message;
+      task.errorMessage = message;
+      this.updateStatusBadge(message, 'warning');
+      if (err.name !== 'AbortError') this.showToast(message, true);
     } finally {
-      this.setGenerating(false);
+      if (this.activeTask === task) {
+        clearTimeout(task.previewTimer); clearTimeout(task.clockTimer);
+        this.finishStreamProgress(task, task.status === 'ready' ? '已接收并完成检查' : '已结束，请查看状态提示');
+        task.totalMs = performance.now() - task.startedAt;
+        this.activeTask = null;
+        this.abortController = null;
+        this.setGenerating(false);
+        this.getHistoryManager()?.archive(task);
+      }
     }
+    return task;
   },
 
-  async callChatApi(cfg, messages, signal) {
-    let endpoint = cfg.baseUrl.replace(/\/+$/, '');
-    if (!endpoint.endsWith('/chat/completions')) {
-      endpoint += '/chat/completions';
-    }
-
-    const headers = {
-      'Content-Type': 'application/json'
-    };
-    if (cfg.apiKey) {
-      headers['Authorization'] = `Bearer ${cfg.apiKey}`;
-    }
-
-    const payload = {
-      model: cfg.model,
-      messages,
-      temperature: 0.2
-    };
-
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-      signal
-    });
-
-    if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      let errMsg = `HTTP ${res.status}: ${res.statusText}`;
-      try {
-        const errJson = JSON.parse(errText);
-        if (errJson.error && errJson.error.message) {
-          errMsg = errJson.error.message;
-        }
-      } catch {}
-      throw new Error(errMsg);
-    }
-
-    const data = await res.json();
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('API 返回的数据结构不包含有效回复');
-    }
-
-    return data.choices[0].message.content || '';
+  async callChatApi(cfg, messages, signal, options = {}) {
+    return AI_TASK_SAFETY.requestCompletion(cfg, messages, { ...options, signal });
   },
 
   extractCCPL(text) {
-    if (!text) return '';
-    // Strip markdown code fences if present
-    const codeBlockMatch = text.match(/```(?:ccpl|chem|script)?\s*([\s\S]*?)```/i);
-    if (codeBlockMatch) {
-      return codeBlockMatch[1].trim();
-    }
-    return text.trim();
+    return AI_TASK_SAFETY.extractScript(text);
   },
 
   validateGenerated(script) {
-    if (typeof ReactionScriptEngine === 'undefined') {
-      this.updateStatusBadge('脚本已生成', 'success');
-      return;
+    const engine = typeof ReactionScriptEngine === 'undefined' ? null : ReactionScriptEngine;
+    const result = AI_TASK_SAFETY.validateScript(script, engine);
+    if (result.valid) {
+      const warnings = result.warnings.length ? `；${result.warnings.join('；')}` : '';
+      this.updateStatusBadge(`脚本检查通过 · ${result.parsed.steps.length} 步${warnings}；化学机理仍需专业审核`, 'success');
+    } else {
+      this.updateStatusBadge(`校验未通过：${result.diagnostics.join('；')}`, 'warning');
     }
+    return result;
+  },
 
-    try {
-      const parsed = ReactionScriptEngine.parse(script);
-      const stepCount = parsed.steps ? parsed.steps.length : 0;
-      this.updateStatusBadge(`语法校验通过 · 包含 ${stepCount} 个推演步骤 (${parsed.name || '反应'})`, 'success');
-    } catch (err) {
-      this.updateStatusBadge(`语法校验提示: ${err.message}`, 'warning');
+  updateActionButtons() {
+    const candidate = this.candidate;
+    const ready = !this.isGenerating && candidate && candidate.complete && candidate.validation && candidate.validation.valid && !candidate.applied;
+    for (const id of ['ai-btn-apply', 'ai-btn-run']) {
+      const button = document.getElementById(id);
+      if (button) button.disabled = !ready;
     }
+    const copy = document.getElementById('ai-btn-copy');
+    if (copy) copy.disabled = !this.lastGeneratedScript;
+    const backup = this.readDraftBackup();
+    for (const id of ['ai-btn-restore-draft', 'btn-ai-restore-draft']) {
+      const button = document.getElementById(id);
+      if (button) button.disabled = this.isGenerating || !backup;
+    }
+    const section = document.getElementById('ai-backup-section');
+    if (section) section.style.display = backup ? 'block' : 'none';
+    const code = document.getElementById('ai-backup-code');
+    if (code) code.value = backup ? backup.before.script : '';
+    if (this.historyManager) this.historyManager.updateControls();
   },
 
   updateStatusBadge(text, type = 'pending') {
+    this.activeTask?.onProgress?.({ type: 'status', text, severity: type });
     const badge = document.getElementById('ai-generation-status');
     if (!badge) return;
 
@@ -383,86 +791,171 @@ const aiAssistant = {
 
   setGenerating(isGen) {
     this.isGenerating = isGen;
-    const btnRun = document.getElementById('ai-btn-generate');
-    const btnCancel = document.getElementById('ai-btn-cancel');
+    const button = document.getElementById('ai-btn-generate');
+    const cancel = document.getElementById('ai-btn-cancel');
+    if (button) {
+      button.disabled = isGen;
+      button.textContent = isGen ? '正在生成推演脚本...' : '开始生成 / 修改';
+    }
+    if (cancel) cancel.style.display = isGen ? 'inline-block' : 'none';
+    for (const id of ['ai-mode-new', 'ai-mode-refine', 'ai-mode-fix', 'ai-scope-all', 'ai-scope-selected', 'ai-auto-repair', 'ai-repair-limit', 'ai-stream-enabled']) {
+      const control = document.getElementById(id);
+      if (control) control.disabled = isGen;
+    }
+    for (const input of document.querySelectorAll('#ai-step-options input')) input.disabled = isGen;
+    this.updateScopeControls();
+    this.updateActionButtons();
+  },
 
-    if (btnRun) {
-      btnRun.disabled = isGen;
-      btnRun.textContent = isGen ? '正在生成推演脚本...' : '开始生成 / 修改';
-    }
-    if (btnCancel) {
-      btnCancel.style.display = isGen ? 'inline-block' : 'none';
-    }
+  backupStorageKey(owner = this.currentHistoryOwner()) {
+    return owner === 'guest' ? AI_TASK_SAFETY.BACKUP_KEY : AI_TASK_SAFETY.BACKUP_KEY + ':' + encodeURIComponent(owner);
+  },
+
+  readDraftBackup() {
+    const owner = this.currentHistoryOwner();
+    if (this.lastDraftBackup && this.lastDraftBackupOwner === owner) return this.lastDraftBackup;
+    try {
+      const raw = localStorage.getItem(this.backupStorageKey(owner));
+      const backup = raw ? JSON.parse(raw) : null;
+      if (backup && (!backup.owner || backup.owner === owner) && backup.version === 1 && backup.before && typeof backup.before.script === 'string' && typeof backup.appliedScript === 'string' && backup.after) {
+        this.lastDraftBackup = backup;
+        this.lastDraftBackupOwner = owner;
+        return backup;
+      }
+    } catch (_) { /* A missing or damaged backup never enables restoration. */ }
+    return null;
+  },
+
+  saveDraftBackup(backup, owner = this.currentHistoryOwner()) {
+    backup.owner = owner;
+    localStorage.setItem(this.backupStorageKey(owner), JSON.stringify(backup));
+    this.lastDraftBackup = backup;
+    this.lastDraftBackupOwner = owner;
   },
 
   applyToWorkspace(runImmediately = false) {
-    if (!this.lastGeneratedScript) {
-      this.showToast('没有可载入的脚本！', true);
-      return;
+    const candidate = this.candidate;
+    if (this.isGenerating || !candidate || !candidate.complete || !candidate.validation || !candidate.validation.valid || candidate.applied) {
+      this.showToast('结果尚未完整通过校验，不能载入；原草稿未改变', true);
+      return false;
     }
-
     const editor = document.getElementById('script-editor');
-    if (editor) {
-      editor.value = this.lastGeneratedScript;
-      // Trigger input event to update line gutters
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
+    const app = window.reactionApp;
+    if (candidate.historyRef && candidate.historyRef.owner !== this.currentHistoryOwner()) {
+      this.showToast('账号已变化，请基于当前账号重新生成或选择历史版本', true);
+      return false;
     }
-
+    if (!editor || !AI_TASK_SAFETY.sameWorkspace(candidate.base, this.getWorkspace())) {
+      this.showToast('当前草稿或机理已变化，未覆盖。请基于当前内容重新生成；候选结果仍可复制。', true);
+      return false;
+    }
+    try { AI_EDITING_TOOLS.assertScope(candidate.scope, candidate.script); }
+    catch (err) {
+      candidate.validation = { valid: false, diagnostics: [err.message], warnings: [] };
+      this.updateStatusBadge(err.message, 'warning');
+      this.showToast(err.message, true);
+      this.updateActionButtons();
+      return false;
+    }
+    // Check again at the actual write boundary, including changes to the engine.
+    const validation = this.validateGenerated(candidate.script);
+    const intentErrors = AI_WORKFLOW?.validateChanges(candidate.workflow, candidate.sourceScript || candidate.base.script, candidate.script) || [];
+    if (intentErrors.length) { validation.valid = false; validation.diagnostics.push(...intentErrors); this.showToast(intentErrors.join('；'), true); }
+    candidate.validation = validation;
+    if (!validation.valid) { this.updateActionButtons(); return false; }
+    if (app && Array.isArray(app.presets) && app.presets.some((p, index) => index !== app.currentReactionIndex && p.name.trim() === validation.parsed.name.trim())) {
+      this.showToast('机理名称与其他作品重复，请修改后重新生成；原草稿未改变', true);
+      return false;
+    }
+    let backup;
+    try {
+      backup = {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        before: candidate.base,
+        after: candidate.base,
+        appliedScript: candidate.script,
+        reaction: app && app.presets && app.presets[app.currentReactionIndex] ? JSON.parse(JSON.stringify(app.presets[app.currentReactionIndex])) : null,
+        ran: !!runImmediately
+      };
+      // Persistence must succeed before any editor or reaction is changed.
+      this.saveDraftBackup(backup);
+    } catch (_) {
+      this.showToast('无法保存原草稿备份，本次未载入。请检查浏览器存储空间或权限。', true);
+      return false;
+    }
+    editor.value = candidate.script;
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    candidate.applied = true;
+    if (app) {
+      if (typeof app.switchTab === 'function') app.switchTab('script');
+      if (runImmediately && typeof app.runCustomScript === 'function') app.runCustomScript();
+    }
+    backup.after = this.getWorkspace();
+    try { this.saveDraftBackup(backup); }
+    catch (_) { this.lastDraftBackup = backup; }
+    this.updateActionButtons();
+    this.getHistoryManager()?.applied(candidate.historyRef, this.lastTask && this.lastTask.historyRecord && candidate.historyRef && this.lastTask.historyRecord.id === candidate.historyRef.recordId ? this.lastTask.historyWrite : null);
     this.closeModal();
+    return true;
+  },
 
-    if (window.reactionApp) {
-      // Switch to script tab
-      if (typeof window.reactionApp.switchTab === 'function') {
-        window.reactionApp.switchTab('script');
-      }
-      if (runImmediately && typeof window.reactionApp.runCustomScript === 'function') {
-        window.reactionApp.runCustomScript();
-      }
+  restoreDraft() {
+    const backup = this.readDraftBackup();
+    if (!backup || this.isGenerating) return false;
+    const current = this.getWorkspace();
+    if (!AI_TASK_SAFETY.sameTarget(backup.after, current) || current.script !== backup.appliedScript) {
+      this.showToast('当前草稿或机理已再次变化，未覆盖。可在 AI 面板“草稿备份”中复制原稿。', true);
+      return false;
     }
+    const app = window.reactionApp;
+    if (backup.ran && backup.reaction && app && app.presets) {
+      app.presets[app.currentReactionIndex] = JSON.parse(JSON.stringify(backup.reaction));
+      if (typeof app.savePresetsToStorage === 'function') app.savePresetsToStorage();
+      if (typeof app.loadReaction === 'function') app.loadReaction(app.currentReactionIndex);
+      if (app.presetSelect && app.presetSelect.options[app.currentReactionIndex]) app.presetSelect.options[app.currentReactionIndex].textContent = `${app.currentReactionIndex + 1}. ${backup.reaction.name}`;
+    }
+    const editor = document.getElementById('script-editor');
+    editor.value = backup.before.script;
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    if (app && typeof app.switchTab === 'function') app.switchTab('script');
+    try { localStorage.removeItem(this.backupStorageKey()); } catch (_) { /* Keep the backup available if storage is read-only. */ }
+    this.lastDraftBackup = null;
+    this.candidate = null;
+    this.lastGeneratedScript = '';
+    this.renderComparison(null);
+    this.updateActionButtons();
+    this.showToast('已恢复 AI 载入前的草稿', false);
+    return true;
   },
 
   async testConnection() {
-    const cfg = this.getConfig();
-    const resultEl = document.getElementById('ai-test-result');
-    if (resultEl) {
-      resultEl.textContent = '正在测试连接...';
-      resultEl.className = 'ai-test-result pending';
-      resultEl.style.display = 'block';
-    }
-
+    // Test exactly what is visible, without overwriting the user's saved settings.
+    const cfg = this.getSettingsConfig();
+    if (this.connectionController) this.connectionController.abort();
+    const controller = new AbortController();
+    this.connectionController = controller;
+    const result = document.getElementById('ai-test-result');
+    const button = document.getElementById('ai-btn-test-conn');
+    if (button) button.disabled = true;
+    if (result) { result.textContent = '正在测试连接...'; result.className = 'ai-test-result pending'; result.style.display = 'block'; }
     try {
-      let endpoint = cfg.baseUrl.replace(/\/+$/, '');
-      if (!endpoint.endsWith('/chat/completions')) {
-        endpoint += '/chat/completions';
-      }
-
-      const headers = { 'Content-Type': 'application/json' };
-      if (cfg.apiKey) headers['Authorization'] = `Bearer ${cfg.apiKey}`;
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          model: cfg.model,
-          messages: [{ role: 'user', content: 'hi' }],
-          max_tokens: 5
-        })
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text.slice(0, 100)}`);
-      }
-
-      if (resultEl) {
-        resultEl.textContent = 'API 连接成功！模型与端点响应正常。';
-        resultEl.className = 'ai-test-result success';
-      }
+      if (!/^https?:\/\//i.test(cfg.baseUrl)) throw AI_TASK_SAFETY.error('CONFIG', '请填写完整的 http(s) API 接口地址');
+      if (!cfg.model) throw AI_TASK_SAFETY.error('CONFIG', '请填写模型标识');
+      if (!cfg.apiKey && cfg.provider !== 'ollama') throw AI_TASK_SAFETY.error('CONFIG', '当前密钥输入框为空，请填写模型平台的 API Key');
+      if (/^Bearer\s/i.test(cfg.apiKey) || /^["']|["']$/.test(cfg.apiKey)) throw AI_TASK_SAFETY.error('CONFIG', '只需粘贴密钥本身，不要附加 Bearer 前缀或引号');
+      await AI_TASK_SAFETY.requestCompletion({ ...cfg, stream: false, timeoutMs: Math.min(cfg.timeoutMs || 90000, 15000) }, [{ role: 'user', content: 'hi' }], { signal: controller.signal, maxTokens: 5 });
+      if (this.connectionController !== controller) return;
+      if (result) { result.textContent = '当前输入的 API 配置连接成功；点击“保存配置”后用于生成。'; result.className = 'ai-test-result success'; }
       this.updateKeyBadge();
     } catch (err) {
-      if (resultEl) {
-        resultEl.textContent = `连接失败: ${err.message}`;
-        resultEl.className = 'ai-test-result error';
+      if (this.connectionController !== controller) return;
+      const message = err.code === 'HTTP_401' ? 'HTTP 401：模型服务拒绝了当前输入的密钥。请确认完整复制了该平台的有效 API Key。' : err.message;
+      if (result) { result.textContent = `连接失败：${message}`; result.className = 'ai-test-result error'; }
+    } finally {
+      if (this.connectionController === controller) {
+        this.connectionController = null;
+        if (button) button.disabled = false;
       }
     }
   },
@@ -484,6 +977,8 @@ const aiAssistant = {
     const tabSet = document.getElementById('ai-tab-settings');
     if (tabGen) tabGen.addEventListener('click', () => this.switchTab('generate'));
     if (tabSet) tabSet.addEventListener('click', () => this.switchTab('settings'));
+    const tabHistory = document.getElementById('ai-tab-history');
+    if (tabHistory) tabHistory.addEventListener('click', () => this.switchTab('history'));
 
     // Mode switching
     const btnNew = document.getElementById('ai-mode-new');
@@ -492,6 +987,25 @@ const aiAssistant = {
     if (btnNew) btnNew.addEventListener('click', () => this.setMode('new'));
     if (btnRefine) btnRefine.addEventListener('click', () => this.setMode('refine'));
     if (btnFix) btnFix.addEventListener('click', () => this.setMode('fix'));
+    const streamInput = document.getElementById('ai-stream-enabled');
+    if (streamInput) streamInput.addEventListener('change', () => {
+      this.saveConfig({ stream: streamInput.checked });
+      this.updateAutomationSummary();
+    });
+    const repairLimit = document.getElementById('ai-repair-limit');
+    if (repairLimit) repairLimit.addEventListener('change', () => this.updateAutomationSummary());
+    const follow = document.getElementById('ai-stream-follow');
+    const streamPreview = document.getElementById('ai-preview-code');
+    if (follow && streamPreview) {
+      follow.addEventListener('change', () => { if (follow.checked) streamPreview.scrollTop = streamPreview.scrollHeight; });
+      streamPreview.addEventListener('scroll', () => {
+        if (this.isGenerating && streamPreview.scrollHeight - streamPreview.scrollTop - streamPreview.clientHeight > 32) follow.checked = false;
+      });
+    }
+    for (const id of ['ai-scope-all', 'ai-scope-selected', 'ai-auto-repair']) {
+      const control = document.getElementById(id);
+      if (control) control.addEventListener('change', () => this.updateScopeControls());
+    }
 
     // Prompt chips
     const chips = document.querySelectorAll('.ai-chip');
@@ -511,7 +1025,7 @@ const aiAssistant = {
     const btnCancel = document.getElementById('ai-btn-cancel');
     if (btnCancel) {
       btnCancel.addEventListener('click', () => {
-        if (this.abortController) this.abortController.abort();
+        this.cancelGeneration();
       });
     }
 
@@ -521,6 +1035,13 @@ const aiAssistant = {
 
     const btnRun = document.getElementById('ai-btn-run');
     if (btnRun) btnRun.addEventListener('click', () => this.applyToWorkspace(true));
+
+    for (const id of ['ai-btn-restore-draft', 'btn-ai-restore-draft']) {
+      const button = document.getElementById(id);
+      if (button) button.addEventListener('click', () => this.restoreDraft());
+    }
+    const editor = document.getElementById('script-editor');
+    if (editor) editor.addEventListener('input', () => this.updateActionButtons());
 
     const btnCopy = document.getElementById('ai-btn-copy');
     if (btnCopy) {
@@ -552,12 +1073,8 @@ const aiAssistant = {
     const btnSaveCfg = document.getElementById('ai-btn-save-config');
     if (btnSaveCfg) {
       btnSaveCfg.addEventListener('click', () => {
-        const provider = document.getElementById('ai-provider-select')?.value || 'deepseek';
-        const baseUrl = document.getElementById('ai-base-url')?.value || '';
-        const apiKey = document.getElementById('ai-api-key')?.value || '';
-        const model = document.getElementById('ai-model-name')?.value || '';
-
-        this.saveConfig({ provider, baseUrl, apiKey, model });
+        const cfg = this.getSettingsConfig();
+        this.saveConfig({ ...cfg, timeoutSeconds: cfg.timeoutMs / 1000 });
         this.updateKeyBadge();
         this.showToast('API 与模型配置已安全保存！', false);
       });
