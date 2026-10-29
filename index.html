@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="css/chemiation.css?v=1.2.1">
-  <link rel="stylesheet" href="css/modal.css?v=1.2.1-ai6">
+  <link rel="stylesheet" href="css/chemiation.css?v=1.2.5">
+  <link rel="stylesheet" href="css/modal.css?v=1.2.5">
   <link rel="stylesheet" href="css/ai-studio.css?v=20261025-rename">
 </head>
 <body>
@@ -187,16 +187,16 @@
             <span data-i18n="tabScript">CCPL 脚本</span>
           </button>
           <button id="tab-btn-chat" class="tab-btn" title="AI 对话" aria-controls="tab-pane-chat">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-3 3V11.5A8.5 8.5 0 0 1 9.5 3h3a8.5 8.5 0 0 1 8.5 8.5Z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-3 3V11.5A8.5 8.5 0 0 1 9.5 3h3a8.5 8.5 0 0 1 8.5 8.5Z"/></svg>
             <span>AI 对话</span>
           </button>
           <div class="studio-menu-wrap">
-            <button id="studio-more" class="studio-more" type="button" title="查看聊天和脚本版本、配置模型或收起工作区" aria-label="历史与设置" aria-expanded="false" aria-controls="studio-tools-menu"><span>历史与设置</span><svg class="studio-more-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <button id="studio-more" class="studio-more" type="button" title="查看聊天和脚本版本、配置模型或收起工作区" aria-label="历史与设置" aria-expanded="false" aria-controls="studio-tools-menu"><span>历史与设置</span><svg class="studio-more-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
             <div id="studio-tools-menu" class="studio-tools-menu" aria-label="对话工具" hidden>
-              <button id="studio-rename" type="button">重命名当前对话 <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></span></button>
-              <button id="studio-history" type="button">聊天与脚本版本 <span>↗</span></button>
-              <button id="studio-settings" type="button">模型设置 <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span></button>
-              <button id="studio-collapse" type="button">收起工作区 <span>→</span></button>
+              <button id="studio-rename" type="button"><span>重命名当前对话</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+              <button id="studio-history" type="button"><span>聊天与脚本版本</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>
+              <button id="studio-settings" type="button"><span>模型设置</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+              <button id="studio-collapse" type="button"><span>收起工作区</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
             </div>
           </div>
         </div>
@@ -205,10 +205,10 @@
         <div class="workspace-content">
           <section id="tab-pane-chat" class="studio" aria-label="AI 机理对话" style="display:none">
             <div class="studio-projectbar">
-              <button id="studio-project-toggle" class="studio-breadcrumb" type="button" aria-expanded="false" aria-controls="studio-project-panel" title="切换机理项目或项目对话"><span id="studio-project-name"></span><span class="studio-breadcrumb-slash" aria-hidden="true">/</span><span id="studio-session-name"></span><span aria-hidden="true">⌄</span></button>
-              <button id="studio-new" type="button" title="在当前机理项目中新建对话" aria-label="新建对话">＋</button>
+              <button id="studio-project-toggle" class="studio-breadcrumb" type="button" aria-expanded="false" aria-controls="studio-project-panel" title="切换机理项目或项目对话"><span id="studio-project-name"></span><span class="studio-breadcrumb-slash" aria-hidden="true">/</span><span id="studio-session-name"></span><svg class="studio-breadcrumb-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+              <button id="studio-new" type="button" title="在当前机理项目中新建对话" aria-label="新建对话"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
               <div id="studio-project-panel" class="studio-project-panel" aria-label="切换项目与对话" hidden>
-                <div class="studio-panel-heading"><strong>项目与对话</strong><button id="studio-close-project" type="button" aria-label="关闭项目切换">×</button></div>
+                <div class="studio-panel-heading"><strong>项目与对话</strong><button id="studio-close-project" class="studio-close-btn" type="button" aria-label="关闭项目切换"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
                 <label class="studio-project-field" for="studio-project-select"><span>机理项目</span><select id="studio-project-select" aria-label="选择机理项目"></select></label>
                 <label class="studio-project-field" for="studio-session-select"><span>项目对话 <small id="studio-project-count"></small></span><select id="studio-session-select" aria-label="切换本项目的对话"></select></label>
                 <button id="studio-open-rename" class="studio-open-rename" type="button">重命名当前对话</button>
@@ -217,11 +217,11 @@
                   <input id="studio-rename-input" type="text" maxlength="100" required autocomplete="off" placeholder="为这段对话起个名字…">
                   <div><button id="studio-rename-cancel" type="button">取消</button><button id="studio-rename-save" class="studio-primary" type="submit">保存名称</button></div>
                 </form>
-                <p>每个机理有独立的对话和脚本版本。点右上角 ＋ 新建对话。</p>
+                <p>每个机理有独立的对话和脚本版本。点击右上角新建按钮可创建对话。</p>
               </div>
             </div>
             <div id="studio-library" class="studio-library" hidden>
-              <div class="studio-library-top"><strong>本项目的聊天与版本</strong><button id="studio-close-library" aria-label="关闭历史">×</button></div>
+              <div class="studio-library-top"><strong>本项目的聊天与版本</strong><button id="studio-close-library" class="studio-close-btn" type="button" aria-label="关闭历史"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
               <div class="studio-library-actions"><button id="studio-export">导出当前会话</button><button id="studio-retry-sync">重新同步</button></div>
               <label class="studio-sr-only" for="studio-history-search">搜索本项目的对话名称</label>
               <input id="studio-history-search" class="studio-history-search" type="search" maxlength="100" placeholder="搜索本项目的对话名称…">
@@ -238,29 +238,29 @@
                 <h2>让机理，<br>在对话中发生。</h2>
                 <p>描述一个反应，或从眼前这一步开始。<br>每次调整，都能在左侧看见。</p>
                 <div class="studio-starters">
-                  <button data-studio-prompt="展示乙酸与乙醇费歇尔酯化反应">从已有机理开始 <span>↗</span></button>
-                  <button data-studio-current="true">完善当前步骤的说明 <span>↗</span></button>
-                  <button data-studio-prompt="我想演示一个取代反应，需要提供哪些信息？">帮我梳理反应条件 <span>↗</span></button>
+                  <button data-studio-prompt="展示乙酸与乙醇费歇尔酯化反应"><span>从已有机理开始</span><svg class="studio-starter-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></button>
+                  <button data-studio-current="true"><span>完善当前步骤的说明</span><svg class="studio-starter-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></button>
+                  <button data-studio-prompt="我想演示一个取代反应，需要提供哪些信息？"><span>帮我梳理反应条件</span><svg class="studio-starter-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></button>
                 </div>
               </div>
             </div>
             <div id="studio-live" class="studio-live" hidden>
-              <div><i></i><span id="studio-progress" role="status"></span><button id="studio-cancel">■ 停止生成</button></div>
-              <details><summary>生成详情 <span id="studio-stream-count"></span></summary><p id="studio-live-preview" class="studio-live-preview">← 完整步骤生成后会自动显示在左侧</p><pre id="studio-stream-code"></pre></details>
+              <div><i></i><span id="studio-progress" role="status"></span><button id="studio-cancel"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg><span>停止生成</span></button></div>
+              <details><summary>生成详情 <span id="studio-stream-count"></span></summary><p id="studio-live-preview" class="studio-live-preview">完整步骤生成后会自动显示在左侧</p><pre id="studio-stream-code"></pre></details>
             </div>
             <div id="studio-candidate" class="studio-candidate" hidden>
-              <div><span class="studio-preview-dot"></span><strong id="studio-candidate-title">左侧正在预览新版本</strong><button id="studio-discard" title="回到原稿" aria-label="回到原稿">撤回</button></div>
+              <div><span class="studio-preview-dot"></span><strong id="studio-candidate-title">左侧正在预览新版本</strong><button id="studio-discard" title="回到原稿" aria-label="回到原稿"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg><span>撤回</span></button></div>
               <p id="studio-candidate-note">基础结构检查通过，原稿尚未改动。</p>
-              <div class="studio-candidate-actions"><button id="studio-before">对比原稿</button><button id="studio-keep" class="studio-primary">保留此版本 ↗</button></div>
+              <div class="studio-candidate-actions"><button id="studio-before"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg><span>对比原稿</span></button><button id="studio-keep" class="studio-primary"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg><span id="studio-keep-text">保留此版本</span></button></div>
             </div>
             <p id="studio-notice" class="studio-notice" role="status" hidden></p>
-            <div id="studio-context" class="studio-context"><span>当前步骤</span><strong id="studio-context-name"></strong><button id="studio-refine-step" title="通过对话只修改当前步骤">只完善本步 ↗</button></div>
-            <div id="studio-scope-tag" class="studio-scope-tag" hidden><span id="studio-scope-label"></span><button type="button" id="studio-clear-scope" aria-label="取消指定步骤">×</button></div>
-            <button id="studio-write-message" class="studio-compose-toggle" type="button" aria-controls="studio-form" aria-expanded="false" hidden>想换个要求？直接发消息 ↗</button>
+            <div id="studio-context" class="studio-context"><span>当前步骤</span><strong id="studio-context-name"></strong><button id="studio-refine-step" title="通过对话只修改当前步骤"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><span>只完善本步</span></button></div>
+            <div id="studio-scope-tag" class="studio-scope-tag" hidden><span id="studio-scope-label"></span><button type="button" id="studio-clear-scope" aria-label="取消指定步骤"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+            <button id="studio-write-message" class="studio-compose-toggle" type="button" aria-controls="studio-form" aria-expanded="false" hidden><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg><span id="studio-write-message-text">想换个要求？直接发消息</span></button>
             <form id="studio-form" class="studio-composer">
               <label class="studio-sr-only" for="studio-input">描述反应或修改要求</label>
               <textarea id="studio-input" rows="2" maxlength="4000" placeholder="描述反应，或说说你想怎样完善…"></textarea>
-              <div class="studio-composer-bottom"><span id="studio-save-state">自动保存在本机</span><button id="studio-send" type="submit" title="发送（Enter）；换行（Shift + Enter）" aria-label="发送消息">发送 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 7-7 7 7M12 5v15"/></svg></button></div>
+              <div class="studio-composer-bottom"><span id="studio-save-state">自动保存在本机</span><button id="studio-send" type="submit" title="发送（Enter）；换行（Shift + Enter）" aria-label="发送消息"><span>发送</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7M12 5v15"/></svg></button></div>
             </form>
             <p class="studio-footnote">自动检查与纠错已开启 · 机理解释仍需专业核对</p>
           </section>

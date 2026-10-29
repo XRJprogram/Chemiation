@@ -5,6 +5,22 @@
   const Workflow = root.ChemiationAIWorkflow;
   const $ = id => document.getElementById(id);
   const node = (tag, text, className) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (className) n.className = className; return n; };
+  const svg = (path, width = 12, height = 12, strokeWidth = 2, viewBox = '0 0 24 24', fill = 'none') => {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', String(width));
+    s.setAttribute('height', String(height));
+    s.setAttribute('viewBox', viewBox);
+    s.setAttribute('fill', fill);
+    s.setAttribute('stroke', fill === 'none' ? 'currentColor' : 'none');
+    if (fill === 'none') {
+      s.setAttribute('stroke-width', String(strokeWidth));
+      s.setAttribute('stroke-linecap', 'round');
+      s.setAttribute('stroke-linejoin', 'round');
+    }
+    s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = path;
+    return s;
+  };
   const studio = {
     ready: false, busy: false, proposal: null, scope: null, session: null,
     localQueue: Promise.resolve(), cloudQueue: Promise.resolve(), pendingCloud: new Map(), revisions: new Map(), localRevisions: new Map(), conflicts: new Set(), recoveries: new Map(), epoch: 0,
@@ -225,14 +241,16 @@
         block.append(details);
       }
       if (m.retry) {
-        const retry = node('button', '重试这次生成 ↻', 'studio-message-link'); retry.dataset.retryId = m.id;
+        const retry = node('button', undefined, 'studio-message-link'); retry.dataset.retryId = m.id;
         retry.title = m.retry.scope ? `使用原请求，只修改第 ${m.retry.scope.index + 1} 步` : '使用原请求和原脚本重新生成';
         retry.disabled = this.busy || this.loading || this.committing;
+        retry.append(node('span', '重试这次生成'), svg('<path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>', 11, 11, 2));
         retry.addEventListener('click', () => this.retryGeneration(m.id)); block.append(retry);
       }
       if (m.versionId) {
-        const button = node('button', '查看这个脚本版本 ↗', 'studio-message-link');
+        const button = node('button', undefined, 'studio-message-link');
         button.disabled = this.busy;
+        button.append(node('span', '查看这个脚本版本'), svg('<line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline>', 11, 11, 2));
         button.addEventListener('click', () => this.restoreVersion(m.versionId)); block.append(button);
       }
       $('studio-messages').append(block); return block;
@@ -251,14 +269,14 @@
         input.checked = message.answerDraft?.selected === option.value;
         const body = node('span', undefined, 'studio-option-body'); body.append(node('strong', option.label));
         if (option.description) body.append(node('small', option.description));
-        label.append(input, node('span', String.fromCharCode(65 + index), 'studio-option-letter'), body, node('span', '✓', 'studio-option-check')); choices.append(label);
+        const check = node('span', undefined, 'studio-option-check'); check.append(svg('<polyline points="20 6 9 17 4 12"></polyline>', 12, 12, 2.5)); label.append(input, node('span', String.fromCharCode(65 + index), 'studio-option-letter'), body, check); choices.append(label);
       });
       const label = node('label', question.options.length ? '自由回答 / 补充说明' : '你的回答', 'studio-answer-label');
       const custom = node('textarea'); custom.id = 'answer-' + message.id; custom.rows = 2; custom.maxLength = 2000;
       custom.placeholder = question.options.length ? '也可以直接输入，或补充所选条件…' : '请输入具体底物、条件或你的想法…'; label.htmlFor = custom.id;
       custom.value = message.answerDraft?.text || '';
       const footer = node('div', undefined, 'studio-question-footer'), hint = node('span', '选择一项或自由回答');
-      const button = node('button', '提交并继续 →', 'studio-primary'); button.type = 'submit'; button.disabled = true;
+      const button = node('button', undefined, 'studio-primary'); button.type = 'submit'; button.disabled = true; button.append(node('span', '提交并继续'), svg('<line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline>', 11, 11, 2));
       footer.append(hint, button); fields.append(choices, label, custom, footer); form.append(heading, fields);
       const update = () => {
         if (this.busy || this.loading || this.committing || !this.isQuestionActive(message.id)) return;
@@ -282,9 +300,15 @@
       const last = this.session.messages.at(-1), questionId = last?.question ? last.id : '';
       if (this.currentQuestionId !== questionId) { this.composerExpanded = false; this.currentQuestionId = questionId; }
       $('studio-form').hidden = !!questionId && !this.composerExpanded;
-      $('studio-write-message').hidden = !questionId;
-      $('studio-write-message').textContent = this.composerExpanded ? '收起输入框，回到问题表单 ↑' : '想换个要求？直接发消息 ↗';
-      $('studio-write-message').setAttribute('aria-expanded', String(!!this.composerExpanded));
+      const writeMsg = $('studio-write-message');
+      writeMsg.hidden = !questionId;
+      writeMsg.replaceChildren();
+      if (this.composerExpanded) {
+        writeMsg.append(svg('<line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline>', 11, 11, 2), node('span', '收起输入框，回到问题表单'));
+      } else {
+        writeMsg.append(svg('<line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline>', 11, 11, 2), node('span', '想换个要求？直接发消息'));
+      }
+      writeMsg.setAttribute('aria-expanded', String(!!this.composerExpanded));
       for (const form of $('studio-messages').querySelectorAll('.studio-question')) {
         const active = this.isQuestionActive(form.dataset.questionId);
         form.classList.toggle('is-answered', !active); form.querySelector('fieldset').disabled = this.busy || this.loading || this.committing || !active;
@@ -476,11 +500,13 @@
         for (const match of matches) {
           const card = node('div', undefined, 'studio-match');
           card.append(node('strong', match.title), node('p', `${match.source} · ${match.reason}`));
-          const button = node('button', '预览已有机理 ↗');
+          const button = node('button', undefined, 'studio-match-preview-btn');
+          button.append(node('span', '预览已有机理'), svg('<line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline>', 11, 11, 2));
           button.addEventListener('click', () => { if (this.session.messages.some(item => item.id === m.id)) this.useMatch(match, prompt); });
           card.append(button); block.append(card);
         }
-        const fresh = node('button', '根据我的要求重新推演 →', 'studio-message-link');
+        const fresh = node('button', undefined, 'studio-message-link');
+        fresh.append(node('span', '根据我的要求重新推演'), svg('<line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline>', 11, 11, 2));
         fresh.addEventListener('click', () => { if (!this.busy) this.generate(prompt, false); }); block.append(fresh);
         this.follow(); this.persist().catch(() => {}); return;
       }
@@ -558,7 +584,7 @@
       try { await this.persist(); }
       catch (_) { this.setBusy(false); this.clearLivePreview(); this.liveBase = null; return; }
       if (epoch !== this.epoch || sessionId !== this.session.id || run !== this.runSequence || !this.busy) return;
-      $('studio-live-preview').textContent = '← 完整步骤生成后会自动显示在左侧';
+      $('studio-live-preview').textContent = '完整步骤生成后会自动显示在左侧';
       this.canvasStatus('正在生成反应', '左侧保留原稿，等待第一个完整步骤');
       this.cancelled = false;
       this.elapsedTimer = setInterval(() => { $('studio-stream-count').textContent = `${Math.floor((performance.now() - this.generationStartedAt) / 1000)} 秒 · ${this.streamText?.length || 0} 字符`; }, 1000);
@@ -648,11 +674,17 @@
       if (this.scope) this.scope.script = proposal.script;
       $('studio-keep').disabled = false;
       root.reactionApp.previewStudioReaction(proposal.validation.parsed, this.scope ? this.scope.index : proposal.previewStep ?? 0);
-      $('studio-candidate').hidden = false; $('studio-before').textContent = '对比原稿';
+      $('studio-candidate').hidden = false; $('studio-before').replaceChildren(
+        svg('<rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line>', 11, 11, 2),
+        node('span', '对比原稿')
+      );
       $('studio-candidate-title').textContent = proposal.restore ? '左侧正在预览历史版本' : '左侧正在预览新版本';
       const warnings = proposal.validation.warnings || [];
       $('studio-candidate-note').textContent = `共 ${proposal.validation.parsed.steps.length} 个结构状态 · 基础检查通过，原稿尚未改动${warnings.length ? '；' + warnings.join('；') : ''}`;
-      $('studio-keep').textContent = proposal.restore ? '恢复此版本 ↗' : '保留此版本 ↗';
+      $('studio-keep').replaceChildren(
+        svg('<polyline points="20 6 9 17 4 12"></polyline>', 12, 12, 2),
+        node('span', proposal.restore ? '恢复此版本' : '保留此版本')
+      );
       this.canvasStatus(proposal.restore ? '历史版本预览' : '新版本已就绪', '基础检查通过 · 点击“保留此版本”应用', 'ready');
       this.show();
     },
@@ -661,7 +693,10 @@
       this.before = !this.before;
       if (this.before) root.reactionApp.endStudioPreview();
       else root.reactionApp.previewStudioReaction(this.proposal.validation.parsed, this.scope ? this.scope.index : this.proposal.previewStep ?? 0);
-      $('studio-before').textContent = this.before ? '查看新版本' : '对比原稿';
+      $('studio-before').replaceChildren(
+        svg('<rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line>', 11, 11, 2),
+        node('span', this.before ? '查看新版本' : '对比原稿')
+      );
       this.canvasStatus(this.before ? '正在对比原稿' : '新版本预览', this.before ? '点击“查看新版本”返回候选结果' : '基础检查通过 · 确认后保留', this.before ? 'original' : 'ready');
     },
     discard() {
