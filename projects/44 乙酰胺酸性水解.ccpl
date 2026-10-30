@@ -1,0 +1,67 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "乙酰胺酸性水解"
+equation "CH₃CONH₂ + H₂O + HCl → CH₃COOH + NH₄Cl"
+summary "酰胺在酸性加热条件下水解，生成羧酸，氨基部分以铵盐形式存在。"
+
+step "乙酰胺与酸性水" {
+  note "酸性条件下羰基氧质子化，水作为亲核试剂进攻羰基碳。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom N4 N
+  atom O5 O
+  atom Cl9 Cl
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H4a H
+  atom H4b H
+  atom H5a H
+  atom H5b H
+  atom H9a H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 N4 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond N4 H4a 1
+  bond N4 H4b 1
+  bond O5 H5a 1
+  bond O5 H5b 1
+  bond Cl9 H9a 1
+}
+
+step "水解产物" {
+  note "C-N键断裂，生成乙酸和铵盐。考试重点：酰胺水解通常需要酸或碱催化并加热。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O5 O
+  atom N4 N charge=+1
+  atom Cl9 Cl charge=-1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H5a H
+  atom H4a H
+  atom H4b H
+  atom H4c H
+  atom H4d H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O5 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O5 H5a 1
+  bond N4 H4a 1
+  bond N4 H4b 1
+  bond N4 H4c 1
+  bond N4 H4d 1
+}

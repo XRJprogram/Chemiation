@@ -1,0 +1,237 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "乙酸与乙醇费歇尔酯化反应"
+equation "CH₃COOH + CH₃CH₂OH ⇌ CH₃COOCH₂CH₃ + H₂O"
+summary "酸催化亲核酰基取代：羰基氧质子化、乙醇进攻、质子转移、脱水、去质子化。"
+
+step "反应物与酸催化剂" {
+  note "浓硫酸提供酸性环境并可促进脱水；反应可逆。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O4 O
+  atom O5 O
+  atom C6 C
+  atom C7 C
+  atom H8 H charge=+1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H6b H
+  atom H7a H
+  atom H7b H
+  atom H7c H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O4 1
+  bond O5 C6 1
+  bond C6 C7 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O4 H4a 1
+  bond O5 H5a 1
+  bond C6 H6a 1
+  bond C6 H6b 1
+  bond C7 H7a 1
+  bond C7 H7b 1
+  bond C7 H7c 1
+}
+
+step "羰基氧质子化" {
+  note "羰基氧接受H⁺，增强羰基碳的亲电性。"
+  atom C1 C
+  atom C2 C
+  atom O3 O charge=+1
+  atom O4 O
+  atom O5 O
+  atom C6 C
+  atom C7 C
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H6b H
+  atom H7a H
+  atom H7b H
+  atom H7c H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O4 1
+  bond O5 C6 1
+  bond C6 C7 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O3 H3a 1
+  bond O4 H4a 1
+  bond O5 H5a 1
+  bond C6 H6a 1
+  bond C6 H6b 1
+  bond C7 H7a 1
+  bond C7 H7b 1
+  bond C7 H7c 1
+}
+
+step "乙醇亲核进攻" {
+  note "乙醇氧进攻羰基碳，C=O变为C-O，形成四面体中间体；乙醇氧暂时带正电。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O4 O
+  atom O5 O charge=+1
+  atom C6 C
+  atom C7 C
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H6b H
+  atom H7a H
+  atom H7b H
+  atom H7c H
+  bond C1 C2 1
+  bond C2 O3 1
+  bond C2 O4 1
+  bond C2 O5 1
+  bond O5 C6 1
+  bond C6 C7 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O3 H3a 1
+  bond O4 H4a 1
+  bond O5 H5a 1
+  bond C6 H6a 1
+  bond C6 H6b 1
+  bond C7 H7a 1
+  bond C7 H7b 1
+  bond C7 H7c 1
+}
+
+step "质子转移活化离去基团" {
+  note "把质子转移给原羟基氧，使其变成H₂O离去基团。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O4 O charge=+1
+  atom O5 O
+  atom C6 C
+  atom C7 C
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H3a H
+  atom H4a H
+  atom H4b H
+  atom H6a H
+  atom H6b H
+  atom H7a H
+  atom H7b H
+  atom H7c H
+  bond C1 C2 1
+  bond C2 O3 1
+  bond C2 O4 1
+  bond C2 O5 1
+  bond O5 C6 1
+  bond C6 C7 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O3 H3a 1
+  bond O4 H4a 1
+  bond O4 H4b 1
+  bond C6 H6a 1
+  bond C6 H6b 1
+  bond C7 H7a 1
+  bond C7 H7b 1
+  bond C7 H7c 1
+}
+
+step "脱水并重建羰基" {
+  note "水离去，氧原子孤对电子重建C=O，得到质子化酯。"
+  atom C1 C
+  atom C2 C
+  atom O3 O charge=+1
+  atom O5 O
+  atom C6 C
+  atom C7 C
+  atom O4 O
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H3a H
+  atom H6a H
+  atom H6b H
+  atom H7a H
+  atom H7b H
+  atom H7c H
+  atom H4a H
+  atom H4b H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O5 1
+  bond O5 C6 1
+  bond C6 C7 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O3 H3a 1
+  bond C6 H6a 1
+  bond C6 H6b 1
+  bond C7 H7a 1
+  bond C7 H7b 1
+  bond C7 H7c 1
+  bond O4 H4a 1
+  bond O4 H4b 1
+}
+
+step "去质子化生成酯" {
+  note "脱去H⁺生成乙酸乙酯，并再生酸催化剂。考试重点：酯化反应可逆，移走水或使用过量反应物可推动平衡。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O5 O
+  atom C6 C
+  atom C7 C
+  atom O4 O
+  atom H8 H charge=+1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H6a H
+  atom H6b H
+  atom H7a H
+  atom H7b H
+  atom H7c H
+  atom H4a H
+  atom H4b H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O5 1
+  bond O5 C6 1
+  bond C6 C7 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C6 H6a 1
+  bond C6 H6b 1
+  bond C7 H7a 1
+  bond C7 H7b 1
+  bond C7 H7c 1
+  bond O4 H4a 1
+  bond O4 H4b 1
+}

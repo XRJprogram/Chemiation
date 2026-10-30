@@ -1,0 +1,97 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "乙烯酸催化水合"
+equation "CH₂=CH₂ + H₂O ⇌ CH₃CH₂OH"
+summary "酸催化下水对烯烃发生亲电加成，生成醇。"
+
+step "反应物与催化剂" {
+  note "水是亲核试剂，H⁺为催化剂。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom H4 H charge=+1
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H2b H
+  atom H3a H
+  atom H3b H
+  bond C1 C2 2
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O3 H3a 1
+  bond O3 H3b 1
+}
+
+step "烯烃质子化" {
+  note "双键接受质子，形成碳正离子。"
+  atom C1 C
+  atom C2 C charge=+1
+  atom O3 O
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H2a H
+  atom H2b H
+  atom H3a H
+  atom H3b H
+  bond C1 C2 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O3 H3a 1
+  bond O3 H3b 1
+}
+
+step "水分子进攻" {
+  note "水分子中的氧进攻碳正离子，形成质子化醇。"
+  atom C1 C
+  atom C2 C
+  atom O3 O charge=+1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H2a H
+  atom H2b H
+  atom H3a H
+  atom H3b H
+  bond C1 C2 1
+  bond C2 O3 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O3 H3a 1
+  bond O3 H3b 1
+}
+
+step "脱质子再生催化剂" {
+  note "失去一个质子，得到乙醇并再生酸催化剂。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom H5 H charge=+1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H2a H
+  atom H2b H
+  atom H3a H
+  bond C1 C2 1
+  bond C2 O3 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O3 H3a 1
+}

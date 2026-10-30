@@ -1,0 +1,63 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "甘氨酸与氢氧化钠反应"
+equation "H₂NCH₂COOH + NaOH → H₂NCH₂COONa + H₂O"
+summary "氨基酸的羧基表现酸性，可与强碱反应形成羧酸盐。"
+
+step "甘氨酸与碱" {
+  note "羧基中的质子被OH⁻夺取。"
+  atom N1 N
+  atom C2 C
+  atom C3 C
+  atom O4 O
+  atom O5 O
+  atom Na6 Na charge=+1
+  atom O7 O charge=-1
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H2b H
+  atom H5a H
+  atom H7a H
+  bond N1 C2 1
+  bond C2 C3 1
+  bond C3 O4 2
+  bond C3 O5 1
+  bond N1 H1a 1
+  bond N1 H1b 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O5 H5a 1
+  bond O7 H7a 1
+}
+
+step "生成甘氨酸钠" {
+  note "形成羧酸根和水。考试重点：氨基酸的两性来自-NH₂和-COOH两个官能团。"
+  atom N1 N
+  atom C2 C
+  atom C3 C
+  atom O4 O
+  atom O5 O charge=-1
+  atom Na6 Na charge=+1
+  atom O7 O
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H2b H
+  atom H7a H
+  atom H7b H
+  bond N1 C2 1
+  bond C2 C3 1
+  bond C3 O4 2
+  bond C3 O5 1
+  bond N1 H1a 1
+  bond N1 H1b 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O7 H7a 1
+  bond O7 H7b 1
+}

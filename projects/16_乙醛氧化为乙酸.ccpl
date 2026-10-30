@@ -1,0 +1,46 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "乙醛氧化为乙酸"
+equation "CH₃CHO + [O] → CH₃COOH"
+summary "醛基容易被氧化为羧基，是醛类的重要化学性质。"
+
+step "乙醛与氧化剂" {
+  note "醛基中的羰基碳仍连接一个氢，较容易进一步氧化。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O5 O radical
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H2a H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C2 H2a 1
+}
+
+step "羧基形成" {
+  note "醛基氧化为羧基。考试重点：醛能被弱氧化剂氧化，普通酮通常不易被温和氧化。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O5 O
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H5a H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O5 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O5 H5a 1
+}

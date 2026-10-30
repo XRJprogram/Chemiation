@@ -1,0 +1,91 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "苯的磺化反应"
+equation "C₆H₆ + H₂SO₄ ⇌ C₆H₅SO₃H + H₂O"
+summary "苯环与发烟硫酸或浓硫酸体系中的SO₃发生亲电芳香取代，生成苯磺酸。"
+
+step "苯与硫酸" {
+  note "磺化亲电试剂可视为SO₃或其质子化形式。"
+  atom C1 C
+  atom C2 C
+  atom C3 C
+  atom C4 C
+  atom C5 C
+  atom C6 C
+  atom O7 O
+  atom S8 S
+  atom O9 O
+  atom O10 O
+  atom O11 O
+  atom H1a H
+  atom H2a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H10a H
+  atom H11a H
+  bond C1 C2 2
+  bond C2 C3 1
+  bond C3 C4 2
+  bond C4 C5 1
+  bond C5 C6 2
+  bond O7 S8 2
+  bond S8 O9 2
+  bond S8 O10 1
+  bond S8 O11 1
+  bond C6 C1 1
+  bond C1 H1a 1
+  bond C2 H2a 1
+  bond C3 H3a 1
+  bond C4 H4a 1
+  bond C5 H5a 1
+  bond C6 H6a 1
+  bond O10 H10a 1
+  bond O11 H11a 1
+}
+
+step "磺酸基取代" {
+  note "苯环上的H被-SO₃H取代，形成苯磺酸。考试重点：磺化属于亲电芳香取代，反应具有可逆性。"
+  atom C1 C
+  atom S8 S
+  atom O7 O
+  atom O9 O
+  atom O10 O
+  atom C2 C
+  atom C3 C
+  atom C4 C
+  atom C5 C
+  atom C6 C
+  atom O11 O
+  atom H10a H
+  atom H2a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H11a H
+  atom H11b H
+  bond C1 S8 1
+  bond S8 O7 2
+  bond S8 O9 2
+  bond S8 O10 1
+  bond C1 C2 2
+  bond C2 C3 1
+  bond C3 C4 2
+  bond C4 C5 1
+  bond C5 C6 2
+  bond C6 C1 1
+  bond O10 H10a 1
+  bond C2 H2a 1
+  bond C3 H3a 1
+  bond C4 H4a 1
+  bond C5 H5a 1
+  bond C6 H6a 1
+  bond O11 H11a 1
+  bond O11 H11b 1
+}

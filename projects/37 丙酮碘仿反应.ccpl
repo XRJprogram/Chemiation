@@ -1,0 +1,75 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "丙酮碘仿反应"
+equation "CH₃COCH₃ + 3I₂ + 4NaOH → CH₃COONa + CHI₃↓ + 3NaI + 3H₂O"
+summary "甲基酮在碘和碱作用下发生连续α-碘代，随后C-C键断裂，生成黄色碘仿沉淀。"
+
+step "丙酮与碘、碱" {
+  note "甲基酮结构CH₃CO-是碘仿反应的重要结构特征。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom C4 C
+  atom I5 I
+  atom I6 I
+  atom I7 I
+  atom I8 I
+  atom I9 I
+  atom I10 I
+  atom Na11 Na charge=+1
+  atom O12 O charge=-1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H4a H
+  atom H4b H
+  atom H4c H
+  atom H12a H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 C4 1
+  bond I5 I6 1
+  bond I7 I8 1
+  bond I9 I10 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C4 H4a 1
+  bond C4 H4b 1
+  bond C4 H4c 1
+  bond O12 H12a 1
+}
+
+step "α位连续碘代与裂解结果" {
+  note "甲基逐步被碘取代，随后发生碱促裂解，形成CHI₃黄色沉淀和羧酸盐。该步骤展示反应中心简化图；完整计量见equation。考试重点：甲基酮、乙醛及可氧化成甲基酮结构的醇可呈阳性。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O12 O charge=-1
+  atom C4 C
+  atom I5 I
+  atom I7 I
+  atom I9 I
+  atom I6 I charge=-1
+  atom I8 I charge=-1
+  atom I10 I charge=-1
+  atom Na11 Na charge=+1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H4a H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O12 1
+  bond C4 I5 1
+  bond C4 I7 1
+  bond C4 I9 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C4 H4a 1
+}

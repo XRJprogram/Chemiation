@@ -1,0 +1,71 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "苯的溴代反应"
+equation "C₆H₆ + Br₂ → C₆H₅Br + HBr"
+summary "FeBr₃催化Br₂极化，苯环发生亲电芳香取代。"
+
+step "苯与溴" {
+  note "FeBr₃作为Lewis酸活化Br₂。"
+  atom C1 C
+  atom C2 C
+  atom C3 C
+  atom C4 C
+  atom C5 C
+  atom C6 C
+  atom Br7 Br
+  atom Br9 Br
+  atom H1a H
+  atom H2a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  bond C1 C2 2
+  bond C2 C3 1
+  bond C3 C4 2
+  bond C4 C5 1
+  bond C5 C6 2
+  bond Br7 Br9 1
+  bond C6 C1 1
+  bond C1 H1a 1
+  bond C2 H2a 1
+  bond C3 H3a 1
+  bond C4 H4a 1
+  bond C5 H5a 1
+  bond C6 H6a 1
+}
+
+step "取代产物形成" {
+  note "苯环上的H被Br取代，恢复芳香性。考试重点：苯的溴代需要FeBr₃等催化剂，不能与烯烃使溴水褪色混淆。"
+  atom C1 C
+  atom Br7 Br
+  atom C2 C
+  atom C3 C
+  atom C4 C
+  atom C5 C
+  atom C6 C
+  atom Br9 Br
+  atom H2a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H9a H
+  bond C1 Br7 1
+  bond C1 C2 2
+  bond C2 C3 1
+  bond C3 C4 2
+  bond C4 C5 1
+  bond C5 C6 2
+  bond C6 C1 1
+  bond C2 H2a 1
+  bond C3 H3a 1
+  bond C4 H4a 1
+  bond C5 H5a 1
+  bond C6 H6a 1
+  bond Br9 H9a 1
+}
