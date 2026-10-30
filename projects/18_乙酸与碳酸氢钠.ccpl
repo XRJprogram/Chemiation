@@ -1,0 +1,95 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "乙酸与碳酸氢钠反应"
+equation "CH₃COOH + NaHCO₃ → CH₃COONa + CO₂↑ + H₂O"
+summary "羧酸酸性强于碳酸氢根对应的碳酸，可发生放出CO₂的酸碱反应。"
+
+step "酸碱反应物" {
+  note "乙酸向HCO₃⁻转移质子。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O4 O
+  atom Na6 Na charge=+1
+  atom O7 O
+  atom C9 C
+  atom O10 O
+  atom O11 O charge=-1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H4a H
+  atom H7a H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O4 1
+  bond O7 C9 1
+  bond C9 O10 2
+  bond C9 O11 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O4 H4a 1
+  bond O7 H7a 1
+}
+
+step "生成乙酸根与碳酸" {
+  note "先形成乙酸根和碳酸，碳酸不稳定。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O4 O charge=-1
+  atom Na6 Na charge=+1
+  atom O7 O
+  atom C9 C
+  atom O10 O
+  atom O11 O
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H7a H
+  atom H11a H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O4 1
+  bond O7 C9 1
+  bond C9 O10 2
+  bond C9 O11 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O7 H7a 1
+  bond O11 H11a 1
+}
+
+step "碳酸分解" {
+  note "碳酸分解为CO₂和H₂O。考试重点：羧酸可与NaHCO₃放出CO₂，苯酚通常不能。"
+  atom C1 C
+  atom C2 C
+  atom O3 O
+  atom O4 O charge=-1
+  atom Na6 Na charge=+1
+  atom O10 O
+  atom C9 C
+  atom O7 O
+  atom O11 O
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H11a H
+  atom H11b H
+  bond C1 C2 1
+  bond C2 O3 2
+  bond C2 O4 1
+  bond O10 C9 2
+  bond C9 O7 2
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond O11 H11a 1
+  bond O11 H11b 1
+}

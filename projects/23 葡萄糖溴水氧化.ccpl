@@ -1,0 +1,127 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "葡萄糖被溴水氧化"
+equation "C₆H₁₂O₆ + Br₂ + H₂O → C₆H₁₂O₇ + 2HBr"
+summary "葡萄糖开链结构中的醛基被溴水温和氧化为羧基，生成葡萄糖酸。"
+
+step "葡萄糖开链醛基" {
+  note "葡萄糖在开链形式下含有醛基；溴水是较温和的氧化剂。"
+  atom C1 C
+  atom O2 O
+  atom C3 C
+  atom O4 O
+  atom C5 C
+  atom O6 O
+  atom C7 C
+  atom O8 O
+  atom C9 C
+  atom O10 O
+  atom C11 C
+  atom O12 O
+  atom Br13 Br
+  atom Br14 Br
+  atom O15 O
+  atom H1a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H7a H
+  atom H8a H
+  atom H9a H
+  atom H10a H
+  atom H11a H
+  atom H11b H
+  atom H12a H
+  atom H15a H
+  atom H15b H
+  bond C1 O2 2
+  bond C1 C3 1
+  bond C3 O4 1
+  bond C3 C5 1
+  bond C5 O6 1
+  bond C5 C7 1
+  bond C7 O8 1
+  bond C7 C9 1
+  bond C9 O10 1
+  bond C9 C11 1
+  bond C11 O12 1
+  bond Br13 Br14 1
+  bond C1 H1a 1
+  bond C3 H3a 1
+  bond O4 H4a 1
+  bond C5 H5a 1
+  bond O6 H6a 1
+  bond C7 H7a 1
+  bond O8 H8a 1
+  bond C9 H9a 1
+  bond O10 H10a 1
+  bond C11 H11a 1
+  bond C11 H11b 1
+  bond O12 H12a 1
+  bond O15 H15a 1
+  bond O15 H15b 1
+}
+
+step "醛基转化为羧基" {
+  note "醛基被氧化为羧基，溴被还原为HBr。考试重点：溴水能氧化葡萄糖的醛基，而果糖没有醛基但在碱性条件下可发生异构化后还原反应。"
+  atom C1 C
+  atom O2 O
+  atom O15 O
+  atom C3 C
+  atom O4 O
+  atom C5 C
+  atom O6 O
+  atom C7 C
+  atom O8 O
+  atom C9 C
+  atom O10 O
+  atom C11 C
+  atom O12 O
+  atom Br13 Br
+  atom Br14 Br
+  atom H15a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H7a H
+  atom H8a H
+  atom H9a H
+  atom H10a H
+  atom H11a H
+  atom H11b H
+  atom H12a H
+  atom H13a H
+  atom H14a H
+  bond C1 O2 2
+  bond C1 O15 1
+  bond C1 C3 1
+  bond C3 O4 1
+  bond C3 C5 1
+  bond C5 O6 1
+  bond C5 C7 1
+  bond C7 O8 1
+  bond C7 C9 1
+  bond C9 O10 1
+  bond C9 C11 1
+  bond C11 O12 1
+  bond O15 H15a 1
+  bond C3 H3a 1
+  bond O4 H4a 1
+  bond C5 H5a 1
+  bond O6 H6a 1
+  bond C7 H7a 1
+  bond O8 H8a 1
+  bond C9 H9a 1
+  bond O10 H10a 1
+  bond C11 H11a 1
+  bond C11 H11b 1
+  bond O12 H12a 1
+  bond Br13 H13a 1
+  bond Br14 H14a 1
+}

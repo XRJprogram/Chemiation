@@ -1,0 +1,65 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "乙烯与溴加成"
+equation "CH₂=CH₂ + Br₂ → BrCH₂CH₂Br"
+summary "乙烯的π电子极化Br₂，经过溴鎓离子中间体后发生亲电加成。"
+
+step "反应物靠近" {
+  note "乙烯的π电子云使Br₂极化。考试重点：溴水褪色可用于检验不饱和键，但不是绝对专一。"
+  atom C1 C
+  atom C2 C
+  atom Br3 Br
+  atom Br4 Br
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H2b H
+  bond C1 C2 2
+  bond Br3 Br4 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+}
+
+step "溴鎓离子形成" {
+  note "形成三元环溴鎓离子和溴离子；这是亲电加成的重要中间体。"
+  atom C1 C
+  atom Br3 Br charge=+1
+  atom C2 C
+  atom Br4 Br charge=-1
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H2b H
+  bond C1 Br3 1
+  bond Br3 C2 1
+  bond C2 C1 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+}
+
+step "溴离子进攻" {
+  note "Br⁻进攻并打开三元环，生成1,2-二溴乙烷。"
+  atom C1 C
+  atom Br3 Br
+  atom C2 C
+  atom Br4 Br
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H2b H
+  bond C1 Br3 1
+  bond C1 C2 1
+  bond C2 Br4 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+}

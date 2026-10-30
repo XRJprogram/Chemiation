@@ -1,0 +1,96 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "苯胺重氮化反应"
+equation "C₆H₅NH₂ + NaNO₂ + 2HCl → C₆H₅N₂Cl + NaCl + 2H₂O"
+summary "NaNO₂与HCl原位生成亚硝酸，苯胺在0–5℃下重氮化生成苯重氮盐。"
+
+step "苯胺与亚硝酸体系" {
+  note "NaNO₂与盐酸生成HNO₂；温度需控制在0–5℃，避免重氮盐分解。"
+  atom C1 C
+  atom C2 C
+  atom C3 C
+  atom C4 C
+  atom C5 C
+  atom C6 C
+  atom N7 N
+  atom Na8 Na charge=+1
+  atom O9 O charge=-1
+  atom N10 N charge=+1 radical
+  atom O11 O
+  atom Cl13 Cl
+  atom Cl15 Cl
+  atom H1a H
+  atom H2a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H7a H
+  atom H7b H
+  atom H13a H
+  atom H15a H
+  bond C1 C2 2
+  bond C2 C3 1
+  bond C3 C4 2
+  bond C4 C5 1
+  bond C5 C6 2
+  bond C6 N7 1
+  bond O9 N10 1
+  bond N10 O11 2
+  bond C6 C1 1
+  bond C1 H1a 1
+  bond C2 H2a 1
+  bond C3 H3a 1
+  bond C4 H4a 1
+  bond C5 H5a 1
+  bond N7 H7a 1
+  bond N7 H7b 1
+  bond Cl13 H13a 1
+  bond Cl15 H15a 1
+}
+
+step "重氮盐形成" {
+  note "芳香伯胺转化为芳香重氮盐。考试重点：0–5℃是重氮化的关键条件；芳香重氮盐可用于偶合反应。"
+  atom C1 C
+  atom C2 C
+  atom C3 C
+  atom C4 C
+  atom C5 C
+  atom C6 C
+  atom N7 N charge=+1
+  atom N10 N
+  atom Na8 Na charge=+1
+  atom Cl13 Cl charge=-1
+  atom Cl15 Cl charge=-1
+  atom O9 O
+  atom O11 O
+  atom H1a H
+  atom H2a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H9a H
+  atom H9b H
+  atom H11a H
+  atom H11b H
+  bond C1 C2 2
+  bond C2 C3 1
+  bond C3 C4 2
+  bond C4 C5 1
+  bond C5 C6 2
+  bond C6 N7 1
+  bond N7 N10 3
+  bond C6 C1 1
+  bond C1 H1a 1
+  bond C2 H2a 1
+  bond C3 H3a 1
+  bond C4 H4a 1
+  bond C5 H5a 1
+  bond O9 H9a 1
+  bond O9 H9b 1
+  bond O11 H11a 1
+  bond O11 H11b 1
+}

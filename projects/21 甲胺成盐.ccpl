@@ -1,0 +1,49 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "甲胺与盐酸成盐"
+equation "CH₃NH₂ + HCl → CH₃NH₃Cl"
+summary "胺氮上的孤对电子接受质子，形成铵盐。"
+
+step "甲胺与盐酸" {
+  note "胺具有碱性，氮原子有孤对电子。"
+  atom C1 C
+  atom N2 N
+  atom Cl4 Cl
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H2a H
+  atom H2b H
+  atom H4a H
+  bond C1 N2 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond N2 H2a 1
+  bond N2 H2b 1
+  bond Cl4 H4a 1
+}
+
+step "质子转移" {
+  note "氮接受H⁺形成甲铵离子，Cl⁻作为对阴离子。考试重点：胺与酸成盐，盐与碱反应可释放游离胺。"
+  atom C1 C
+  atom N2 N charge=+1
+  atom Cl4 Cl charge=-1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H2a H
+  atom H2b H
+  atom H2c H
+  bond C1 N2 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond N2 H2a 1
+  bond N2 H2b 1
+  bond N2 H2c 1
+}

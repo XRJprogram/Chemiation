@@ -1,0 +1,58 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "丙二酸脱羧"
+equation "HOOCCH₂COOH → CH₃COOH + CO₂"
+summary "丙二酸受热脱去一个羧基，以CO₂形式离去，生成乙酸。"
+
+step "丙二酸结构" {
+  note "丙二酸属于β-二羧酸，受热容易脱羧。"
+  atom O1 O
+  atom C2 C
+  atom O3 O
+  atom C4 C
+  atom C5 C
+  atom O6 O
+  atom O7 O
+  atom H1a H
+  atom H4a H
+  atom H4b H
+  atom H7a H
+  bond O1 C2 1
+  bond C2 O3 2
+  bond C2 C4 1
+  bond C4 C5 1
+  bond C5 O6 2
+  bond C5 O7 1
+  bond O1 H1a 1
+  bond C4 H4a 1
+  bond C4 H4b 1
+  bond O7 H7a 1
+}
+
+step "脱羧产物" {
+  note "一个羧基转化为CO₂，剩余部分形成乙酸。考试重点：丙二酸及其衍生物常考脱羧。"
+  atom O1 O
+  atom C2 C
+  atom O3 O
+  atom C4 C
+  atom C5 C
+  atom O6 O
+  atom O7 O
+  atom H4a H
+  atom H4b H
+  atom H4c H
+  atom H7a H
+  bond O1 C2 2
+  bond C2 O3 2
+  bond C4 C5 1
+  bond C5 O6 2
+  bond C5 O7 1
+  bond C4 H4a 1
+  bond C4 H4b 1
+  bond C4 H4c 1
+  bond O7 H7a 1
+}

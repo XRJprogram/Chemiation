@@ -1,0 +1,52 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "溴乙烷消除反应"
+equation "CH₃CH₂Br + NaOH(醇) → CH₂=CH₂ + NaBr + H₂O"
+summary "醇溶液中OH⁻夺取β-H，C-Br键断裂，形成C=C双键，属于β-消除。"
+
+step "底物与碱" {
+  note "C-Br所在碳为α碳，相邻碳为β碳；碱夺取β-H。"
+  atom C1 C
+  atom C2 C
+  atom Br3 Br
+  atom O4 O charge=-1
+  atom H1a H
+  atom H1b H
+  atom H1c H
+  atom H2a H
+  atom H2b H
+  atom H4a H
+  bond C1 C2 1
+  bond C2 Br3 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C1 H1c 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O4 H4a 1
+}
+
+step "消除生成乙烯" {
+  note "β-H与Br分别离去，形成C=C。考试重点：判断β-H是否存在，并区分水溶液取代与醇溶液消除。"
+  atom C1 C
+  atom C2 C
+  atom O4 O
+  atom Br3 Br charge=-1
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H2b H
+  atom H4a H
+  atom H4b H
+  bond C1 C2 2
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond C2 H2a 1
+  bond C2 H2b 1
+  bond O4 H4a 1
+  bond O4 H4b 1
+}

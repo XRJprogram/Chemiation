@@ -1,0 +1,118 @@
+# ============================================================
+# CCPL 有机化学反应机理文件
+# 规则：一个文件只包含一个反应方程式
+# 坐标省略，由支持自动坐标解算的CCPL环境生成
+# ============================================================
+
+reaction "葡萄糖加氢还原"
+equation "C₆H₁₂O₆ + H₂ → C₆H₁₄O₆"
+summary "葡萄糖开链结构的醛基加氢还原为伯醇，生成山梨醇。"
+
+step "葡萄糖与氢气" {
+  note "羰基碳具有亲电性，催化剂活化氢气。"
+  atom C1 C
+  atom O2 O
+  atom C3 C
+  atom O4 O
+  atom C5 C
+  atom O6 O
+  atom C7 C
+  atom O8 O
+  atom C9 C
+  atom O10 O
+  atom C11 C
+  atom O12 O
+  atom H13 H
+  atom H14 H
+  atom H1a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H7a H
+  atom H8a H
+  atom H9a H
+  atom H10a H
+  atom H11a H
+  atom H11b H
+  atom H12a H
+  bond C1 O2 2
+  bond C1 C3 1
+  bond C3 O4 1
+  bond C3 C5 1
+  bond C5 O6 1
+  bond C5 C7 1
+  bond C7 O8 1
+  bond C7 C9 1
+  bond C9 O10 1
+  bond C9 C11 1
+  bond C11 O12 1
+  bond H13 H14 1
+  bond C1 H1a 1
+  bond C3 H3a 1
+  bond O4 H4a 1
+  bond C5 H5a 1
+  bond O6 H6a 1
+  bond C7 H7a 1
+  bond O8 H8a 1
+  bond C9 H9a 1
+  bond O10 H10a 1
+  bond C11 H11a 1
+  bond C11 H11b 1
+  bond O12 H12a 1
+}
+
+step "醛基还原" {
+  note "一个氢加到羰基碳，另一个氢加到氧，醛基变为羟甲基，生成山梨醇。"
+  atom C1 C
+  atom O2 O
+  atom C3 C
+  atom O4 O
+  atom C5 C
+  atom O6 O
+  atom C7 C
+  atom O8 O
+  atom C9 C
+  atom O10 O
+  atom C11 C
+  atom O12 O
+  atom H1a H
+  atom H1b H
+  atom H2a H
+  atom H3a H
+  atom H4a H
+  atom H5a H
+  atom H6a H
+  atom H7a H
+  atom H8a H
+  atom H9a H
+  atom H10a H
+  atom H11a H
+  atom H11b H
+  atom H12a H
+  bond C1 O2 1
+  bond C1 C3 1
+  bond C3 O4 1
+  bond C3 C5 1
+  bond C5 O6 1
+  bond C5 C7 1
+  bond C7 O8 1
+  bond C7 C9 1
+  bond C9 O10 1
+  bond C9 C11 1
+  bond C11 O12 1
+  bond C1 H1a 1
+  bond C1 H1b 1
+  bond O2 H2a 1
+  bond C3 H3a 1
+  bond O4 H4a 1
+  bond C5 H5a 1
+  bond O6 H6a 1
+  bond C7 H7a 1
+  bond O8 H8a 1
+  bond C9 H9a 1
+  bond O10 H10a 1
+  bond C11 H11a 1
+  bond C11 H11b 1
+  bond O12 H12a 1
+}
